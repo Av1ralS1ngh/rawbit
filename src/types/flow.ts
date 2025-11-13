@@ -1,0 +1,170 @@
+import type { Edge, Node, XYPosition } from "@xyflow/react";
+
+import type { ScriptExecutionResult } from "./calc";
+
+/* ------------------------------------------------------------------ */
+/*  Input-structure definitions                                       */
+/* ------------------------------------------------------------------ */
+
+export interface FieldDefinition {
+  label: string;
+  index: number; // absolute offset inside the instance
+  placeholder?: string;
+  small?: boolean;
+  rows?: number;
+  allowEmpty00?: boolean;
+  allowEmptyBlank?: boolean;
+  unconnectable?: boolean;
+  comment?: string;
+  options?: string[];
+  value?: string;
+}
+
+export interface GroupDefinition {
+  title: string;
+  baseIndex: number; // absolute offset of the first instance
+  fields: FieldDefinition[];
+  expandable?: boolean;
+  fieldCountToAdd?: number; // how many fields one click should add
+  minInstances?: number;
+  maxInstances?: number;
+}
+
+export interface InputStructure {
+  ungrouped?: FieldDefinition[];
+  groups?: GroupDefinition[];
+  betweenGroups?: Record<string, FieldDefinition[]>;
+  afterGroups?: FieldDefinition[];
+  helpText?: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Calculation-node-specific data                                    */
+/* ------------------------------------------------------------------ */
+
+export interface CalculationNodeData extends Record<string, unknown> {
+  /** core */
+  functionName?: string;
+  dirty?: boolean;
+  version?: number;
+  error?: boolean;
+  result?: unknown;
+
+  /** geometry / layout */
+  baseHeight?: number;
+  width?: number;
+  height?: number;
+
+  /** single-value mode */
+  value?: string;
+
+  /** multi-value mode */
+  inputs?: {
+    vals?: Record<number, string> | string[];
+    val?: string | number;
+    [key: string]: unknown;
+  };
+  inputStructure?: InputStructure;
+  numInputs?: number;
+  groupInstances?: Record<string, number>;
+  groupInstanceKeys?: Record<string, number[]>;
+
+  /** UX helpers */
+  networkDependent?: boolean;
+  selectedNetwork?: "regtest" | "testnet" | "mainnet";
+  extendedError?: string;
+  comment?: string;
+  showComment?: boolean;
+  title?: string; // editable display name
+  customFieldLabels?: Record<number, string>;
+  customGroupTitles?: Record<string, string>;
+  hasRegenerate?: boolean;
+  forceRegenerate?: boolean;
+  showField?: boolean;
+  paramExtraction?: "single_val" | "multi_val";
+  isGroup?: boolean;
+  groupFlash?: boolean;
+  borderColor?: string;
+  locked?: boolean;
+  isHighlighted?: boolean;
+  isConcatAll?: boolean;
+  searchMark?: {
+    term: string;
+    ts: number;
+  };
+
+  /** TextInfoNode */
+  content?: string;
+  fontSize?: number;
+
+  totalInputs?: number; // how many input handles the node *should* render
+  unwiredCount?: number; // how many of those handles are currently *unwired*
+  scriptDebugSteps?: ScriptExecutionResult | null;
+  scriptSteps?: ScriptExecutionResult | null;
+  banner?: unknown;
+  tooltip?: unknown;
+}
+
+export type NodeData = CalculationNodeData;
+
+/**
+ * Rich Flow node wrapper used across the app.
+ * Supports overriding the embedded `data` shape when a caller has
+ * narrowed/calculated a more specific interface.
+ */
+export type FlowNode<TData extends CalculationNodeData = CalculationNodeData> =
+  Node<TData> & {
+    /**
+     * Absolute canvas coordinates emitted by React Flow position change events.
+     * Optional because it's only populated during drags or by tests.
+     */
+    positionAbsolute?: XYPosition;
+    dragHandle?: string;
+    dragging?: boolean;
+    measured?: {
+      width?: number;
+      height?: number;
+    };
+  };
+
+export type FlowNodes<TData extends CalculationNodeData = CalculationNodeData> =
+  FlowNode<TData>[];
+
+export type FlowGraph<
+  TNode extends FlowNode = FlowNode,
+  TEdge extends Edge = Edge
+> = {
+  nodes: TNode[];
+  edges: TEdge[];
+};
+
+/* ------------------------------------------------------------------ */
+/*  Flow & persistent-storage                                         */
+/* ------------------------------------------------------------------ */
+
+export interface FlowData<
+  TNode extends FlowNode = FlowNode,
+  TEdge extends Edge = Edge
+> {
+  nodes: TNode[];
+  edges: TEdge[];
+  name?: string;
+  schemaVersion?: number;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Simplified export for "save simplified flow"                      */
+/* ------------------------------------------------------------------ */
+
+export interface SimplifiedNode {
+  id: string;
+  name?: string; // node.data.title OR id fallback
+  functionName?: string; // node.data.functionName
+  value?: unknown; // node.data.result OR node.data.value
+}
+
+export interface SimplifiedEdge {
+  id: string;
+  source: string;
+  target: string;
+}

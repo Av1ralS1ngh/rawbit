@@ -1,0 +1,383 @@
+import React from "react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import ShadcnGroupNode from "@/components/nodes/GroupNode";
+import type { CalculationNodeData, FlowNode } from "@/types";
+import type { Edge } from "@xyflow/react";
+import { buildEdge, buildFlowNode, buildNodeProps } from "@/test-utils/types";
+
+vi.mock("react-dom", () => ({
+  createPortal: (node: React.ReactNode) => node,
+}));
+
+const clipboardMock = { copyId: vi.fn(), idCopied: false };
+vi.mock("@/hooks/nodes/useClipboardLite", () => ({
+  useClipboardLite: () => clipboardMock,
+}));
+
+const snapshotMock = {
+  lockEdgeSnapshotSkip: vi.fn(),
+  releaseEdgeSnapshotSkip: vi.fn(),
+  scheduleSnapshot: vi.fn(),
+  lockNodeRemovalSnapshotSkip: vi.fn(),
+  releaseNodeRemovalSnapshotSkip: vi.fn(),
+  skipNextNodeRemovalRef: { current: false },
+};
+vi.mock("@/hooks/useSnapshotSchedulerContext", () => ({
+  useSnapshotSchedulerContext: () => snapshotMock,
+}));
+
+const flowActionsMock = {
+  groupWithUndo: vi.fn(),
+  ungroupWithUndo: vi.fn(),
+};
+vi.mock("@/hooks/useFlowActions", () => ({
+  useFlowActions: () => flowActionsMock,
+}));
+
+const pushState = vi.fn();
+vi.mock("@/hooks/useUndoRedo", () => ({
+  useUndoRedo: () => ({ pushState }),
+}));
+
+const reactFlowInstance = {
+  setNodes: vi.fn<(updater: FlowNode[] | ((current: FlowNode[]) => FlowNode[])) => void>(),
+  setEdges: vi.fn<(updater: Edge[] | ((current: Edge[]) => Edge[])) => void>(),
+  getNodes: vi.fn<() => FlowNode[]>(),
+  getEdges: vi.fn<() => Edge[]>(),
+  getViewport: vi.fn<() => { x: number; y: number; zoom: number }>(),
+  setViewport: vi.fn<(viewport: { x: number; y: number; zoom: number }) => void>(),
+};
+
+type NodeResizerSpyProps = {
+  onResize?: (event: unknown, params: { width: number; height: number; x: number; y: number }) => void;
+  onResizeEnd?: () => void;
+  [key: string]: unknown;
+};
+
+let nodeResizerProps: NodeResizerSpyProps | null = null;
+
+vi.mock("@xyflow/react", () => ({
+  NodeResizer: (props: NodeResizerSpyProps) => {
+    nodeResizerProps = props;
+    return <div data-testid="resizer" />;
+  },
+  useReactFlow: () => reactFlowInstance,
+}));
+
+vi.mock("@/hooks/nodes/useGroupInstances", () => ({
+  useGroupInstances: () => ({}),
+}));
+
+vi.mock("@/hooks/nodes/useNodePortalMenu", () => ({
+  useNodePortalMenu: () => ({
+    containerRef: { current: null },
+    position: { x: 0, y: 0 },
+  }),
+}));
+
+let nodes: FlowNode[] = [];
+let edges: Edge[] = [];
+
+const createNode = (
+  dataOverrides: Partial<CalculationNodeData> = {},
+  nodeOverrides: Partial<FlowNode> = {}
+): FlowNode =>
+  buildFlowNode({
+    id: "group-1",
+    type: "shadcnGroup",
+    position: { x: 0, y: 0 },
+    parentId: undefined,
+    selected: true,
+    data: {
+      title: "Group Node",
+      fontSize: 20,
+      width: 600,
+      height: 360,
+      ...dataOverrides,
+    },
+    ...nodeOverrides,
+  });
+
+const setupNodes = (customNodes: FlowNode[], customEdges: Edge[] = []) => {
+  nodes = customNodes;
+  edges = customEdges;
+  reactFlowInstance.getNodes.mockImplementation(() => nodes);
+  reactFlowInstance.getEdges.mockImplementation(() => edges);
+};
+
+const renderGroupNode = (
+  overrides: Partial<CalculationNodeData> = {},
+  nodeOverrides: Partial<FlowNode> = {}
+) => {
+  const node = createNode(overrides, nodeOverrides);
+  setupNodes([node], []);
+
+  render(<ShadcnGroupNode {...buildNodeProps(node)} />);
+
+  return node;
+};
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  nodeResizerProps = null;
+  clipboardMock.copyId.mockClear();
+  flowActionsMock.groupWithUndo.mockClear();
+  flowActionsMock.ungroupWithUndo.mockClear();
+  pushState.mockClear();
+  snapshotMock.lockEdgeSnapshotSkip.mockClear();
+  snapshotMock.releaseEdgeSnapshotSkip.mockClear();
+  snapshotMock.scheduleSnapshot.mockClear();
+
+  reactFlowInstance.setNodes.mockImplementation((updater) => {
+    nodes = typeof updater === "function" ? updater(nodes) : updater;
+  });
+  reactFlowInstance.setEdges.mockImplementation((updater) => {
+    edges = typeof updater === "function" ? updater(edges) : updater;
+  });
+  reactFlowInstance.getNodes.mockImplementation(() => nodes);
+  reactFlowInstance.getEdges.mockImplementation(() => edges);
+  reactFlowInstance.getViewport.mockReturnValue({ x: 0, y: 0, zoom: 1 });
+  reactFlowInstance.setViewport.mockClear();
+});
+
+afterEach(() => {
+  vi.runOnlyPendingTimers();
+  vi.useRealTimers();
+});
+
+describe("GroupNode interactions", () => {
+  it("opens menu and copies id", () => {
+    renderGroupNode();
+
+    fireEvent.click(screen.getByTitle("More"));
+    fireEvent.click(screen.getByText(/Copy ID/i));
+
+    expect(clipboardMock.copyId).toHaveBeenCalledTimes(1);
+  });
+
+  it("commits title edits and records undo state", () => {
+    renderGroupNode();
+
+    fireEvent.doubleClick(screen.getByRole("button", { name: "Group Node" }));
+    const input = screen.getByDisplayValue("Group Node");
+    fireEvent.change(input, { target: { value: "Renamed" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.title).toBe("Renamed");
+    expect(pushState).toHaveBeenCalledWith(nodes, edges, "Change Group Title");
+  });
+
+  it("preserves leading spaces when committing title", () => {
+    renderGroupNode();
+
+    fireEvent.doubleClick(screen.getByRole("button", { name: "Group Node" }));
+    const input = screen.getByDisplayValue("Group Node");
+    fireEvent.change(input, { target: { value: "   Centered" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.title).toBe("   Centered");
+  });
+
+  it("cancels title edit on escape", () => {
+    renderGroupNode();
+
+    fireEvent.doubleClick(screen.getByRole("button", { name: "Group Node" }));
+    const input = screen.getByDisplayValue("Group Node");
+    fireEvent.change(input, { target: { value: "Should Not Save" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    expect(nodes[0].data.title).toBe("Group Node");
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(pushState).not.toHaveBeenCalled();
+  });
+
+  it("increases font size with dynamic step", () => {
+    renderGroupNode({ fontSize: 32 });
+
+    fireEvent.click(screen.getByRole("button", { name: "Increase font size" }));
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.fontSize).toBe(36); // step 4 because >= 32
+    expect(pushState).toHaveBeenCalledWith(nodes, edges, "Increase Font Size");
+  });
+
+  it("grows header height as title font increases", () => {
+    renderGroupNode({ fontSize: 48, height: 360 });
+
+    const header = screen.getByTestId("group-header");
+    const body = screen.getByTestId("group-body");
+
+    const headerHeight = parseInt(header.style.height, 10);
+    const bodyHeight = parseInt(body.style.height, 10);
+    const nodeHeight = nodes[0].data.height as number;
+
+    expect(headerHeight).toBeGreaterThan(36);
+    expect(bodyHeight).toBe(nodeHeight - headerHeight);
+  });
+
+  it("decreases font size respecting minimum", () => {
+    renderGroupNode({ fontSize: 12 });
+
+    fireEvent.click(screen.getByRole("button", { name: "Decrease font size" }));
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.fontSize).toBe(12); // already at minimum
+    expect(pushState).not.toHaveBeenCalled();
+  });
+
+  it("applies resize changes and records undo state", () => {
+    renderGroupNode();
+
+    expect(nodeResizerProps).toBeTruthy();
+    const resizer = nodeResizerProps as NodeResizerSpyProps;
+    act(() => {
+      resizer.onResize?.(null, {
+        width: 800,
+        height: 420,
+        x: 15,
+        y: 25,
+      });
+    });
+
+    expect(nodes[0].data.width).toBe(800);
+    expect(nodes[0].data.height).toBe(420);
+    expect(nodes[0].position).toEqual({ x: 15, y: 25 });
+
+    act(() => {
+      resizer.onResizeEnd?.();
+      vi.runAllTimers();
+    });
+
+    expect(pushState).toHaveBeenCalledWith(nodes, edges, "Resize Group");
+  });
+
+  it("pans the viewport when dragging inside the body", () => {
+    renderGroupNode();
+
+    const body = screen.getByTestId("group-body") as HTMLElement & {
+      setPointerCapture: (pointerId: number) => void;
+      releasePointerCapture: (pointerId: number) => void;
+    };
+    body.setPointerCapture = vi.fn();
+    body.releasePointerCapture = vi.fn();
+
+    const reactKey = Object.keys(body).find((key) =>
+      key.startsWith("__reactProps$")
+    );
+    const propsRecord = reactKey
+      ? (body as unknown as Record<string, unknown>)[reactKey]
+      : undefined;
+    const handlers = (propsRecord as
+      | Partial<Record<string, (event: PointerEventInit & { pointerId: number }) => void>>
+      | undefined) ?? {};
+
+    const makeEvent = (overrides: Partial<PointerEventInit> = {}) => ({
+      button: 0,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 120,
+      pointerType: "mouse",
+      buttons: 1,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: body,
+      currentTarget: body,
+      ...overrides,
+    });
+
+    handlers.onPointerDownCapture?.(makeEvent());
+    handlers.onPointerMoveCapture?.(makeEvent({ clientX: 140, clientY: 180 }));
+    handlers.onPointerUpCapture?.(makeEvent({ pointerId: 1 }));
+
+    expect(reactFlowInstance.setViewport).toHaveBeenCalledWith({
+      x: 40,
+      y: 60,
+      zoom: 1,
+    });
+    expect(body.releasePointerCapture).toHaveBeenCalledWith(1);
+  });
+
+  it("calls shared ungroup action from menu", () => {
+    const raf = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb: FrameRequestCallback) => {
+        cb(0);
+        return 0;
+      });
+
+    renderGroupNode({}, { selected: false });
+
+    fireEvent.click(screen.getByTitle("More"));
+    fireEvent.click(screen.getByText(/Ungroup/i));
+
+    expect(flowActionsMock.ungroupWithUndo).toHaveBeenCalledTimes(1);
+    expect(nodes[0].selected).toBe(true);
+
+    raf.mockRestore();
+  });
+
+  it("deletes group, descendants, and related edges", () => {
+    const parent = createNode();
+    const child = buildFlowNode({
+      id: "child-1",
+      type: "calculation",
+      position: { x: 0, y: 0 },
+      parentId: parent.id,
+      selected: false,
+      data: {},
+    });
+    const removedEdge = buildEdge({ id: "edge-1", source: parent.id, target: child.id });
+    const preservedEdge = buildEdge({ id: "edge-2", source: "other", target: "external" });
+
+    setupNodes([parent, child], [removedEdge, preservedEdge]);
+
+    render(<ShadcnGroupNode {...buildNodeProps(parent)} />);
+
+    fireEvent.click(screen.getByTitle("More"));
+    fireEvent.click(screen.getByText(/Delete Node/i));
+
+    expect(nodes).toEqual([]);
+    expect(edges).toEqual([
+      expect.objectContaining({
+        id: preservedEdge.id,
+        source: preservedEdge.source,
+        target: preservedEdge.target,
+      }),
+    ]);
+    expect(snapshotMock.lockEdgeSnapshotSkip).toHaveBeenCalledTimes(1);
+    expect(snapshotMock.releaseEdgeSnapshotSkip).not.toHaveBeenCalled();
+    expect(snapshotMock.scheduleSnapshot).toHaveBeenCalledWith("Node(s) removed", {
+      refresh: true,
+    });
+  });
+
+  it("renders interior fill when borderColor is set", () => {
+    renderGroupNode({ borderColor: "#ffaa00" });
+
+    const fill = screen.getByTestId("group-fill");
+    expect(fill).toBeInTheDocument();
+    expect(fill).toHaveStyle({ backgroundColor: "#ffaa00" });
+    expect(parseFloat(fill.style.opacity)).toBeGreaterThan(0);
+
+    const bodyContent = screen.getByTestId("group-body-content");
+    expect(bodyContent.className).toContain("z-10");
+    expect(fill.className).toContain("pointer-events-none");
+  });
+});

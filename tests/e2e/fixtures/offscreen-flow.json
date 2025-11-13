@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "playwright-offscreen",
+  "nodes": [
+    {
+      "id": "node_far_source",
+      "type": "calculation",
+      "position": { "x": 4200, "y": -1800 },
+      "data": {
+        "functionName": "identity",
+        "title": "Far Input",
+        "numInputs": 0,
+        "showField": true,
+        "value": "414243",
+        "inputs": { "val": "414243" },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "INPUT VALUE:", "rows": 1 }
+          ]
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_far_target",
+      "type": "calculation",
+      "position": { "x": 4600, "y": -1500 },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Far Hash",
+        "numInputs": 1,
+        "showField": false,
+        "inputs": { "val": "" },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "Input Hex:", "rows": 2 }
+          ]
+        },
+        "groupInstances": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_far",
+      "source": "node_far_source",
+      "target": "node_far_target",
+      "targetHandle": "input-0"
+    }
+  ]
+}

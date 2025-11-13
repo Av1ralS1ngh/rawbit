@@ -1,0 +1,1577 @@
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ReactFlowProvider,
+  useReactFlow,
+  useStore,
+  useStoreApi,
+  type Edge,
+  type OnInit,
+  type ReactFlowInstance,
+  type Viewport,
+  type Node,
+} from "@xyflow/react";
+
+import CalculationNode from "@/components/nodes/CalculationNode";
+import ShadcnGroupNode from "@/components/nodes/GroupNode";
+import TextInfoNode from "@/components/nodes/TextInfoNode";
+import OpCodeNode from "@/components/nodes/OpCodeNode";
+
+import { TopBar } from "@/components/layout/TopBar";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { ColorPalette } from "@/components/ui/ColorPalette";
+import { FlowCanvas } from "@/components/FlowCanvas";
+import { FlowDialogLayer } from "@/components/FlowDialogLayer";
+import { FlowPanels } from "@/components/FlowPanels";
+import { FirstRunDialog } from "@/components/dialog/FirstRunDialog";
+
+import { useNodeOperations } from "@/hooks/useNodeOperations";
+import { useFileOperations } from "@/hooks/useFileOperations";
+import { useCopyPaste } from "@/hooks/useCopyPaste";
+
+import { useGlobalCalculationLogic } from "@/hooks/useCalculation";
+import { UndoRedoProvider } from "@/contexts/UndoRedoContext";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
+
+import { cn } from "@/lib/utils";
+import type { CalcError, CalcStatus, FlowData, FlowNode } from "@/types";
+import type { FlowValidationIssue } from "@/lib/flow/validate";
+import { isCalculableNode } from "@/lib/flow/nonCalculableNodes";
+import {
+  ingestScriptSteps,
+  restoreScriptSteps,
+} from "@/lib/share/scriptStepsCache";
+
+import { useLimitErrorRecovery } from "@/hooks/useLimitErrorRecovery";
+
+import { useTheme } from "@/hooks/useTheme";
+
+import { useTabs } from "@/hooks/useTabs";
+import { useSnapshotScheduler } from "@/hooks/useSnapshotScheduler";
+import { SnapshotProvider } from "@/contexts/SnapshotContext";
+import { useAutoRefreshVersion } from "@/hooks/useAutoRefreshVersion";
+import { FlowActionsProvider } from "@/contexts/FlowActionsContext";
+import { useHighlight } from "@/hooks/useHighlight";
+import { useFlowHotkeys } from "@/hooks/useFlowHotkeys";
+import { useMiniMapSize } from "@/hooks/useMiniMapSize";
+import { useConnectDialog } from "@/hooks/useConnectPorts";
+import { useShareFlow } from "@/hooks/useShareFlow";
+import { useColorPalette } from "@/hooks/useColorPalette";
+import { customFlows } from "@/my_tx_flows/customFlows";
+import { usePanelAutoClose } from "@/hooks/usePanelAutoClose";
+import { useFlowInteractions } from "@/hooks/useFlowInteractions";
+import { useSearchHighlights } from "@/hooks/useSearchHighlights";
+import { useSharedFlowLoader } from "@/hooks/useSharedFlowLoader";
+import { useSimplifiedSave } from "@/hooks/useSimplifiedSave";
+
+const COLORABLE_NODE_TYPES = new Set([
+  "calculation",
+  "shadcnGroup",
+  "shadcnTextInfo",
+  "opCodeNode",
+]);
+
+const nodeTypes = {
+  calculation: CalculationNode,
+  shadcnGroup: ShadcnGroupNode,
+  shadcnTextInfo: TextInfoNode,
+  opCodeNode: OpCodeNode,
+};
+
+type TabCalculationState = {
+  status: CalcStatus;
+  errors: CalcError[];
+};
+
+const DEFAULT_TAB_CALC_STATE: TabCalculationState = {
+  status: "OK",
+  errors: [],
+};
+
+const LIMIT_ERROR_PATTERNS = [
+  /over the server limit/i,
+  /timed out/i,
+  /calculation requests are limited/i,
+];
+
+const FIRST_RUN_STORAGE_KEY = "rawbit.ui.welcomeSeen";
+const TABS_STORAGE_KEYS = [
+  "rawbit.flow.tabs",
+  "rawbit.flow.tabs.archive",
+] as const;
+
+function isAutomationEnvironment() {
+  if (typeof navigator !== "undefined" && navigator.webdriver) {
+    return true;
+  }
+  if (typeof window !== "undefined") {
+    const win = window as typeof window & {
+      Cypress?: unknown;
+      __PW_TESTING__?: unknown;
+      __PLAYWRIGHT__?: unknown;
+    };
+    if (win.Cypress || win.__PW_TESTING__ || win.__PLAYWRIGHT__) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function cloneFlowData(data: FlowData): FlowData {
+  try {
+    if (typeof structuredClone === "function") {
+      return structuredClone(data) as FlowData;
+    }
+  } catch {
+    /* structuredClone not available; fall back to JSON copy */
+  }
+  return JSON.parse(JSON.stringify(data)) as FlowData;
+}
+
+function FlowContent() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showUndoRedoPanel, setShowUndoRedoPanel] = useState(false);
+  const [showErrorPanel, setShowErrorPanel] = useState(false);
+
+  // 🔍 search-panel state
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+
+  const [calcStateByTab, setCalcStateByTab] = useState<
+    Record<string, TabCalculationState>
+  >({});
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [showMiniMap, setShowMiniMap] = useState(false);
+  const [isSelectionLocked, setIsSelectionLocked] = useState(false);
+  const [isSelectionHotKeyActive, setIsSelectionHotKeyActive] = useState(false);
+  const isSelectionMode = isSelectionLocked || isSelectionHotKeyActive;
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const activeTabIdRef = useRef<string | null>(null);
+  const loadingUndoRef = useRef(false);
+  const isPastingRef = useRef(false);
+  const welcomeCompleteRef = useRef(false);
+  const graphRev = useRef(0); // monotonically-increasing revision counter
+  const [revTick, setRevTick] = useState(0);
+  const incrementGraphRev = useCallback(() => {
+    graphRev.current += 1;
+    setRevTick(graphRev.current);
+    return graphRev.current;
+  }, []);
+  const { theme } = useTheme(); // "light" | "dark" | "system"
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const exampleFlowMap = useMemo(
+    () => new Map(customFlows.map((flow) => [flow.id, flow])),
+    []
+  );
+  const exampleFlowOptions = useMemo(
+    () => customFlows.map((flow) => ({ id: flow.id, label: flow.label })),
+    []
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (welcomeCompleteRef.current) return;
+    try {
+      if (window.localStorage.getItem(FIRST_RUN_STORAGE_KEY)) {
+        welcomeCompleteRef.current = true;
+        return;
+      }
+
+      const hasExistingData = TABS_STORAGE_KEYS.some((key) =>
+        Boolean(window.localStorage.getItem(key))
+      );
+      if (hasExistingData) {
+        window.localStorage.setItem(FIRST_RUN_STORAGE_KEY, "1");
+        welcomeCompleteRef.current = true;
+        return;
+      }
+
+      if (isAutomationEnvironment()) {
+        window.localStorage.setItem(FIRST_RUN_STORAGE_KEY, "1");
+        welcomeCompleteRef.current = true;
+        return;
+      }
+    } catch {
+      /* localStorage unavailable; show dialog as fallback */
+      if (isAutomationEnvironment()) {
+        welcomeCompleteRef.current = true;
+        return;
+      }
+    }
+
+    setShowWelcomeDialog(true);
+  }, []);
+
+  const markWelcomeComplete = useCallback(() => {
+    if (welcomeCompleteRef.current) return;
+    welcomeCompleteRef.current = true;
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(FIRST_RUN_STORAGE_KEY, "1");
+    } catch {
+      /* ignore storage write failures */
+    }
+  }, []);
+
+  const RHS_PANEL_W = 256; // Tailwind w-64  (=16 rem)
+  const MM_GAP = 44.8; // 2.8 rem  (space beside controls)
+  const rightPanelOpen = showUndoRedoPanel || showErrorPanel || showSearchPanel;
+  const miniMapOffset = rightPanelOpen ? RHS_PANEL_W + MM_GAP : MM_GAP;
+
+  const flowInstanceRef = useRef<ReactFlowInstance | null>(null);
+  const [hasFitOnInitialLoad, setHasFitOnInitialLoad] = useState(false);
+  const [isFlowVisible, setIsFlowVisible] = useState(false);
+
+  // MiniMap sizing (keep one side fixed; compute the other from graph AR)
+  const MINIMAP_LONG = 170; // longest side of the minimap
+  const MINIMAP_SHORT_MIN = 90; // floor so it never gets too skinny
+  const {
+    nodes,
+    setNodes: baseSetNodes,
+    edges,
+    setEdges: baseSetEdges,
+    onNodesChange: rawOnNodesChange,
+    onEdgesChange: rawOnEdgesChange,
+    onConnect,
+    onDragOver,
+    onDrop,
+    onNodeDragStop,
+    onInit: rawOnInit,
+    groupSelectedNodes,
+    ungroupSelectedNodes,
+    canGroupSelectedNodes,
+    canUngroupSelectedNodes,
+  } = useNodeOperations();
+
+  const {
+    copyNodes,
+    pasteNodes,
+    handleMouseMove,
+    getTopLeftPosition,
+    hasCopiedNodes,
+  } = useCopyPaste();
+  const {
+    pushState,
+    history,
+    pointer,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    setActiveTab,
+    initializeTabHistory,
+    removeTabHistory,
+  } = useUndoRedo();
+  const { getNodes, getEdges } = useReactFlow<FlowNode>();
+  const storeApi = useStoreApi<FlowNode>();
+  const hasCopiedNodesRef = useRef(hasCopiedNodes);
+  useEffect(() => {
+    hasCopiedNodesRef.current = hasCopiedNodes;
+  }, [hasCopiedNodes]);
+
+  const canUndoRef = useRef(canUndo);
+  useEffect(() => {
+    canUndoRef.current = canUndo;
+  }, [canUndo]);
+
+  const canRedoRef = useRef(canRedo);
+  useEffect(() => {
+    canRedoRef.current = canRedo;
+  }, [canRedo]);
+
+  // keyboard listeners moved below once all escape targets are declared
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.dataset.flowSelectionMode = isSelectionMode
+      ? "true"
+      : "false";
+    return () => {
+      delete document.body.dataset.flowSelectionMode;
+    };
+  }, [isSelectionMode]);
+
+  const canGroupSelectedRef = useRef(canGroupSelectedNodes);
+  useEffect(() => {
+    canGroupSelectedRef.current = canGroupSelectedNodes;
+  }, [canGroupSelectedNodes]);
+
+  const canUngroupSelectedRef = useRef(canUngroupSelectedNodes);
+  useEffect(() => {
+    canUngroupSelectedRef.current = canUngroupSelectedNodes;
+  }, [canUngroupSelectedNodes]);
+
+  const paletteOpenRef = useRef(false);
+
+  const copyNodesRef = useRef(copyNodes);
+  useEffect(() => {
+    copyNodesRef.current = copyNodes;
+  }, [copyNodes]);
+
+  const pasteNodesRef = useRef<((withOffset?: boolean) => void) | null>(null);
+
+  const undoRef = useRef(undo);
+  useEffect(() => {
+    undoRef.current = undo;
+  }, [undo]);
+
+  const redoRef = useRef(redo);
+  useEffect(() => {
+    redoRef.current = redo;
+  }, [redo]);
+
+  const incRev = useCallback(() => incrementGraphRev(), [incrementGraphRev]);
+
+  const setNodes: typeof baseSetNodes = useCallback(
+    (updater) =>
+      baseSetNodes((prev) => {
+        const next =
+          typeof updater === "function"
+            ? (updater as (prev: FlowNode[]) => FlowNode[])(prev)
+            : updater;
+        if (next !== prev) incRev();
+        return next;
+      }),
+    [baseSetNodes, incRev]
+  );
+
+  const setEdges: typeof baseSetEdges = useCallback(
+    (updater) =>
+      baseSetEdges((prev) => {
+        const next =
+          typeof updater === "function"
+            ? (updater as (prev: Edge[]) => Edge[])(prev)
+            : updater;
+        if (next !== prev) incRev();
+        return next;
+      }),
+    [baseSetEdges, incRev]
+  );
+
+  const groupWithUndoRef = useRef<(() => void) | null>(null);
+  const ungroupWithUndoRef = useRef<(() => void) | null>(null);
+  const hasSelection = useStore((s) => s.nodes.some((n) => n.selected));
+  const hasSelectionRef = useRef(hasSelection);
+  useEffect(() => {
+    hasSelectionRef.current = hasSelection;
+  }, [hasSelection]);
+  const bannerFrameRef = useRef<number | null>(null);
+  const pendingBannerNodesRef = useRef<FlowNode[] | null>(null);
+  const pendingBannerTabRef = useRef<string | null>(null);
+  const pendingSaveFrameRef = useRef<number | null>(null);
+  const pendingSaveTimeoutRef = useRef<number | null>(null);
+
+  const applyCalculationState = useCallback(
+    (
+      status: CalcStatus,
+      errors: CalcError[] = [],
+      tabId?: string,
+      options?: { source?: "banner" | "calculation"; sticky?: boolean }
+    ) => {
+      const targetTabId = tabId ?? activeTabIdRef.current;
+      if (!targetTabId) return;
+
+      setCalcStateByTab((prev) => {
+        const prevEntry = prev[targetTabId];
+        if (
+          options?.source === "banner" &&
+          options?.sticky !== false &&
+          status === "OK" &&
+          errors.length === 0 &&
+          prevEntry?.status === "ERROR"
+        ) {
+          return prev;
+        }
+        const sameErrors =
+          prevEntry?.errors.length === errors.length &&
+          prevEntry?.errors.every((prevErr, index) => {
+            const nextErr = errors[index];
+            return (
+              prevErr?.nodeId === nextErr?.nodeId &&
+              prevErr?.error === nextErr?.error
+            );
+          });
+
+        if (prevEntry && prevEntry.status === status && sameErrors) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [targetTabId]: {
+            status,
+            errors,
+          },
+        };
+      });
+    },
+    []
+  );
+
+  const refreshBanner = useCallback(
+    (
+      nodesToInspect: FlowNode[],
+      tabId?: string,
+      options?: { sticky?: boolean; immediate?: boolean }
+    ) => {
+      const compute = (snapshot: FlowNode[], targetTab: string | null) => {
+        if (!snapshot || !targetTab) return;
+        const relevantNodes = snapshot.filter(isCalculableNode);
+        const dirty = relevantNodes.some((n) => n.data?.dirty);
+        const errorNodes = relevantNodes.filter((n) => n.data?.error);
+        const status: CalcStatus = dirty
+          ? "CALC"
+          : errorNodes.length
+          ? "ERROR"
+          : "OK";
+        const errors = errorNodes.map((n) => ({
+          nodeId: n.id,
+          error: n.data?.extendedError || "Unknown error",
+        }));
+
+        applyCalculationState(status, errors, targetTab, {
+          source: "banner",
+          sticky: options?.sticky,
+        });
+      };
+
+      if (options?.immediate) {
+        compute(nodesToInspect, tabId ?? activeTabIdRef.current ?? null);
+        return;
+      }
+
+      pendingBannerNodesRef.current = nodesToInspect;
+      pendingBannerTabRef.current = tabId ?? activeTabIdRef.current;
+      if (bannerFrameRef.current !== null) return;
+
+      bannerFrameRef.current = requestAnimationFrame(() => {
+        bannerFrameRef.current = null;
+        const snapshot = pendingBannerNodesRef.current;
+        const targetTab = pendingBannerTabRef.current ?? activeTabIdRef.current;
+        pendingBannerNodesRef.current = null;
+        pendingBannerTabRef.current = null;
+        compute(snapshot ?? [], targetTab ?? null);
+      });
+    },
+    [applyCalculationState]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (bannerFrameRef.current !== null) {
+        cancelAnimationFrame(bannerFrameRef.current);
+      }
+    };
+  }, []);
+  const {
+    tabs,
+    activeTabId,
+    skipLoadRef,
+    initialHydrationDone,
+    closeDialog,
+    selectTab,
+    addTab,
+    requestCloseTab,
+    confirmCloseTab,
+    cancelCloseTab,
+    setTabTransform,
+    setTabTooltip,
+    renameTab,
+    saveTabData,
+  } = useTabs({
+    getNodes,
+    getEdges,
+    baseSetNodes,
+    baseSetEdges,
+    graphRevRef: graphRev,
+    refreshBanner,
+    getFlowInstance: () => flowInstanceRef.current,
+    initializeTabHistory,
+    setActiveTabCtx: setActiveTab,
+    removeTabHistory,
+  });
+
+  useAutoRefreshVersion({
+    tabs,
+    saveTabData,
+    disableVersionPolling: import.meta.env.MODE === "test",
+  });
+
+  useEffect(() => {
+    activeTabIdRef.current = activeTabId;
+  }, [activeTabId]);
+
+  const activeCalcState = calcStateByTab[activeTabId] ?? DEFAULT_TAB_CALC_STATE;
+  const calcStatus = activeCalcState.status;
+  const errorInfo = activeCalcState.errors;
+  const hasLimitErrors = useMemo(
+    () =>
+      errorInfo.some((entry) =>
+        LIMIT_ERROR_PATTERNS.some((pattern) => pattern.test(entry.error ?? ""))
+      ),
+    [errorInfo]
+  );
+  const getCalcSnapshot = useCallback(
+    () => ({
+      status: calcStatus,
+      errors: errorInfo,
+    }),
+    [calcStatus, errorInfo]
+  );
+
+  useEffect(() => {
+    const tabId = activeTabIdRef.current ?? activeTabId;
+    if (!tabId) return;
+    setCalcStateByTab((prev) => {
+      const entry = prev[tabId];
+      if (!entry || entry.status === "CALC") return prev;
+
+      const existingIds = new Set(nodes.map((node) => node.id));
+      const filteredErrors = entry.errors.filter((err) =>
+        existingIds.has(err.nodeId)
+      );
+
+      if (filteredErrors.length === entry.errors.length) return prev;
+
+      const nextErrors = filteredErrors;
+      const hadErrorBefore = entry.status === "ERROR";
+      const nextStatus = nextErrors.length
+        ? "ERROR"
+        : hadErrorBefore
+        ? "ERROR"
+        : "OK";
+      return {
+        ...prev,
+        [tabId]: {
+          status: nextStatus,
+          errors: nextErrors,
+        },
+      };
+    });
+  }, [nodes, activeTabId, setCalcStateByTab]);
+
+  const snapshotScheduler = useSnapshotScheduler({
+    storeApi,
+    pushState,
+    incrementGraphRev,
+    skipLoadRef,
+    refreshBanner,
+    autoAfterCalc: {
+      calcStatus,
+      loadingUndoRef,
+    },
+    getCalcSnapshot,
+  });
+
+  const {
+    pushCleanState,
+    scheduleSnapshot,
+    pendingSnapshotRef,
+    skipNextEdgeSnapshotRef,
+    skipNextNodeRemovalRef,
+    markPendingAfterDirtyChange,
+    releaseEdgeSnapshotSkip,
+    releaseNodeRemovalSnapshotSkip,
+  } = snapshotScheduler;
+
+  const resetToEmptyCanvas = useCallback(() => {
+    restoreScriptSteps([]);
+    setNodes(() => []);
+    setEdges(() => []);
+
+    refreshBanner([], activeTabId, {
+      immediate: true,
+      sticky: false,
+    });
+
+    scheduleSnapshot("Start empty canvas", { refresh: true });
+    if (activeTabId) {
+      setTabTooltip(activeTabId, "Empty canvas");
+    }
+  }, [
+    activeTabId,
+    refreshBanner,
+    scheduleSnapshot,
+    setEdges,
+    setNodes,
+    setTabTooltip,
+  ]);
+
+  const loadExampleFlow = useCallback(
+    (flowId: string) => {
+      const entry = exampleFlowMap.get(flowId);
+      if (!entry) return false;
+
+      const clonedData = cloneFlowData(entry.data);
+      const nodesFromFlow = Array.isArray(clonedData.nodes)
+        ? clonedData.nodes
+        : [];
+      const edgesFromFlow = Array.isArray(clonedData.edges)
+        ? clonedData.edges
+        : [];
+
+      restoreScriptSteps([]);
+
+      const normalizedNodes = ingestScriptSteps(
+        nodesFromFlow.map((node) => {
+          const base: FlowNode & { dragHandle?: string } = {
+            ...node,
+            data: node.data ? { ...node.data } : node.data,
+            position: node.position
+              ? { x: node.position.x, y: node.position.y }
+              : node.position,
+            selected: false,
+          };
+          if (base.type === "shadcnGroup" && !base.dragHandle) {
+            base.dragHandle = "[data-drag-handle]";
+          }
+          return base;
+        })
+      );
+
+      const normalizedEdges = edgesFromFlow.map((edge) => ({
+        ...edge,
+      })) as Edge[];
+
+      setNodes(() => normalizedNodes);
+      setEdges(() => normalizedEdges);
+
+      refreshBanner(normalizedNodes, activeTabId, {
+        immediate: true,
+        sticky: false,
+      });
+
+      scheduleSnapshot(`Load example: ${entry.label}`, { refresh: true });
+      if (activeTabId) {
+        setTabTooltip(
+          activeTabId,
+          entry.label ? `Example: ${entry.label}` : "Example flow"
+        );
+      }
+
+      requestAnimationFrame(() => {
+        const instance = flowInstanceRef.current;
+        if (instance) {
+          instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
+        }
+      });
+
+      return true;
+    },
+    [
+      activeTabId,
+      exampleFlowMap,
+      flowInstanceRef,
+      refreshBanner,
+      scheduleSnapshot,
+      setEdges,
+      setNodes,
+      setTabTooltip,
+    ]
+  );
+
+  const handleWelcomeStartEmpty = useCallback(() => {
+    setShowWelcomeDialog(false);
+    resetToEmptyCanvas();
+    markWelcomeComplete();
+  }, [markWelcomeComplete, resetToEmptyCanvas, setShowWelcomeDialog]);
+
+  const handleWelcomeLoadExample = useCallback(
+    (flowId: string) => {
+      const loaded = loadExampleFlow(flowId);
+      if (loaded) {
+        setShowWelcomeDialog(false);
+        markWelcomeComplete();
+      }
+    },
+    [loadExampleFlow, markWelcomeComplete, setShowWelcomeDialog]
+  );
+
+  const [
+    { highlightedNodes },
+    { highlightAndFit, setIsSearchHighlight, clearHighlights },
+  ] = useHighlight({
+    setNodes,
+    baseSetNodes,
+    getNodes,
+    getFlowInstance: () => flowInstanceRef.current,
+    hasNodeSelectionRef: hasSelectionRef,
+  });
+
+  const {
+    shareDialogOpen,
+    openShareDialog,
+    closeShareDialog,
+    shareCreatedId,
+    requestShare,
+    softGateOpen,
+    closeSoftGate,
+    verifyTurnstile,
+    infoDialog,
+    setInfoDialog,
+    closeInfoDialog,
+  } = useShareFlow({ getNodes, getEdges });
+
+  const isNodeColorable = useCallback(
+    (node: FlowNode) => COLORABLE_NODE_TYPES.has(node.type as string),
+    []
+  );
+
+  const {
+    isOpen: isColorPaletteOpen,
+    position: colorPalettePosition,
+    canApply: canColorSelection,
+    open: openPalette,
+    close: closePalette,
+    apply: applyPaletteColor,
+    updateEligibility: updatePaletteEligibility,
+  } = useColorPalette({
+    getNodes,
+    setNodes,
+    scheduleSnapshot,
+    isSidebarOpen,
+    tabsCount: tabs.length,
+    isColorable: isNodeColorable,
+  });
+
+  useEffect(() => {
+    paletteOpenRef.current = isColorPaletteOpen;
+  }, [isColorPaletteOpen]);
+
+  const fitImportedFlow = useCallback(() => {
+    const instance = flowInstanceRef.current;
+    if (!instance) return;
+
+    const currentNodes = getNodes();
+    const currentEdges = getEdges();
+    if (!currentNodes.length && !currentEdges.length) return;
+
+    requestAnimationFrame(() =>
+      instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 })
+    );
+  }, [getEdges, getNodes]);
+
+  const handleImportTooltip = useCallback(
+    (filename?: string) => {
+      if (!filename) return;
+      setTabTooltip(activeTabId, `File: ${filename}`);
+    },
+    [activeTabId, setTabTooltip]
+  );
+
+  const handleImportError = useCallback(
+    (message: string, details?: FlowValidationIssue[]) => {
+      if (details?.length) {
+        console.error("Flow import validation issues", details);
+      }
+      setInfoDialog({ open: true, message });
+    },
+    [setInfoDialog]
+  );
+
+  const {
+    fileInputRef,
+    saveFlow,
+    saveSimplifiedFlow,
+    openFileDialog,
+    handleFileSelect,
+  } = useFileOperations(nodes, edges, rawOnNodesChange, rawOnEdgesChange, {
+    getNodes,
+    getEdges,
+    scheduleSnapshot,
+    fitView: fitImportedFlow,
+    onTooltip: handleImportTooltip,
+    onError: handleImportError,
+    getActiveTabTitle: () => {
+      const tabId = activeTabIdRef.current ?? activeTabId;
+      const activeTab = tabs.find((tab) => tab.id === tabId);
+      return activeTab?.title;
+    },
+    renameActiveTab: (title, options) => {
+      const tabId = activeTabIdRef.current ?? activeTabId;
+      if (tabId) {
+        renameTab(tabId, title, options);
+      }
+    },
+  });
+
+  const centerOnNode = useCallback(
+    (nodeId: string) => {
+      const instance = flowInstanceRef.current;
+      if (!instance) return;
+      const node = getNodes().find((nd) => nd.id === nodeId);
+      if (!node) return;
+
+      /* `fitView` automatically computes the bounding-box of the node,
+       keeps the user’s current zoom if possible, and respects padding. */
+      instance.fitView({
+        nodes: [node],
+        padding: 0.2, // 20 % viewport margin
+        maxZoom: 2, // don’t zoom in too much
+        duration: 350, // smooth scroll
+      });
+    },
+    [getNodes]
+  );
+
+  const miniMapSize = useMiniMapSize(nodes, showMiniMap, {
+    longSide: MINIMAP_LONG,
+    shortSideMin: MINIMAP_SHORT_MIN,
+    defaultHeight: 120,
+  });
+
+  const nodeClassName = useCallback(
+    (n: Node) => (n.type === "shadcnGroup" ? "minimap-group" : ""),
+    []
+  );
+
+  usePanelAutoClose({
+    activeTabId,
+    calcStatus,
+    errorCount: errorInfo.length,
+    showErrorPanel,
+    setShowErrorPanel,
+    setShowSearchPanel,
+  });
+
+  const handleSelectTab = useCallback(
+    (tabId: string) => {
+      selectTab(tabId);
+    },
+    [selectTab]
+  );
+
+  const handleAddTab = useCallback(() => {
+    addTab();
+  }, [addTab]);
+
+  const handleCloseTab = useCallback(
+    (tabId: string) => {
+      if (tabs.length === 1) {
+        setInfoDialog({ open: true, message: "Cannot close the last tab!" });
+        return;
+      }
+      requestCloseTab(tabId);
+    },
+    [requestCloseTab, tabs.length, setInfoDialog]
+  );
+
+  const handleConfirmTabClose = useCallback(() => {
+    confirmCloseTab();
+  }, [confirmCloseTab]);
+  useEffect(() => {
+    if (!initialHydrationDone) return;
+
+    let cancelled = false;
+
+    const cancelPending = () => {
+      if (typeof window !== "undefined") {
+        if (pendingSaveFrameRef.current !== null) {
+          window.cancelAnimationFrame(pendingSaveFrameRef.current);
+          pendingSaveFrameRef.current = null;
+        }
+        if (pendingSaveTimeoutRef.current !== null) {
+          window.clearTimeout(pendingSaveTimeoutRef.current);
+          pendingSaveTimeoutRef.current = null;
+        }
+      }
+    };
+
+    const scheduleSave = () => {
+      if (cancelled) return;
+
+      if (typeof window === "undefined") {
+        if (!skipLoadRef.current && !loadingUndoRef.current) {
+          saveTabData(activeTabId);
+        }
+        return;
+      }
+
+      const rafId = window.requestAnimationFrame(() => {
+        pendingSaveFrameRef.current = null;
+        if (cancelled) return;
+
+        pendingSaveTimeoutRef.current = window.setTimeout(() => {
+          pendingSaveTimeoutRef.current = null;
+          if (cancelled) return;
+
+          if (skipLoadRef.current || loadingUndoRef.current) {
+            scheduleSave();
+            return;
+          }
+
+          saveTabData(activeTabId);
+        }, 40);
+      });
+
+      pendingSaveFrameRef.current = rafId;
+    };
+
+    cancelPending();
+    scheduleSave();
+
+    return () => {
+      cancelled = true;
+      cancelPending();
+    };
+  }, [
+    activeTabId,
+    saveTabData,
+    revTick,
+    initialHydrationDone,
+    skipLoadRef,
+    loadingUndoRef,
+  ]);
+
+  // Build a stable signature that only changes when the set of selected IDs changes
+  const selectedNodeIds = useMemo(
+    () => nodes.filter((n) => n.selected).map((n) => n.id),
+    [nodes]
+  );
+  const exactlyTwoSelected = selectedNodeIds.length === 2;
+
+  const {
+    allPorts,
+    sourcePorts,
+    targetPorts,
+    existingEdges: existingEdgesForConnect,
+    handleApply: handleConnectApply,
+  } = useConnectDialog({
+    nodes,
+    edges,
+    connectOpen,
+    selectedNodeIds,
+    setNodes,
+    setEdges,
+    markPendingAfterDirtyChange,
+    skipNextEdgeSnapshotRef,
+    setConnectOpen,
+  });
+
+  const handleToggleColorPalette = useCallback(
+    (evt: React.MouseEvent) => {
+      updatePaletteEligibility();
+      if (isColorPaletteOpen) {
+        closePalette();
+      } else if (canColorSelection) {
+        openPalette(evt);
+      }
+    },
+    [
+      updatePaletteEligibility,
+      isColorPaletteOpen,
+      closePalette,
+      canColorSelection,
+      openPalette,
+    ]
+  );
+
+  const handleColorSelect = useCallback(
+    (color: string | undefined) => {
+      applyPaletteColor(color);
+    },
+    [applyPaletteColor]
+  );
+
+  const handlePaneClick = useCallback(() => {
+    closePalette();
+    setIsSearchHighlight(false);
+    clearHighlights();
+
+    requestAnimationFrame(() => {
+      const store = storeApi.getState();
+      const selectedNodes = store.nodes.filter((node) => node.selected);
+      const selectedEdges = store.edges.filter((edge) => edge.selected);
+
+      store.resetSelectedElements?.();
+      if (selectedNodes.length || selectedEdges.length) {
+        store.unselectNodesAndEdges?.({
+          nodes: selectedNodes,
+          edges: selectedEdges,
+        });
+      }
+
+      setNodes((existing) => {
+        let mutated = false;
+        const next = existing.map((node) => {
+          if (!node.selected) return node;
+          mutated = true;
+          return { ...node, selected: false };
+        });
+        return mutated ? next : existing;
+      });
+
+      setEdges((existing) => {
+        let mutated = false;
+        const next = existing.map((edge) => {
+          if (!edge.selected) return edge;
+          mutated = true;
+          return { ...edge, selected: false };
+        });
+        return mutated ? next : existing;
+      });
+    });
+  }, [
+    clearHighlights,
+    closePalette,
+    setIsSearchHighlight,
+    storeApi,
+    setNodes,
+    setEdges,
+  ]);
+
+  const {
+    onNodesChange,
+    onEdgesChange,
+    onConnectWithUndo,
+    onReconnectWithUndo,
+    onDropWithUndo,
+    groupWithUndo,
+    ungroupWithUndo,
+    onNodeDragStopWithUndo,
+    handlePaste,
+  } = useFlowInteractions({
+    rawOnNodesChange,
+    rawOnEdgesChange,
+    onConnect,
+    onDrop,
+    onNodeDragStop,
+    getNodes,
+    getEdges,
+    setNodes,
+    setEdges,
+    scheduleSnapshot,
+    pendingSnapshotRef,
+    skipNextEdgeSnapshotRef,
+    skipNextNodeRemovalRef,
+    markPendingAfterDirtyChange,
+    releaseEdgeSnapshotSkip,
+    releaseNodeRemovalSnapshotSkip,
+    loadingUndoRef,
+    isPastingRef,
+    getTopLeftPosition,
+    pasteNodes,
+    isSidebarOpen,
+    setTabTooltip,
+    renameTab,
+    activeTabId,
+    groupSelectedNodes,
+    ungroupSelectedNodes,
+    clearHighlights,
+    setIsSearchHighlight,
+    incRev,
+    pushCleanState,
+    updatePaletteEligibility,
+  });
+
+  useEffect(() => {
+    groupWithUndoRef.current = groupWithUndo;
+  }, [groupWithUndo]);
+
+  useEffect(() => {
+    ungroupWithUndoRef.current = ungroupWithUndo;
+  }, [ungroupWithUndo]);
+
+  const handleShareClick = useCallback(() => {
+    openShareDialog();
+  }, [openShareDialog]);
+
+  useEffect(() => {
+    pasteNodesRef.current = handlePaste;
+  }, [handlePaste]);
+
+  useFlowHotkeys({
+    paletteOpenRef,
+    hasSelectionRef,
+    hasCopiedNodesRef,
+    copyNodesRef,
+    pasteNodesRef,
+    canUndoRef,
+    canRedoRef,
+    undoRef,
+    redoRef,
+    canGroupSelectedRef,
+    canUngroupSelectedRef,
+    groupWithUndoRef,
+    ungroupWithUndoRef,
+  });
+
+  useSharedFlowLoader({
+    getNodes,
+    getEdges,
+    onNodesChange: rawOnNodesChange,
+    onEdgesChange: rawOnEdgesChange,
+    scheduleSnapshot,
+    setTabTooltip,
+    renameTab,
+    activeTabId,
+    setInfoDialog,
+    flowInstanceRef,
+  });
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [handleMouseMove]);
+
+  const paneDistanceAppliedRef = useRef(false);
+
+  useEffect(() => {
+    type PanZoomInstance = ReturnType<typeof storeApi.getState>["panZoom"];
+
+    const ensureDistance = (panZoom: PanZoomInstance) => {
+      if (!panZoom || paneDistanceAppliedRef.current) return;
+      if (typeof panZoom.setClickDistance === "function") {
+        panZoom.setClickDistance(12);
+        paneDistanceAppliedRef.current = true;
+      }
+    };
+
+    ensureDistance(storeApi.getState().panZoom);
+
+    const unsubscribe = storeApi.subscribe((state) => {
+      ensureDistance(state.panZoom);
+    });
+
+    return () => unsubscribe?.();
+  }, [storeApi]);
+
+  useGlobalCalculationLogic({
+    nodes,
+    edges,
+    debounceMs: 500,
+    onStatusChange: (status, errors) => {
+      applyCalculationState(status, errors || []);
+      if (status === "OK" && initialHydrationDone) {
+        saveTabData(activeTabId);
+      }
+    },
+  });
+
+  const handleRetryAll = useLimitErrorRecovery(hasLimitErrors, setNodes);
+
+  // remember which history index we have already mounted
+  const lastLoadedPtr = useRef<number>(pointer);
+
+  useEffect(() => {
+    if (skipLoadRef.current) {
+      skipLoadRef.current = false;
+      // CRITICAL: Update lastLoadedPtr even when skipping to keep it in sync
+      lastLoadedPtr.current = pointer;
+      return;
+    }
+    if (lastLoadedPtr.current === pointer) return;
+    lastLoadedPtr.current = pointer;
+    if (pointer < 0 || pointer >= history.length) return;
+
+    const snap = history[pointer];
+    loadingUndoRef.current = true;
+
+    // Prevent an "After calc" snapshot right after history loads
+    pendingSnapshotRef.current = false;
+    skipNextEdgeSnapshotRef.current = false;
+    clearHighlights();
+    const restoredNodes = snap.nodes.map((n: FlowNode) => ({
+      ...n,
+      data: { ...n.data, dirty: false },
+    }));
+    const restoredEdges = snap.edges.map((e: Edge) => ({
+      ...e,
+      ...(e.data ? { data: { ...e.data } } : {}),
+    }));
+
+    setNodes(restoredNodes);
+    requestAnimationFrame(() => {
+      const hasMissingHandle = restoredEdges.some((edge) => {
+        const targetNode = restoredNodes.find(
+          (node) => node.id === edge.target
+        );
+        if (!targetNode) return true;
+        if (!edge.targetHandle) return false;
+        return !edge.targetHandle.startsWith("input-")
+          ? false
+          : targetNode.data?.totalInputs !== undefined &&
+              parseInt(edge.targetHandle.replace("input-", ""), 10) >=
+                (targetNode.data?.totalInputs ?? 0);
+      });
+
+      if (hasMissingHandle) {
+        clearHighlights();
+        setEdges([]);
+        requestAnimationFrame(() => {
+          setTimeout(() => setEdges(restoredEdges), 0);
+        });
+      } else {
+        setEdges(restoredEdges);
+      }
+    });
+    if (snap.calcState) {
+      const stored = snap.calcState;
+      applyCalculationState(stored.status, stored.errors, activeTabId, {
+        source: "calculation",
+        sticky: false,
+      });
+    } else {
+      refreshBanner(restoredNodes, activeTabId, {
+        sticky: false,
+        immediate: true,
+      });
+    }
+    requestAnimationFrame(() => {
+      updatePaletteEligibility();
+      loadingUndoRef.current = false;
+    });
+  }, [
+    pointer,
+    history,
+    setNodes,
+    setEdges,
+    refreshBanner,
+    applyCalculationState,
+    skipLoadRef,
+    pendingSnapshotRef,
+    skipNextEdgeSnapshotRef,
+    clearHighlights,
+    updatePaletteEligibility,
+    activeTabId,
+  ]);
+
+  const scheduleIdle = useCallback((fn: () => void) => {
+    if (typeof window === "undefined") {
+      fn();
+      return () => {};
+    }
+    const globalWin = window as Window & {
+      requestIdleCallback?: (
+        cb: IdleRequestCallback,
+        options?: IdleRequestOptions
+      ) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    if (typeof globalWin.requestIdleCallback === "function") {
+      const id = globalWin.requestIdleCallback(fn, { timeout: 200 });
+      return () => globalWin.cancelIdleCallback?.(id);
+    }
+    const timeoutId = window.setTimeout(fn, 120);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (
+      typeof document !== "undefined" &&
+      document.body.dataset.largeDrag === "true"
+    ) {
+      return;
+    }
+    return scheduleIdle(() => updatePaletteEligibility());
+  }, [nodes, updatePaletteEligibility, scheduleIdle]);
+
+  const handleInit = useCallback<OnInit>(
+    (instance) => {
+      rawOnInit(instance);
+      flowInstanceRef.current = instance;
+      requestAnimationFrame(() => {
+        if (
+          !hasFitOnInitialLoad &&
+          (nodes.length || edges.length) &&
+          activeTabId === "tab-1"
+        ) {
+          instance.fitView({ padding: 0.2 });
+          setHasFitOnInitialLoad(true);
+        }
+        setIsFlowVisible(true);
+      });
+
+      if (history.length === 0) {
+        if (!initialHydrationDone) {
+          return;
+        }
+        if (nodes.length === 0 && edges.length === 0 && activeTabId === "tab-1")
+          initializeTabHistory("tab-1", [], []);
+        else if (nodes.length || edges.length)
+          pushCleanState(nodes, edges, "Initial Load");
+      }
+    },
+    [
+      rawOnInit,
+      pushCleanState,
+      nodes,
+      edges,
+      history.length,
+      initializeTabHistory,
+      activeTabId,
+      hasFitOnInitialLoad,
+      initialHydrationDone,
+    ]
+  );
+
+  const onMoveEnd = useCallback(
+    (_: MouseEvent | TouchEvent | null, vp: Viewport) => {
+      setTabTransform(activeTabId, { x: vp.x, y: vp.y, zoom: vp.zoom });
+    },
+    [activeTabId, setTabTransform]
+  );
+
+  const {
+    showConfirmation: showSaveConfirmation,
+    confirmationMessage: saveConfirmationMessage,
+    promptSave: handleSaveSimplified,
+    confirmSave: handleConfirmSimplifiedSave,
+    cancelSave: handleCancelSimplifiedSave,
+  } = useSimplifiedSave({ nodes, saveSimplifiedFlow });
+
+  const { focusSearchHit } = useSearchHighlights({
+    showSearchPanel,
+    searchQuery,
+    setSearchQuery,
+    setNodes,
+    centerOnNode,
+    clearHighlights,
+  });
+
+  useEffect(() => {
+    const selectionKey = "s";
+
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName.toLowerCase();
+      return (
+        target.isContentEditable ||
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select"
+      );
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key !== selectionKey &&
+        event.key !== selectionKey.toUpperCase()
+      )
+        return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isEditableTarget(event.target)) return;
+      setIsSelectionHotKeyActive(true);
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (
+        event.key !== selectionKey &&
+        event.key !== selectionKey.toUpperCase()
+      )
+        return;
+      setIsSelectionHotKeyActive(false);
+    };
+
+    const handleBlur = () => setIsSelectionHotKeyActive(false);
+    const listenerOptions: AddEventListenerOptions = { capture: true };
+
+    window.addEventListener("keydown", handleKeyDown, listenerOptions);
+    window.addEventListener("keyup", handleKeyUp, listenerOptions);
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleBlur);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, listenerOptions);
+      window.removeEventListener("keyup", handleKeyUp, listenerOptions);
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleBlur);
+    };
+  }, [setIsSelectionHotKeyActive]);
+
+  /* =================================================================
+   *  JSX render – nothing but UI
+   * ================================================================ */
+  return (
+    <SnapshotProvider scheduler={snapshotScheduler}>
+      <FlowActionsProvider value={{ groupWithUndo, ungroupWithUndo }}>
+        <div
+          ref={reactFlowWrapper}
+          className="relative w-screen h-screen bg-background"
+          style={{ visibility: isFlowVisible ? "visible" : "hidden" }}
+        >
+          {/* Top bar */}
+          <TopBar
+            isSidebarOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabSelect={handleSelectTab}
+            onAddTab={handleAddTab}
+            onCloseTab={handleCloseTab}
+            onRenameTab={(id, title) => renameTab(id, title)}
+            fileInputRef={fileInputRef}
+            onSave={saveFlow}
+            onSaveSimplified={handleSaveSimplified}
+            onLoad={openFileDialog}
+            onFileSelect={handleFileSelect}
+            canCopy={nodes.some((n) => n.selected)}
+            hasCopiedNodes={hasCopiedNodes}
+            onCopy={copyNodes}
+            onPaste={() => handlePaste()}
+            calcStatus={calcStatus}
+            errorInfo={errorInfo}
+            errorCount={errorInfo.length}
+            showErrorPanel={showErrorPanel}
+            setShowErrorPanel={setShowErrorPanel}
+            onRetryAll={handleRetryAll}
+            hasLimitErrors={hasLimitErrors}
+            showUndoRedoPanel={showUndoRedoPanel}
+            setShowUndoRedoPanel={setShowUndoRedoPanel}
+            onToggleColorPalette={handleToggleColorPalette}
+            isColorPaletteOpen={isColorPaletteOpen}
+            canColorSelection={canColorSelection}
+            canGroupSelectedNodes={canGroupSelectedNodes}
+            canUngroupSelectedNodes={canUngroupSelectedNodes}
+            connectDisabled={
+              !(
+                exactlyTwoSelected &&
+                sourcePorts?.outputs.length &&
+                targetPorts?.inputs.length
+              )
+            }
+            onConnectClick={() => setConnectOpen(true)}
+            onGroup={groupWithUndo}
+            onUngroup={ungroupWithUndo}
+            onSearchClick={() => {
+              setShowUndoRedoPanel(false); // never overlap
+              setShowErrorPanel(false);
+              setShowSearchPanel((v) => !v); // toggle
+            }}
+            setShowSearchPanel={setShowSearchPanel}
+            showMiniMap={showMiniMap}
+            onToggleMiniMap={() => setShowMiniMap((v) => !v)}
+            isSelectionModeActive={isSelectionMode}
+            onToggleSelectionMode={() => setIsSelectionLocked((v) => !v)}
+            onShare={handleShareClick}
+            shareDisabled={nodes.length === 0}
+          />
+
+          {/* Sidebar */}
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          />
+
+          {/* Main canvas */}
+          <main
+            className={cn(
+              "absolute top-14 bottom-0 flex transition-all duration-300",
+              isSidebarOpen ? "left-64 right-0" : "left-0 right-0",
+              tabs.length > 0 && "pt-10"
+            )}
+          >
+            <div
+              className={cn(
+                "relative flex-1 overflow-hidden",
+                (showUndoRedoPanel || showErrorPanel || showSearchPanel) &&
+                  "mr-64"
+              )}
+            >
+              <FlowCanvas
+                nodeTypes={nodeTypes}
+                nodes={nodes}
+                edges={edges}
+                showMiniMap={showMiniMap}
+                miniMapSize={miniMapSize}
+                miniMapOffset={miniMapOffset}
+                isDark={isDark}
+                nodeClassName={nodeClassName}
+                onInit={handleInit}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnectWithUndo}
+                onReconnect={onReconnectWithUndo}
+                onDrop={onDropWithUndo}
+                onDragOver={onDragOver}
+                onNodeDragStop={onNodeDragStopWithUndo}
+                onPaneClick={handlePaneClick}
+                onMoveEnd={onMoveEnd}
+                isSelectionModeActive={isSelectionMode}
+              />
+            </div>
+
+            <FlowPanels
+              showUndoRedoPanel={showUndoRedoPanel}
+              setShowUndoRedoPanel={setShowUndoRedoPanel}
+              showErrorPanel={showErrorPanel}
+              setShowErrorPanel={setShowErrorPanel}
+              errorInfo={errorInfo}
+              nodes={nodes}
+              showSearchPanel={showSearchPanel}
+              setShowSearchPanel={setShowSearchPanel}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              edges={edges}
+              highlightAndFit={highlightAndFit}
+              highlightedNodes={highlightedNodes}
+              centerOnNode={centerOnNode}
+              focusSearchHit={focusSearchHit}
+              hasMultipleTabs={tabs.length > 0}
+            />
+          </main>
+
+          {/* 🎨 ColorPalette - MOVED HERE, outside ReactFlow, with higher z-index */}
+          <ColorPalette
+            isOpen={isColorPaletteOpen}
+            position={colorPalettePosition}
+            onColorSelect={handleColorSelect}
+            onClose={closePalette}
+          />
+
+          {/* dialogs */}
+          <FlowDialogLayer
+            closeDialog={closeDialog}
+            onConfirmTabClose={handleConfirmTabClose}
+            onCancelTabClose={cancelCloseTab}
+            showSaveConfirmation={showSaveConfirmation}
+            saveConfirmationMessage={saveConfirmationMessage}
+            onConfirmSave={handleConfirmSimplifiedSave}
+            onCancelSave={handleCancelSimplifiedSave}
+            infoDialog={infoDialog}
+            closeInfoDialog={closeInfoDialog}
+            connectOpen={connectOpen}
+            setConnectOpen={setConnectOpen}
+            allPorts={allPorts}
+            sourcePorts={sourcePorts}
+            targetPorts={targetPorts}
+            existingEdges={existingEdgesForConnect}
+            onConnectApply={handleConnectApply}
+            shareDialogOpen={shareDialogOpen}
+            shareCreatedId={shareCreatedId}
+            closeShareDialog={closeShareDialog}
+            requestShare={requestShare}
+            softGateOpen={softGateOpen}
+            closeSoftGate={closeSoftGate}
+            verifyTurnstile={verifyTurnstile}
+          />
+          <FirstRunDialog
+            open={showWelcomeDialog}
+            flows={exampleFlowOptions}
+            onStartEmpty={handleWelcomeStartEmpty}
+            onLoadExample={handleWelcomeLoadExample}
+          />
+        </div>
+      </FlowActionsProvider>
+    </SnapshotProvider>
+  );
+}
+
+export default function Flow() {
+  return (
+    <ReactFlowProvider>
+      <UndoRedoProvider>
+        <FlowContent />
+      </UndoRedoProvider>
+    </ReactFlowProvider>
+  );
+}

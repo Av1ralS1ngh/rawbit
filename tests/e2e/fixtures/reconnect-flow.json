@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "name": "edge-reconnect",
+  "nodes": [
+    {
+      "id": "node_input",
+      "type": "calculation",
+      "position": { "x": -200, "y": 0 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input",
+        "numInputs": 0,
+        "showField": true,
+        "value": "68656c6c6f",
+        "inputs": { "val": "68656c6c6f" },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "INPUT VALUE:", "rows": 1 }
+          ]
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_hash",
+      "type": "calculation",
+      "position": { "x": 120, "y": -120 },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Hash",
+        "numInputs": 1,
+        "showField": false,
+        "inputs": { "val": "" },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "Input Hex:", "rows": 2 }
+          ]
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_passthrough",
+      "type": "calculation",
+      "position": { "x": 120, "y": 160 },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Alt Hash",
+        "numInputs": 1,
+        "showField": false,
+        "inputs": { "val": "" },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "Input Hex:", "rows": 2 }
+          ]
+        },
+        "groupInstances": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_input_hash",
+      "source": "node_input",
+      "target": "node_hash",
+      "targetHandle": "input-0"
+    }
+  ]
+}

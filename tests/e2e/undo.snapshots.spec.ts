@@ -1,0 +1,122 @@
+import { expect, test } from '@playwright/test';
+
+import type { Page } from '@playwright/test';
+
+import { computeNodeResult, enrichNodesForSuccess, parseBulkRequestPayload } from './fixtures';
+import { loadFixture } from './utils';
+
+const MOVE_OFFSET = { x: 140, y: 120 };
+
+// These tests focus on flows interacting with undo snapshots when nodes move or edges reconnect.
+test.describe('Undo snapshots for interactions', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubBulkCalculate(page);
+    await page.goto('/');
+    await loadFixture(page, 'reconnect-flow.json');
+  });
+
+  test.afterEach(async ({ page }) => {
+    await page.unroute('**/bulk_calculate');
+  });
+
+  test('node drag records undo snapshot and restores position', async ({ page }) => {
+    const node = page.locator('[data-id="node_hash"]');
+    await expect(node).toBeVisible();
+
+    const initialBox = await node.boundingBox();
+    if (!initialBox) throw new Error('Node bounding box unavailable');
+
+    await page.mouse.move(initialBox.x + initialBox.width / 2, initialBox.y + initialBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(
+      initialBox.x + initialBox.width / 2 + MOVE_OFFSET.x,
+      initialBox.y + initialBox.height / 2 + MOVE_OFFSET.y,
+      { steps: 12 },
+    );
+    await page.mouse.up();
+
+    await expect.poll(async () => {
+      const moved = await node.boundingBox();
+      if (!moved) return 0;
+      const dx = Math.abs(moved.x - initialBox.x);
+      const dy = Math.abs(moved.y - initialBox.y);
+      return dx + dy;
+    }).toBeGreaterThan(10);
+
+    await page.getByTitle('Undo').click();
+
+    await expect.poll(async () => {
+      const restored = await node.boundingBox();
+      if (!restored) return Infinity;
+      const dx = Math.abs(restored.x - initialBox.x);
+      const dy = Math.abs(restored.y - initialBox.y);
+      return dx + dy;
+    }).toBeLessThan(2);
+  });
+
+  test('edge reconnect can be undone', async ({ page }) => {
+    const edgeLocator = page.locator('.react-flow__edge[data-id="edge_input_hash"]');
+    await expect(edgeLocator).toBeVisible();
+
+    const originalEdgeButton = page.getByRole('button', {
+      name: 'Edge from node_input to node_hash',
+    });
+    await expect(originalEdgeButton).toBeVisible();
+
+    const targetUpdater = page.locator('circle.react-flow__edgeupdater-target').first();
+    await edgeLocator.hover();
+    await expect(targetUpdater).toBeVisible();
+
+    const newTargetHandle = page
+      .locator('[data-id="node_passthrough"] .react-flow__handle.target')
+      .first();
+    await expect(newTargetHandle).toBeVisible();
+
+    const updaterBox = await targetUpdater.boundingBox();
+    const newHandleBox = await newTargetHandle.boundingBox();
+    if (!updaterBox || !newHandleBox) {
+      throw new Error('Unable to compute edge or handle position for reconnect test');
+    }
+
+    const startX = updaterBox.x + updaterBox.width / 2;
+    const startY = updaterBox.y + updaterBox.height / 2;
+    const endX = newHandleBox.x + newHandleBox.width / 2;
+    const endY = newHandleBox.y + newHandleBox.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(endX, endY, { steps: 10 });
+    await page.mouse.up();
+
+    const reconnectedEdgeButton = page.getByRole('button', {
+      name: 'Edge from node_input to node_passthrough',
+    });
+
+    await expect(reconnectedEdgeButton).toBeVisible();
+    await expect(originalEdgeButton).toHaveCount(0);
+
+    await page.getByTitle('Undo').click();
+    await expect(originalEdgeButton).toBeVisible();
+    await expect(reconnectedEdgeButton).toHaveCount(0);
+  });
+});
+
+async function stubBulkCalculate(page: Page) {
+  await page.route('**/bulk_calculate', async (route) => {
+    let payload: unknown;
+    try {
+      payload = route.request().postDataJSON();
+    } catch {
+      payload = undefined;
+    }
+
+    const { version, nodes } = parseBulkRequestPayload(payload);
+    const enrichedNodes = enrichNodesForSuccess(nodes, computeNodeResult);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ nodes: enrichedNodes, errors: [], version }),
+    });
+  });
+}

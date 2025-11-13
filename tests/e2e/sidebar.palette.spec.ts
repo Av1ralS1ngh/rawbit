@@ -1,0 +1,68 @@
+import { expect, test } from '@playwright/test';
+
+import { delay } from './utils';
+
+test.describe('Sidebar palette', () => {
+  test('drag-and-drop template creates node with undo/redo history', async ({ page }) => {
+    await page.goto('/');
+
+    const searchInput = page.getByPlaceholder('Search nodes...');
+    await searchInput.fill('identity');
+
+    const templateTile = page
+      .locator('[draggable="true"]')
+      .filter({ hasText: /Identity/i })
+      .first();
+    await expect(templateTile).toBeVisible();
+
+    const canvas = page.locator('.react-flow__pane');
+    await templateTile.dragTo(canvas, { targetPosition: { x: 200, y: 200 } });
+
+    const nodes = page.locator('.react-flow__node');
+    await expect(nodes).toHaveCount(1, { timeout: 10_000 });
+
+    await page.waitForTimeout(100);
+    const historyButton = page.getByTitle('History');
+    await historyButton.click();
+    await expect(page.getByRole('heading', { name: 'Undo/Redo Stack' })).toBeVisible();
+    const historyEntries = page.getByRole('button', {
+      name: /Node\(s\) (dropped|added)/i,
+    });
+    await expect.poll(async () => historyEntries.count()).toBeGreaterThan(0);
+    const historyEntry = historyEntries.first();
+    await expect(historyEntry).toBeVisible();
+    await page.getByTitle('Close panel').click();
+
+    const undoButton = page.getByTitle('Undo');
+    await undoButton.click();
+    await expect(nodes).toHaveCount(0);
+
+    const redoButton = page.getByTitle('Redo');
+    await redoButton.click();
+    await expect(nodes).toHaveCount(1);
+
+    await historyButton.click();
+    await expect(historyEntry).toHaveClass(/font-medium/);
+    await page.getByTitle('Close panel').click();
+  });
+
+  test('filters templates via search and resets after clearing', async ({ page }) => {
+    await page.goto('/');
+
+    const searchInput = page.getByPlaceholder('Search nodes...');
+    await searchInput.fill('un');
+
+    const resultsBanner = page.getByText(/Found \d+ result/i);
+    await expect(resultsBanner).toBeVisible();
+
+    const resultTiles = page.locator('[draggable="true"]');
+    await expect(resultTiles.first()).toBeVisible();
+    await expect(resultTiles.filter({ hasText: /Uint32/i })).toBeVisible();
+
+    await page.getByLabel('Clear search').click();
+    await delay(50);
+
+    await expect(resultsBanner).toHaveCount(0);
+    await expect(page.getByText('Input/Data', { exact: true })).toBeVisible();
+  });
+});

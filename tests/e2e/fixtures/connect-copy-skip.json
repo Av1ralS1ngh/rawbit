@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "name": "copy-inputs-skip",
+  "nodes": [
+    {
+      "id": "node_in_a",
+      "type": "calculation",
+      "position": { "x": -600, "y": -180 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input A",
+        "numInputs": 0,
+        "showField": true,
+        "value": "aa",
+        "inputs": { "val": "aa" },
+        "result": "aa",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_in_c",
+      "type": "calculation",
+      "position": { "x": -600, "y": 200 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input C",
+        "numInputs": 0,
+        "showField": true,
+        "value": "cc",
+        "inputs": { "val": "cc" },
+        "result": "cc",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_in_d",
+      "type": "calculation",
+      "position": { "x": -600, "y": 340 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input D",
+        "numInputs": 0,
+        "showField": true,
+        "value": "dd",
+        "inputs": { "val": "dd" },
+        "result": "dd",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_in_b",
+      "type": "calculation",
+      "position": { "x": -600, "y": 60 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input B",
+        "numInputs": 0,
+        "showField": true,
+        "value": "bb",
+        "inputs": { "val": "bb" },
+        "result": "bb",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_source",
+      "type": "calculation",
+      "position": { "x": 260, "y": 20 },
+      "selected": true,
+      "data": {
+        "functionName": "concat_hex",
+        "title": "Source Node",
+        "numInputs": 3,
+        "showField": false,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "",
+            "2": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "First", "rows": 1 },
+            { "index": 1, "label": "Second", "rows": 1 },
+            { "index": 2, "label": "Third", "rows": 1 }
+          ],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    },
+    {
+      "id": "node_target",
+      "type": "calculation",
+      "position": { "x": 520, "y": 20 },
+      "selected": true,
+      "data": {
+        "functionName": "concat_hex",
+        "title": "Target Node",
+        "numInputs": 3,
+        "showField": false,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "",
+            "2": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "First", "rows": 1 },
+            { "index": 1, "label": "Second", "rows": 1 }
+          ],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_a_source",
+      "source": "node_in_a",
+      "target": "node_source",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_b_source",
+      "source": "node_in_b",
+      "target": "node_source",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_c_target",
+      "source": "node_in_c",
+      "target": "node_target",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_d_target",
+      "source": "node_in_d",
+      "target": "node_target",
+      "targetHandle": "input-2"
+    }
+  ]
+}

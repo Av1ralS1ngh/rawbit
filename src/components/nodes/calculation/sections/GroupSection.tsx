@@ -1,0 +1,101 @@
+import React from "react";
+
+import { FixedSizeList as List } from "react-window";
+
+import { Button } from "@/components/ui/button";
+import { Minus, Plus } from "lucide-react";
+import {
+  FIELD_ROW_HEIGHT,
+  VIRTUALIZE_THRESHOLD,
+  VIRTUAL_MAX_HEIGHT,
+  VIRTUAL_OVERSCAN,
+} from "@/lib/nodes/constants";
+import type { FieldDefinition, GroupDefinition } from "@/types";
+
+import { EditableLabel } from "../fields/EditableLabel";
+
+interface GroupSectionProps {
+  group: GroupDefinition;
+  instanceKeys: number[];
+  title: string;
+  onTitleCommit: (title: string) => void;
+  canIncrement: boolean;
+  canDecrement: boolean;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  renderField: (offset: number, field: FieldDefinition, index: number) => React.ReactNode;
+}
+
+export function GroupSection({
+  group,
+  instanceKeys,
+  title,
+  onTitleCommit,
+  canIncrement,
+  canDecrement,
+  onIncrement,
+  onDecrement,
+  renderField,
+}: GroupSectionProps) {
+  const totalFields = instanceKeys.length * group.fields.length;
+  const hasInstances = instanceKeys.length > 0;
+
+  const renderVirtualItem = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const instanceIndex = Math.floor(index / group.fields.length);
+    const fieldIndex = index % group.fields.length;
+    const offset = instanceKeys[instanceIndex];
+    const field = group.fields[fieldIndex];
+
+    return (
+      <div
+        key={`${group.title}-virtual-${index}`}
+        style={{
+          ...style,
+          paddingLeft: 16,
+          paddingBottom: 12,
+          boxSizing: "border-box",
+        }}
+      >
+        {renderField(offset, field, fieldIndex)}
+      </div>
+    );
+  };
+
+  return (
+    <div className="mb-6 space-y-3">
+      <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
+        <EditableLabel value={title} onCommit={onTitleCommit} className="text-lg" />
+        {group.expandable && (
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={onDecrement} disabled={!canDecrement}>
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={onIncrement} disabled={!canIncrement}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {hasInstances && (
+        totalFields > VIRTUALIZE_THRESHOLD ? (
+          <List
+            height={Math.min(totalFields * FIELD_ROW_HEIGHT, VIRTUAL_MAX_HEIGHT)}
+            itemCount={totalFields}
+            itemSize={FIELD_ROW_HEIGHT}
+            width="100%"
+            overscanCount={VIRTUAL_OVERSCAN}
+          >
+            {renderVirtualItem}
+          </List>
+        ) : (
+          instanceKeys.map((offset) => (
+            <div key={`${group.title}-${offset}`} className="mb-4 space-y-3 pl-4">
+              {group.fields.map((field, index) => renderField(offset, field, index))}
+            </div>
+          ))
+        )
+      )}
+    </div>
+  );
+}

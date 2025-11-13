@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --resizer-handle-color: black;
+
+    /*
+      Added a custom controls color so icons are grayish 
+      and visible in light mode:
+    */
+    --controls-color: #6b7280; /* Tailwind gray-500, adjust as needed */
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --resizer-handle-color: white;
+
+    /* 
+      Use the same controls color in dark mode (so they're visible).
+      Change if you'd like a different color in dark:
+    */
+    --controls-color: #6b7280;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 
+   By default, React Flow puts edges behind nodes. 
+   We only want to push *this group node* behind the edges, 
+   while leaving all other nodes as usual.
+*/
+
+/* Let normal nodes (like 'calculation') stay on top: z-index: 2 */
+.react-flow__node {
+  z-index: 2 !important;
+}
+
+/* The group node => behind edges: z-index: 0 */
+.react-flow__node-shadcnGroup {
+  z-index: 0 !important;
+}
+
+/* Edges => in the middle: z-index: 1 (so above group, but below normal nodes) */
+.react-flow__edges {
+  z-index: 1 !important;
+}
+
+/* Allow the text info node to work properly with the resizer */
+.react-flow__node-shadcnTextInfo .react-flow__resize-control {
+  /* Hide all handles by default */
+  display: none !important;
+}
+
+/* Only show the bottom-right handle for text node (similar to group node) */
+.react-flow__node-shadcnTextInfo .react-flow__resize-control.bottom.right {
+  display: block !important;
+  /* Add z-index to ensure it's above other elements */
+  z-index: 10 !important;
+
+  /* Ensure handle extends outside node boundary */
+  position: absolute;
+  bottom: -10px !important;
+  right: -10px !important;
+}
+
+/* Make sure the handle is visible and clickable */
+.react-flow__node-shadcnTextInfo {
+  /* Ensure node itself doesn't clip the handles */
+  overflow: visible !important;
+}
+
+/* ===================== CONTROL OVERRIDES ===================== */
+
+/* The React Flow Controls container */
+.custom-flow-controls.react-flow__controls {
+  /* Very high z-index so controls are on top of nodes/edges */
+  z-index: 9999 !important;
+}
+
+/* Style for the actual buttons in the controls */
+.custom-flow-controls .react-flow__controls-button {
+  /* Transparent background, visible border & icon color */
+  background-color: transparent !important;
+  border: 1px transparent var(--controls-color) !important;
+  color: var(--controls-color) !important;
+  border-radius: 4px !important;
+  /* padding/margin can be tweaked if you like */
+}
+
+/* Hover effect to slightly darken the background in light mode */
+.custom-flow-controls .react-flow__controls-button:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/*
+  If you want a different hover in dark mode, you can add:
+  .dark .custom-flow-controls .react-flow__controls-button:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+  }
+*/
+/* === MiniMap – make <shadcnGroup> transparent ===================== */
+.minimap-group {
+  fill: none !important; /* let inner nodes shine through  */
+  stroke: var(--border); /* thin outline, matches theme    */
+  stroke-width: 1;
+}
+
+/* 1) Target the node's inner element, not the RF wrapper */
+.react-flow__node.selected.is-highlighted > * {
+  position: relative; /* anchor the overlay */
+  /* remove Tailwind ring from the selected state (keeps drop-shadow) */
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  box-shadow: var(--tw-shadow, 0 0 #0000) !important;
+}
+
+/* 2) Draw the highlight on top of the card (correct size, not the wrapper) */
+.react-flow__node.selected.is-highlighted > *::after {
+  content: "";
+  position: absolute;
+  inset: 0; /* match the card’s box */
+  pointer-events: none;
+  box-shadow: 0 0 0 7px #facc15; /* the yellow highlight ring */
+  border-radius: inherit; /* respects card rounding */
+  z-index: 1;
+}
+
+/* ===================== Large-drag low-detail mode ===================== */
+body[data-large-drag="true"] .react-flow__edge,
+body[data-large-drag="true"] .react-flow__edge-path {
+  opacity: 0.1 !important;
+}
+
+body[data-large-drag="true"] .react-flow__connectionline,
+body[data-large-drag="true"] .react-flow__minimap {
+  visibility: hidden !important;
+}
+
+body[data-large-drag="true"] .react-flow__node,
+body[data-large-drag="true"] .rf-node {
+  transition: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  will-change: transform;
+}

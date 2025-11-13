@@ -1,0 +1,474 @@
+/* ---------------------------------------------------------------
+ *  ScriptExecutionSteps.tsx  –  multi-phase trace viewer
+ * --------------------------------------------------------------- */
+
+import {
+  useState,
+  useEffect,
+  useCallback,
+  KeyboardEvent,
+  ReactNode,
+} from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import {
+  ScriptExecutionStepsProps,
+  RenderHighlightedScriptProps,
+  StepData,
+} from "@/types";
+
+/* ---------- helpers ------------------------------------------------ */
+
+/* ---------- opcode cheat-sheet ----------------------------------- */
+const OPCODES: Record<string, string> = {
+  /* constant pushes */
+  OP_0: "Push number 0 (empty byte array).",
+  OP_1NEGATE: "Push -1.",
+  OP_1: "Push number 1.", // OP_TRUE
+  OP_2: "Push number 2.",
+  OP_3: "Push number 3.",
+  OP_4: "Push number 4.",
+  OP_5: "Push number 5.",
+  OP_6: "Push number 6.",
+  OP_7: "Push number 7.",
+  OP_8: "Push number 8.",
+  OP_9: "Push number 9.",
+  OP_10: "Push number 10.",
+  OP_11: "Push number 11.",
+  OP_12: "Push number 12.",
+  OP_13: "Push number 13.",
+  OP_14: "Push number 14.",
+  OP_15: "Push number 15.",
+  OP_16: "Push number 16.",
+
+  /* stack operations */
+  OP_DUP: "Duplicate the top stack item.",
+  OP_DROP: "Remove the top stack item.",
+  OP_NIP: "Drop the 2nd item from the top.",
+  OP_OVER: "Copy the 2nd item to the top.",
+  OP_PICK: "Copy Nth stack item to top (leave in place).",
+  OP_ROLL: "Move Nth item to top (remove from original).",
+  OP_SWAP: "Swap top two items.",
+  OP_TUCK: "Copy top item beneath second item.",
+  OP_2DROP: "Remove top two items.",
+  OP_2DUP: "Duplicate top two items.",
+  OP_3DUP: "Duplicate top three items.",
+  OP_2OVER: "Copy items #3‒4 to top of stack.",
+  OP_2ROT: "Rotate top six items left twice.",
+  OP_2SWAP: "Swap the top two pairs.",
+
+  /* splice */
+  OP_SIZE: "Push size (bytes) of top item.",
+
+  /* logic */
+  OP_EQUAL: "Push 1 if top two items are byte-equal.",
+  OP_EQUALVERIFY: "Equal then OP_VERIFY.",
+  OP_VERIFY: "Fail the script if top item is false.",
+  OP_IF: "If (bool) execute the THEN branch.",
+  OP_NOTIF: "If NOT bool execute the THEN branch.",
+  OP_ELSE: "Start the ELSE branch.",
+  OP_ENDIF: "End IF/ELSE.",
+  OP_BOOLOR: "Boolean OR.",
+  OP_BOOLAND: "Boolean AND.",
+  OP_NUMEQUAL: "Numeric equality (deprecated for consensus).",
+  OP_WITHIN: "x min ≤ x < max ? 1 : 0",
+
+  /* arithmetic (minimal encode rules apply) */
+  OP_ADD: "a + b",
+  OP_SUB: "a − b",
+  OP_NEGATE: "Unary minus.",
+  OP_ABS: "Absolute value.",
+  OP_1ADD: "Add 1.",
+  OP_1SUB: "Subtract 1.",
+
+  /* crypto */
+  OP_SHA256: "SHA-256 hash.",
+  OP_HASH160: "RIPEMD-160(SHA-256(x)).",
+  OP_RIPEMD160: "RIPEMD-160 hash.",
+  OP_SHA1: "SHA-1 hash.",
+  OP_HASH256: "Double SHA-256.",
+  OP_CHECKSIG: "Verify signature against pubkey & tx hash.",
+  OP_CHECKSIGVERIFY: "CHECKSIG then VERIFY.",
+  OP_CHECKMULTISIG: "m-of-n multisig validation.",
+  OP_CHECKMULTISIGVERIFY: "CHECKMULTISIG then VERIFY.",
+  OP_CHECKLOCKTIMEVERIFY: "Require nLockTime ≥ value.",
+  OP_CHECKSEQUENCEVERIFY: "Require relative-locktime ≥ value.",
+
+  /* pseudo-op for all small pushes handled in code */
+  OP_PUSHDATA: "Push raw bytes onto the stack.",
+
+  /* discouraged or disabled (short description so users know why) */
+  OP_NOP1: "NOP (reserved for soft-fork).",
+  OP_NOP2: "NOP (became OP_CHECKLOCKTIMEVERIFY).",
+  OP_NOP3: "NOP (became OP_CHECKSEQUENCEVERIFY).",
+  OP_NOP4: "Reserved NOP.",
+  OP_NOP5: "Reserved NOP.",
+  OP_NOP6: "Reserved NOP.",
+  OP_NOP7: "Reserved NOP.",
+  OP_NOP8: "Reserved NOP.",
+  OP_NOP9: "Reserved NOP.",
+  OP_NOP10: "Reserved NOP.",
+  OP_RETURN: "Mark transaction output as provably unspendable.",
+  /* you can continue with OP_CODESEPARATOR, OP_CAT (disabled)… */
+};
+
+const prettify = (code: number, name: string) =>
+  name.toLowerCase().includes("unknown opcode") && code >= 1 && code <= 0x4b
+    ? `OP_PUSHDATA(${code} bytes)`
+    : name;
+
+const pushLenInParens = (n: string) =>
+  Number((/\((\d+)\s*bytes?\)/i.exec(n) || [])[1] ?? 0);
+
+const opcodeExplanation = (n: string) =>
+  n.startsWith("OP_PUSHDATA(")
+    ? OPCODES.OP_PUSHDATA
+    : OPCODES[n.split("(")[0].trim()] || "";
+
+const hexToBytes = (hex = "") =>
+  Array.from({ length: hex.length / 2 }, (_, i) => hex.slice(i * 2, i * 2 + 2));
+
+function consumedFlags(
+  before: string[],
+  after: string[],
+  op: string
+): boolean[] {
+  const afterCopy = [...after];
+  return before.map((it, idx) => {
+    const pop = () => {
+      const i = afterCopy.indexOf(it);
+      if (i === -1) return true;
+      afterCopy.splice(i, 1);
+      return false;
+    };
+    switch (op) {
+      case "OP_HASH160":
+      case "OP_DUP":
+        return idx === 0;
+      case "OP_EQUALVERIFY":
+      case "OP_EQUAL":
+      case "OP_CHECKSIG":
+      case "OP_CHECKMULTISIG":
+        return pop();
+      default:
+        return pop();
+    }
+  });
+}
+
+/* ---------- single pane ------------------------------------------- */
+
+type PaneProps = RenderHighlightedScriptProps & {
+  highlighted?: boolean;
+  children?: ReactNode;
+};
+
+function ScriptPane({
+  scriptHex,
+  offset,
+  pc,
+  opcodeName,
+  label,
+  highlighted = true,
+}: PaneProps) {
+  if (!scriptHex) return null;
+
+  const bytes = hexToBytes(scriptHex);
+  const relPC = pc - offset;
+
+  /* figure out push-data length (incl. length bytes for 1/2/4) */
+  let len = pushLenInParens(opcodeName);
+
+  if (len === 0 && relPC >= 0) {
+    if (opcodeName === "OP_PUSHDATA1" && relPC + 1 < bytes.length) {
+      len = 1 + parseInt(bytes[relPC + 1], 16);
+    } else if (opcodeName === "OP_PUSHDATA2" && relPC + 2 < bytes.length) {
+      len = 2 + parseInt(bytes[relPC + 2] + bytes[relPC + 1], 16); // little-endian
+    } else if (opcodeName === "OP_PUSHDATA4" && relPC + 4 < bytes.length) {
+      len =
+        4 +
+        parseInt(
+          bytes[relPC + 4] +
+            bytes[relPC + 3] +
+            bytes[relPC + 2] +
+            bytes[relPC + 1],
+          16
+        );
+    }
+  }
+
+  const hiEnd = relPC + len;
+
+  return (
+    <div className="mb-3 text-xs">
+      <div className="font-bold mb-1">{label}:</div>
+      <div className="h-16 overflow-auto border p-2 break-words">
+        {bytes.map((b, i) => {
+          if (!highlighted)
+            return (
+              <span key={i} className="text-gray-400">
+                {b}
+              </span>
+            );
+          if (i === relPC)
+            return (
+              <span key={i} className="font-bold text-blue-600">
+                {b}
+              </span>
+            );
+          if (len && i > relPC && i <= hiEnd)
+            return (
+              <span key={i} className="italic text-green-600">
+                {b}
+              </span>
+            );
+          return <span key={i}>{b}</span>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- main component ---------------------------------------- */
+
+export default function ScriptExecutionSteps({
+  open,
+  onClose,
+  scriptResult,
+  scriptSigInputHex,
+  scriptPubKeyInputHex,
+}: ScriptExecutionStepsProps) {
+  const [idx, setIdx] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setIdx(0);
+    setCopied(false);
+  }, [scriptResult?.steps?.length, open]);
+
+  /* callbacks */
+  const prev = useCallback(() => setIdx((p) => Math.max(p - 1, 0)), []);
+  const next = useCallback(
+    () =>
+      setIdx((p) => Math.min(p + 1, (scriptResult?.steps?.length ?? 1) - 1)),
+    [scriptResult]
+  );
+
+  const copy = useCallback(() => {
+    if (!scriptResult) return;
+    const lines: string[] = [
+      "===== Script Execution Steps =====",
+      `isValid: ${scriptResult.isValid}`,
+    ];
+    if (scriptResult.error) lines.push(`FinalError: ${scriptResult.error}`);
+    lines.push("");
+    (scriptResult.steps || []).forEach((s, i) => {
+      lines.push(
+        `Step #${i}  PC=${s.pc}  opcode_name=${s.opcode_name}`,
+        `StackBefore: [${s.stack_before.join(", ")}]`,
+        `StackAfter: [${s.stack_after.join(", ")}]`,
+        ...(s.failed ? [`ERROR: ${s.error ?? "Unknown error"}`] : []),
+        "-----------"
+      );
+    });
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    });
+  }, [scriptResult]);
+
+  const stopKey = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => e.stopPropagation(),
+    []
+  );
+
+  /* placeholder if no trace */
+  if (!open || !scriptResult || !scriptResult.steps?.length) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent onKeyDownCapture={stopKey}>
+          <DialogHeader>
+            <DialogTitle>Script Execution Steps</DialogTitle>
+            <DialogDescription>No script trace available.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  /* ----- trace available ----- */
+  const steps = scriptResult.steps as StepData[];
+  const step = steps[idx];
+  const phase = step.phase ?? "scriptSig";
+
+  const ssHex = scriptSigInputHex || scriptResult.scriptSig || "";
+  const spkHex = scriptPubKeyInputHex || scriptResult.scriptPubKey || "";
+  const redeemHex = scriptResult.redeemScript ?? "";
+  const witnessHex = scriptResult.witnessScript ?? "";
+
+  const pretty = prettify(step.opcode, step.opcode_name);
+  const explain = opcodeExplanation(pretty);
+
+  const beforeR = [...step.stack_before].reverse();
+  const afterR = [...step.stack_after].reverse();
+  const consumed = consumedFlags(beforeR, afterR, step.opcode_name);
+
+  const phaseText =
+    phase === "scriptSig"
+      ? "Phase 1 (scriptSig)"
+      : phase === "scriptPubKey"
+      ? "Phase 2 (scriptPubKey)"
+      : phase === "redeemScript"
+      ? "Phase 3 (redeemScript)"
+      : "Phase 4 (witnessScript)";
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl" onKeyDownCapture={stopKey}>
+        <DialogHeader>
+          <DialogTitle>Script Execution Steps</DialogTitle>
+          <DialogDescription>
+            Live walk-through of every opcode in every phase.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="h-[600px] overflow-y-auto px-1">
+          {/* navigation */}
+          <div className="sticky top-0 bg-background z-10 pb-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={prev}
+                disabled={idx === 0}
+              >
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={next}
+                disabled={idx === steps.length - 1}
+              >
+                Next
+              </Button>
+              <div className="text-sm mx-2">
+                Step {idx + 1}/{steps.length} — {phaseText}
+              </div>
+              <div className="ml-auto">
+                <Button variant="outline" size="sm" onClick={copy}>
+                  {copied ? "Copied!" : "Copy All"}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* panes */}
+          <ScriptPane
+            scriptHex={ssHex}
+            offset={0}
+            pc={phase === "scriptSig" ? step.pc : -1}
+            opcodeName={pretty}
+            label="scriptSig"
+            highlighted={phase === "scriptSig"}
+            isInScriptPubKey={false}
+          />
+          <ScriptPane
+            scriptHex={spkHex}
+            offset={0}
+            pc={phase === "scriptPubKey" ? step.pc : -1}
+            opcodeName={pretty}
+            label="scriptPubKey"
+            highlighted={phase === "scriptPubKey"}
+            isInScriptPubKey={true}
+          />
+          {redeemHex && (
+            <ScriptPane
+              scriptHex={redeemHex}
+              offset={0}
+              pc={phase === "redeemScript" ? step.pc : -1}
+              opcodeName={pretty}
+              label="redeemScript"
+              highlighted={phase === "redeemScript"}
+              isInScriptPubKey={false}
+            />
+          )}
+          {witnessHex && (
+            <ScriptPane
+              scriptHex={witnessHex}
+              offset={0}
+              pc={phase === "witnessScript" ? step.pc : -1}
+              opcodeName={pretty}
+              label="witnessScript"
+              highlighted={phase === "witnessScript"}
+              isInScriptPubKey={false}
+            />
+          )}
+
+          {/* details */}
+          <div className="space-y-3 text-xs font-mono">
+            <div>
+              <strong>PC:</strong> {step.pc}
+            </div>
+            <div>
+              <strong>Opcode:</strong>{" "}
+              <span className="font-bold">{pretty}</span>
+            </div>
+            {explain && (
+              <div className="text-muted-foreground">
+                <em>{explain}</em>
+              </div>
+            )}
+
+            <div>
+              <strong>Stack Before (top → first):</strong>
+              {beforeR.map((it, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "border p-2 break-words",
+                    consumed[i] && "font-bold"
+                  )}
+                >
+                  {it}
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <strong>Stack After (top → first):</strong>
+              {afterR.map((it, i) => (
+                <div key={i} className="border p-2 break-words">
+                  {it}
+                </div>
+              ))}
+            </div>
+
+            {step.failed && step.error && (
+              <div className="text-red-600 font-semibold">
+                ERROR: {step.error}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter className="mt-4">
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

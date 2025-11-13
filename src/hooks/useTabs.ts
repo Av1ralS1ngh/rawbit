@@ -1,0 +1,1044 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import type { Edge, ReactFlowInstance } from "@xyflow/react";
+import type { FlowNode } from "@/types";
+import {
+  restoreScriptSteps,
+  snapshotScriptSteps,
+  type ScriptStepsEntry,
+} from "@/lib/share/scriptStepsCache";
+import {
+  decodeStoragePayload,
+  encodeStoragePayload,
+} from "@/lib/storageCompression";
+import type {
+  CompressTabRequest,
+  CompressTabResponse,
+  WorkerFlowTabArchive,
+} from "@/workers/tabsCompression.types";
+
+export interface FlowTab {
+  id: string;
+  title: string;
+  version: number;
+  transform?: { x: number; y: number; zoom: number };
+  tooltip?: string;
+}
+
+const MAX_TAB_TITLE_LENGTH = 40;
+
+const normalizeTabTitle = (raw: string): string => {
+  const collapsed = raw.replace(/\s+/g, " ").trim();
+  if (!collapsed) return "Flow";
+  if (collapsed.length <= MAX_TAB_TITLE_LENGTH) return collapsed;
+  return collapsed.slice(0, MAX_TAB_TITLE_LENGTH);
+};
+
+interface FlowTabArchive {
+  nodes: FlowNode[];
+  edges: Edge[];
+  scriptSteps?: ScriptStepsEntry[];
+}
+
+interface FlowTabArchiveEntry {
+  raw?: FlowTabArchive;
+  compressed?: string;
+  pendingRequestId?: number;
+}
+
+function createEmptyArchive(): FlowTabArchive {
+  return { nodes: [], edges: [] };
+}
+
+function normalizeArchive(value: unknown): FlowTabArchive {
+  if (!value || typeof value !== "object") return createEmptyArchive();
+  const maybe = value as Partial<FlowTabArchive>;
+  const nodes = Array.isArray(maybe.nodes) ? (maybe.nodes as FlowNode[]) : [];
+  const edges = Array.isArray(maybe.edges) ? (maybe.edges as Edge[]) : [];
+  const scriptSteps = sanitizeScriptSteps(maybe.scriptSteps);
+  return {
+    nodes,
+    edges,
+    scriptSteps,
+  };
+}
+
+function decodeCompressedArchive(compressed?: string): FlowTabArchive {
+  if (!compressed) return createEmptyArchive();
+  try {
+    const parsed = decodeStoragePayload(compressed);
+    return normalizeArchive(parsed);
+  } catch (error) {
+    console.warn("Failed to decode tab archive payload", error);
+    return createEmptyArchive();
+  }
+}
+
+function encodeArchiveRaw(raw: FlowTabArchive): string | undefined {
+  try {
+    return encodeStoragePayload(raw);
+  } catch (error) {
+    console.warn("Failed to encode tab archive payload", error);
+    return undefined;
+  }
+}
+
+const DEFAULT_TAB: FlowTab = {
+  id: "tab-1",
+  title: "Flow 1",
+  version: 0,
+};
+
+const AUTO_TAB_TITLE_PATTERN = /^Flow(?:\s+\d+)?$/i;
+
+const isAutoTabTitle = (title: string) => AUTO_TAB_TITLE_PATTERN.test(title.trim());
+
+const TABS_STORAGE_KEY = "rawbit.flow.tabs";
+const TABS_ARCHIVE_STORAGE_KEY = "rawbit.flow.tabs.archive";
+const ACTIVE_TAB_STORAGE_KEY = "rawbit.flow.activeTab";
+const TAB_COUNTER_STORAGE_KEY = "rawbit.flow.tabCounter";
+
+interface TabsPersistState {
+  disabled: boolean;
+  lastPayloadSize: number;
+}
+
+function isQuotaExceededError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const maybeDomException =
+    typeof window !== "undefined" && window.DOMException
+      ? error instanceof DOMException
+      : false;
+
+  const name = (error as { name?: string }).name;
+  const code = (error as { code?: number }).code;
+
+  if (
+    maybeDomException &&
+    ((name === "QuotaExceededError" && code === 22) ||
+      (name === "NS_ERROR_DOM_QUOTA_REACHED" && code === 1014))
+  ) {
+    return true;
+  }
+
+  return (
+    name === "QuotaExceededError" ||
+    name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    name === "quota_exceeded"
+  );
+}
+
+function sanitizeScriptSteps(value: unknown): ScriptStepsEntry[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const entries: ScriptStepsEntry[] = [];
+  for (const entry of value) {
+    if (
+      Array.isArray(entry) &&
+      entry.length === 2 &&
+      typeof entry[0] === "string"
+    ) {
+      entries.push([entry[0], entry[1] ?? null]);
+    }
+  }
+  return entries.length ? entries : undefined;
+}
+
+const TAB_ARCHIVE_KEY_PREFIX = "rawbit.flow.tab.";
+
+function getArchiveStorageKey(tabId: string): string {
+  return `${TAB_ARCHIVE_KEY_PREFIX}${tabId}`;
+}
+
+interface HydratedTabsState {
+  tabs: FlowTab[];
+  archive: Map<string, FlowTabArchiveEntry>;
+}
+
+function hydrateTabs(): HydratedTabsState {
+  const archive = new Map<string, FlowTabArchiveEntry>();
+  const emptyArchive = createEmptyArchive();
+  const fallbackCompressed =
+    encodeArchiveRaw(emptyArchive) ?? encodeStoragePayload(emptyArchive);
+  const fallbackEntry: FlowTabArchiveEntry = {
+    compressed: fallbackCompressed,
+  };
+  const fallback: HydratedTabsState = {
+    tabs: [DEFAULT_TAB],
+    archive: new Map<string, FlowTabArchiveEntry>().set(
+      DEFAULT_TAB.id,
+      fallbackEntry
+    ),
+  };
+
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const metaRaw = window.localStorage.getItem(TABS_STORAGE_KEY);
+    const archiveRaw = window.localStorage.getItem(TABS_ARCHIVE_STORAGE_KEY);
+    let tabs: FlowTab[] = [];
+    const legacyArchive = new Map<string, FlowTabArchiveEntry>();
+
+    if (archiveRaw) {
+      const parsedArchive = decodeStoragePayload(archiveRaw);
+      if (parsedArchive && typeof parsedArchive === "object") {
+        const nested = (parsedArchive as { archive?: unknown }).archive;
+        const source =
+          nested && typeof nested === "object"
+            ? (nested as Record<string, unknown>)
+            : (parsedArchive as Record<string, unknown>);
+
+        for (const [key, value] of Object.entries(source)) {
+          if (!value) continue;
+          if (typeof value === "string") {
+            legacyArchive.set(key, {
+              compressed: value,
+            });
+            continue;
+          }
+          if (typeof value === "object") {
+            const normalized = normalizeArchive(value);
+            legacyArchive.set(key, {
+              raw: normalized,
+              compressed: encodeArchiveRaw(normalized),
+            });
+          }
+        }
+      }
+    }
+
+    if (metaRaw) {
+      const parsedMeta = decodeStoragePayload(metaRaw);
+      if (Array.isArray(parsedMeta)) {
+        tabs = parsedMeta.map((tab: Partial<FlowTab> & { id?: string }, index) => {
+          const title =
+            typeof tab.title === "string" ? tab.title : `Flow ${index + 1}`;
+          const id = typeof tab.id === "string" ? tab.id : `tab-${index + 1}`;
+          const version = typeof tab.version === "number" ? tab.version : 0;
+          const transform =
+            tab.transform &&
+            typeof tab.transform === "object" &&
+            typeof tab.transform.x === "number" &&
+            typeof tab.transform.y === "number" &&
+            typeof tab.transform.zoom === "number"
+              ? tab.transform
+              : undefined;
+
+          const archived = normalizeArchive(tab);
+          legacyArchive.set(id, {
+            raw: archived,
+            compressed: encodeArchiveRaw(archived),
+          });
+
+          return {
+            id,
+            title,
+            version,
+            transform,
+            tooltip: typeof tab.tooltip === "string" ? tab.tooltip : undefined,
+          };
+        });
+      } else if (
+        parsedMeta &&
+        typeof parsedMeta === "object" &&
+        Array.isArray((parsedMeta as { tabs?: unknown }).tabs)
+      ) {
+        const next = parsedMeta as {
+          tabs: Array<Partial<FlowTab>>;
+        };
+        tabs = next.tabs.map((tab, index) => {
+          const title =
+            typeof tab.title === "string" ? tab.title : `Flow ${index + 1}`;
+          const id = typeof tab.id === "string" ? tab.id : `tab-${index + 1}`;
+          const version = typeof tab.version === "number" ? tab.version : 0;
+          const transform =
+            tab.transform &&
+            typeof tab.transform === "object" &&
+            typeof tab.transform.x === "number" &&
+            typeof tab.transform.y === "number" &&
+            typeof tab.transform.zoom === "number"
+              ? tab.transform
+              : undefined;
+
+          return {
+            id,
+            title,
+            version,
+            transform,
+            tooltip: typeof tab.tooltip === "string" ? tab.tooltip : undefined,
+          };
+        });
+      }
+    }
+
+    if (tabs.length === 0) {
+      tabs = [DEFAULT_TAB];
+    }
+
+    for (const tab of tabs) {
+      const storageKey = getArchiveStorageKey(tab.id);
+      let entry: FlowTabArchiveEntry | undefined;
+      const storedCompressed = window.localStorage.getItem(storageKey);
+      if (storedCompressed) {
+        entry = { compressed: storedCompressed };
+      } else if (legacyArchive.has(tab.id)) {
+        entry = legacyArchive.get(tab.id);
+        const compressed =
+          entry?.compressed ??
+          encodeArchiveRaw(entry?.raw ?? createEmptyArchive());
+        if (compressed) {
+          try {
+            window.localStorage.setItem(storageKey, compressed);
+          } catch (error) {
+            console.warn(
+              "Failed to migrate tab archive to dedicated storage",
+              error
+            );
+          }
+          entry = { ...entry, compressed };
+        }
+      }
+
+      if (!entry) {
+        entry = {
+          compressed: encodeArchiveRaw(createEmptyArchive()),
+        };
+      }
+      archive.set(tab.id, entry);
+    }
+
+    if (legacyArchive.size > 0) {
+      try {
+        window.localStorage.removeItem(TABS_ARCHIVE_STORAGE_KEY);
+      } catch (error) {
+        console.warn("Failed to remove legacy tab archive payload", error);
+      }
+    }
+
+    return { tabs, archive };
+  } catch (error) {
+    console.warn("Failed to hydrate tabs from storage", error);
+    return fallback;
+  }
+}
+
+function hydrateActiveTab(tabs: FlowTab[]): string {
+  if (typeof window === "undefined") return tabs[0]?.id ?? DEFAULT_TAB.id;
+  const stored = window.localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+  if (stored && tabs.some((t) => t.id === stored)) {
+    return stored;
+  }
+  return tabs[0]?.id ?? DEFAULT_TAB.id;
+}
+
+function hydrateCounter(tabs: FlowTab[]): number {
+  if (typeof window === "undefined") return tabs.length || 1;
+  const stored = window.localStorage.getItem(TAB_COUNTER_STORAGE_KEY);
+  const parsed = stored ? Number.parseInt(stored, 10) : Number.NaN;
+  if (Number.isFinite(parsed) && parsed >= tabs.length) {
+    return parsed;
+  }
+  return tabs.length || 1;
+}
+
+interface UseTabsArgs {
+  getNodes: () => FlowNode[];
+  getEdges: () => Edge[];
+  baseSetNodes: (next: FlowNode[] | ((prev: FlowNode[]) => FlowNode[])) => void;
+  baseSetEdges: (next: Edge[] | ((prev: Edge[]) => Edge[])) => void;
+  graphRevRef: React.MutableRefObject<number>;
+  refreshBanner: (
+    nodes: FlowNode[],
+    tabId?: string,
+    options?: { sticky?: boolean; immediate?: boolean }
+  ) => void;
+  getFlowInstance: () => ReactFlowInstance | null;
+  initializeTabHistory: (tabId: string, nodes: FlowNode[], edges: Edge[]) => void;
+  setActiveTabCtx: (tabId: string) => void;
+  removeTabHistory: (tabId: string) => void;
+}
+
+interface CloseDialogState {
+  tabId: string | null;
+  open: boolean;
+}
+
+export interface UseTabsResult {
+  tabs: FlowTab[];
+  activeTabId: string;
+  tabCounter: number;
+  skipLoadRef: React.MutableRefObject<boolean>;
+  initialHydrationDone: boolean;
+  closeDialog: CloseDialogState;
+  selectTab: (tabId: string) => void;
+  addTab: () => void;
+  requestCloseTab: (tabId: string) => void;
+  confirmCloseTab: () => void;
+  cancelCloseTab: () => void;
+  setTabTransform: (tabId: string, transform: FlowTab["transform"]) => void;
+  setTabTooltip: (tabId: string, tooltip: string) => void;
+  renameTab: (
+    tabId: string,
+    title: string,
+    options?: { onlyIfEmpty?: boolean }
+  ) => void;
+  saveTabData: (tabId: string) => void;
+  setTabsExternal: Dispatch<SetStateAction<FlowTab[]>>;
+  setActiveTabId: Dispatch<SetStateAction<string>>;
+  bumpTabCounter: () => void;
+}
+
+export function useTabs({
+  getNodes,
+  getEdges,
+  baseSetNodes,
+  baseSetEdges,
+  graphRevRef,
+  refreshBanner,
+  getFlowInstance,
+  initializeTabHistory,
+  setActiveTabCtx,
+  removeTabHistory,
+}: UseTabsArgs): UseTabsResult {
+  const initialTabsRef = useRef(hydrateTabs());
+  const [tabs, setTabs] = useState<FlowTab[]>([
+    ...initialTabsRef.current.tabs,
+  ]);
+  const archiveRef = useRef<Map<string, FlowTabArchiveEntry>>(
+    initialTabsRef.current.archive
+  );
+  const [activeTabId, setActiveTabId] = useState(() =>
+    hydrateActiveTab(initialTabsRef.current.tabs)
+  );
+  const [tabCounter, setTabCounter] = useState(() =>
+    hydrateCounter(initialTabsRef.current.tabs)
+  );
+  const skipLoadRef = useRef(false);
+  const initialHydrationDoneRef = useRef(false);
+  const [initialHydrationDone, setInitialHydrationDone] = useState(false);
+  const [closeDialog, setCloseDialog] = useState<CloseDialogState>({
+    tabId: null,
+    open: false,
+  });
+
+  const getTabIndex = useCallback(
+    (tabId: string) => tabs.findIndex((t) => t.id === tabId),
+    [tabs]
+  );
+
+  const clone = useCallback(<T,>(value: T): T => {
+    if (typeof structuredClone === "function") {
+      return structuredClone(value) as T;
+    }
+    return JSON.parse(JSON.stringify(value));
+  }, []);
+
+  const archivePersistDisabledRef = useRef(false);
+
+  const persistTabCompressed = useCallback(
+    (tabId: string, compressed?: string) => {
+      if (typeof window === "undefined") return;
+      if (!compressed || archivePersistDisabledRef.current) return;
+      try {
+        window.localStorage.setItem(
+          getArchiveStorageKey(tabId),
+          compressed
+        );
+      } catch (error) {
+        console.warn("Failed to persist tab archive", error);
+        if (isQuotaExceededError(error)) {
+          archivePersistDisabledRef.current = true;
+        }
+      }
+    },
+    []
+  );
+
+  const removeTabArchive = useCallback((tabId: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(getArchiveStorageKey(tabId));
+    } catch (error) {
+      console.warn("Failed to remove tab archive", error);
+    }
+  }, []);
+
+  const ensureArchiveEntry = useCallback((tabId: string): FlowTabArchiveEntry => {
+    let entry = archiveRef.current.get(tabId);
+    if (!entry) {
+      const raw = createEmptyArchive();
+      const compressed =
+        encodeArchiveRaw(raw) ?? encodeStoragePayload(raw);
+      persistTabCompressed(tabId, compressed);
+      entry = {
+        raw,
+        compressed,
+      };
+      archiveRef.current.set(tabId, entry);
+    }
+    return entry;
+  }, [persistTabCompressed]);
+
+  const ensureArchiveRaw = useCallback(
+    (tabId: string): FlowTabArchive => {
+      const entry = ensureArchiveEntry(tabId);
+      if (!entry.raw) {
+        entry.raw = decodeCompressedArchive(entry.compressed);
+      }
+      return entry.raw ?? createEmptyArchive();
+    },
+    [ensureArchiveEntry]
+  );
+
+  const applyCompressedResult = useCallback(
+    (tabId: string, requestId: number | null, compressed?: string) => {
+      const entry = archiveRef.current.get(tabId);
+      if (!entry) return;
+      if (requestId !== null && entry.pendingRequestId !== requestId) {
+        return;
+      }
+      entry.pendingRequestId = undefined;
+      if (!compressed) return;
+      if (entry.compressed === compressed) return;
+      entry.compressed = compressed;
+      archiveRef.current.set(tabId, entry);
+      persistTabCompressed(tabId, compressed);
+    },
+    [persistTabCompressed]
+  );
+
+  const archiveWorkerRequestIdRef = useRef(0);
+  const archiveWorkerPendingRef = useRef<Map<number, { tabId: string }>>(
+    new Map()
+  );
+
+  const compressTabArchive = useCallback(
+    (tabId: string, data: FlowTabArchive) => {
+      const worker = archiveWorkerRef.current;
+      if (worker) {
+        const requestId = archiveWorkerRequestIdRef.current + 1;
+        archiveWorkerRequestIdRef.current = requestId;
+        const entry = ensureArchiveEntry(tabId);
+        entry.pendingRequestId = requestId;
+        archiveRef.current.set(tabId, entry);
+        archiveWorkerPendingRef.current.set(requestId, { tabId });
+        const message: CompressTabRequest = {
+          type: "compress-tab",
+          requestId,
+          tabId,
+          payload: data as WorkerFlowTabArchive,
+        };
+        try {
+          worker.postMessage(message);
+          return;
+        } catch (error) {
+          console.warn("Failed to offload tab compression", error);
+          archiveWorkerPendingRef.current.delete(requestId);
+          entry.pendingRequestId = undefined;
+        }
+      }
+
+      const compressed =
+        encodeArchiveRaw(data) ?? encodeStoragePayload(data);
+      if (compressed) {
+        applyCompressedResult(tabId, null, compressed);
+      }
+    },
+    [applyCompressedResult, ensureArchiveEntry]
+  );
+
+  const saveTabData = useCallback(
+    (tabId: string) => {
+      if (!initialHydrationDoneRef.current) return;
+      const idx = getTabIndex(tabId);
+      if (idx < 0) return;
+      if (tabs[idx].version === graphRevRef.current) return;
+
+      const currentNodes = getNodes();
+      const currentEdges = getEdges();
+      const nodeIds = new Set(currentNodes.map((node) => node.id));
+      const tabScriptSteps = snapshotScriptSteps().filter(([id]) =>
+        nodeIds.has(id)
+      );
+
+      const entry = ensureArchiveEntry(tabId);
+      entry.raw = {
+        nodes: clone(currentNodes),
+        edges: clone(currentEdges),
+        scriptSteps: tabScriptSteps.length ? tabScriptSteps : undefined,
+      };
+      archiveRef.current.set(tabId, entry);
+      compressTabArchive(tabId, entry.raw);
+
+      setTabs((prev) => {
+        if (prev[idx].version === graphRevRef.current) return prev;
+        const copy = [...prev];
+        copy[idx] = {
+          ...copy[idx],
+          version: graphRevRef.current,
+        };
+        return copy;
+      });
+    },
+    [
+      clone,
+      compressTabArchive,
+      ensureArchiveEntry,
+      getEdges,
+      getNodes,
+      getTabIndex,
+      graphRevRef,
+      tabs,
+    ]
+  );
+
+  const runViewportRestore = useCallback(
+    (tab?: FlowTab) => {
+      const instance = getFlowInstance();
+      if (!instance) return;
+      requestAnimationFrame(() => {
+        if (!tab?.transform) {
+          instance.setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
+        } else {
+          instance.setViewport(tab.transform, { duration: 0 });
+        }
+      });
+    },
+    [getFlowInstance]
+  );
+
+  const selectTab = useCallback(
+    (tabId: string) => {
+      if (tabId === activeTabId) return;
+      skipLoadRef.current = true;
+      const previousTabId = activeTabId;
+      saveTabData(previousTabId);
+      if (previousTabId !== tabId) {
+        const previousEntry = archiveRef.current.get(previousTabId);
+        if (previousEntry?.compressed) {
+          previousEntry.raw = undefined;
+        }
+      }
+
+      const nextTab = tabs.find((t) => t.id === tabId);
+      const nextArchive = ensureArchiveRaw(tabId);
+      setActiveTabId(tabId);
+      setActiveTabCtx(tabId);
+
+      if (nextTab) {
+        restoreScriptSteps(nextArchive.scriptSteps ?? []);
+        baseSetNodes(clone(nextArchive.nodes));
+        baseSetEdges(clone(nextArchive.edges));
+        graphRevRef.current = nextTab.version;
+        refreshBanner(nextArchive.nodes, tabId);
+      } else {
+        restoreScriptSteps([]);
+        baseSetNodes([]);
+        baseSetEdges([]);
+        graphRevRef.current = 0;
+        initializeTabHistory(tabId, [], []);
+      }
+
+      runViewportRestore(nextTab);
+    },
+    [
+      activeTabId,
+      baseSetEdges,
+      baseSetNodes,
+      clone,
+      ensureArchiveRaw,
+      graphRevRef,
+      initializeTabHistory,
+      refreshBanner,
+      runViewportRestore,
+      saveTabData,
+      setActiveTabCtx,
+      tabs,
+    ]
+  );
+
+  const addTab = useCallback(() => {
+    skipLoadRef.current = true;
+    saveTabData(activeTabId);
+
+    const newIndex = tabCounter + 1;
+    setTabCounter(newIndex);
+    const newId = `tab-${newIndex}`;
+    const newTab: FlowTab = {
+      id: newId,
+      title: `Flow ${newIndex}`,
+      version: 0,
+      transform: { x: 0, y: 0, zoom: 1 },
+    };
+
+    const emptyRaw = createEmptyArchive();
+    const emptyCompressed = encodeArchiveRaw(emptyRaw);
+    archiveRef.current.set(newId, {
+      raw: emptyRaw,
+      compressed: emptyCompressed,
+    });
+    persistTabCompressed(newId, emptyCompressed);
+
+    setTabs((prev) => [...prev, newTab]);
+
+    restoreScriptSteps([]);
+    baseSetNodes([]);
+    baseSetEdges([]);
+    graphRevRef.current = 0;
+    initializeTabHistory(newId, [], []);
+    refreshBanner([], newId);
+    setActiveTabId(newId);
+    setActiveTabCtx(newId);
+
+    runViewportRestore(newTab);
+  }, [
+    activeTabId,
+    baseSetEdges,
+    baseSetNodes,
+    graphRevRef,
+    initializeTabHistory,
+    refreshBanner,
+    runViewportRestore,
+    saveTabData,
+    setActiveTabCtx,
+    persistTabCompressed,
+    tabCounter,
+  ]);
+
+  const requestCloseTab = useCallback(
+    (tabId: string) => {
+      setCloseDialog({ tabId, open: true });
+    },
+    []
+  );
+
+  const cancelCloseTab = useCallback(() => {
+    setCloseDialog({ tabId: null, open: false });
+  }, []);
+
+  const confirmCloseTab = useCallback(() => {
+    const tabId = closeDialog.tabId;
+    if (!tabId) {
+      setCloseDialog({ tabId: null, open: false });
+      return;
+    }
+
+    setCloseDialog({ tabId: null, open: false });
+    const remaining = tabs.filter((t) => t.id !== tabId);
+
+    archiveRef.current.delete(tabId);
+    archiveWorkerPendingRef.current.forEach((value, requestId) => {
+      if (value.tabId === tabId) {
+        archiveWorkerPendingRef.current.delete(requestId);
+      }
+    });
+    removeTabArchive(tabId);
+
+    if (tabId === activeTabId) {
+      const next = remaining[0];
+      if (next) {
+        skipLoadRef.current = true;
+        setActiveTabId(next.id);
+        setActiveTabCtx(next.id);
+        const nextArchive = ensureArchiveRaw(next.id);
+        restoreScriptSteps(nextArchive.scriptSteps ?? []);
+        baseSetNodes(clone(nextArchive.nodes));
+        baseSetEdges(clone(nextArchive.edges));
+        graphRevRef.current = next.version;
+        refreshBanner(nextArchive.nodes, next.id);
+        runViewportRestore(next);
+      } else {
+        restoreScriptSteps([]);
+      }
+    }
+
+    setTabs(remaining);
+    removeTabHistory(tabId);
+  }, [
+    activeTabId,
+    baseSetEdges,
+    baseSetNodes,
+    clone,
+    ensureArchiveRaw,
+    closeDialog.tabId,
+    graphRevRef,
+    refreshBanner,
+    removeTabArchive,
+    removeTabHistory,
+    runViewportRestore,
+    setActiveTabCtx,
+    tabs,
+  ]);
+
+  const setTabTransform = useCallback(
+    (tabId: string, transform: FlowTab["transform"]) => {
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === tabId
+            ? {
+                ...t,
+                transform: transform ?? undefined,
+              }
+            : t
+        )
+      );
+    },
+    []
+  );
+
+  const setTabTooltip = useCallback((tabId: string, tooltip: string) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === tabId ? { ...t, tooltip } : t))
+    );
+  }, []);
+
+  const renameTab = useCallback(
+    (tabId: string, nextTitle: string, options?: { onlyIfEmpty?: boolean }) => {
+      setTabs((prev) => {
+        const index = prev.findIndex((t) => t.id === tabId);
+        if (index === -1) return prev;
+        const currentTitle = prev[index].title;
+
+        if (options?.onlyIfEmpty) {
+          const archive = ensureArchiveRaw(tabId);
+          const hasContent =
+            (archive.nodes?.length ?? 0) > 0 ||
+            (archive.edges?.length ?? 0) > 0;
+          const isAutoTitle = isAutoTabTitle(currentTitle);
+          if (hasContent && !isAutoTitle) {
+            return prev;
+          }
+        }
+
+        const normalized = normalizeTabTitle(nextTitle);
+        if (!normalized) {
+          return prev;
+        }
+        if (currentTitle === normalized) {
+          return prev;
+        }
+
+        const next = [...prev];
+        next[index] = { ...next[index], title: normalized };
+        return next;
+      });
+    },
+    [ensureArchiveRaw]
+  );
+
+  const bumpTabCounter = useCallback(() => {
+    setTabCounter((prev) => prev + 1);
+  }, []);
+
+  const hasHydratedInitialTab = useRef(false);
+  const metaPersistStateRef = useRef<TabsPersistState>({
+    disabled: false,
+    lastPayloadSize: 0,
+  });
+  const archiveWorkerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof Worker === "undefined") return;
+
+    try {
+      const worker = new Worker(
+        new URL("../workers/tabsCompression.worker.ts", import.meta.url),
+        { type: "module" }
+      );
+      archiveWorkerRef.current = worker;
+
+      const handleMessage = (event: MessageEvent<CompressTabResponse>) => {
+        const message = event.data;
+        if (!message || message.type !== "compress-tab-result") return;
+        const pending = archiveWorkerPendingRef.current.get(message.requestId);
+        if (!pending || pending.tabId !== message.tabId) return;
+        archiveWorkerPendingRef.current.delete(message.requestId);
+
+        if (typeof message.data === "string") {
+          applyCompressedResult(message.tabId, message.requestId, message.data);
+          return;
+        }
+
+        if (message.error) {
+          console.warn("Tabs archive compression worker failed", message.error);
+          const entry = archiveRef.current.get(message.tabId);
+          const fallback =
+            encodeArchiveRaw(entry?.raw ?? createEmptyArchive()) ??
+            encodeStoragePayload(entry?.raw ?? createEmptyArchive());
+          if (fallback) {
+            applyCompressedResult(message.tabId, message.requestId, fallback);
+          }
+        }
+      };
+
+      const handleError = (event: ErrorEvent | MessageEvent) => {
+        console.warn(
+          "Tabs archive worker encountered an error",
+          "message" in event ? event.message : event
+        );
+        archiveWorkerPendingRef.current.forEach(({ tabId }, requestId) => {
+          const entry = archiveRef.current.get(tabId);
+          const fallback =
+            encodeArchiveRaw(entry?.raw ?? createEmptyArchive()) ??
+            encodeStoragePayload(entry?.raw ?? createEmptyArchive());
+          if (fallback) {
+            applyCompressedResult(tabId, requestId, fallback);
+          }
+        });
+        archiveWorkerPendingRef.current = new Map();
+      };
+
+      worker.addEventListener("message", handleMessage as EventListener);
+      worker.addEventListener("error", handleError as EventListener);
+      worker.addEventListener("messageerror", handleError as EventListener);
+
+      return () => {
+        worker.removeEventListener("message", handleMessage as EventListener);
+        worker.removeEventListener("error", handleError as EventListener);
+        worker.removeEventListener("messageerror", handleError as EventListener);
+        worker.terminate();
+        archiveWorkerRef.current = null;
+        archiveWorkerPendingRef.current.clear();
+      };
+    } catch (error) {
+      console.warn("Failed to initialize tabs archive worker", error);
+    }
+  }, [applyCompressedResult]);
+  useEffect(() => {
+    if (hasHydratedInitialTab.current) return;
+    hasHydratedInitialTab.current = true;
+
+    const active = tabs.find((t) => t.id === activeTabId) ?? DEFAULT_TAB;
+    const archiveData = ensureArchiveRaw(active.id);
+    restoreScriptSteps(archiveData.scriptSteps ?? []);
+    baseSetNodes(clone(archiveData.nodes));
+    baseSetEdges(clone(archiveData.edges));
+    graphRevRef.current = active.version;
+    refreshBanner(archiveData.nodes, active.id);
+    initializeTabHistory(
+      active.id,
+      clone(archiveData.nodes),
+      clone(archiveData.edges)
+    );
+
+    const finalizeHydration = () => {
+      initialHydrationDoneRef.current = true;
+      setInitialHydrationDone(true);
+    };
+
+    if (typeof window === "undefined") {
+      finalizeHydration();
+    } else {
+      requestAnimationFrame(() => {
+        finalizeHydration();
+      });
+    }
+  }, [
+    activeTabId,
+    baseSetEdges,
+    baseSetNodes,
+    clone,
+    ensureArchiveRaw,
+    graphRevRef,
+    initializeTabHistory,
+    refreshBanner,
+    tabs,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const payload = encodeStoragePayload({
+      version: 2,
+      tabs,
+    });
+    const payloadSize = payload.length;
+    const { disabled, lastPayloadSize } = metaPersistStateRef.current;
+    if (disabled && payloadSize >= lastPayloadSize) {
+      return;
+    }
+    try {
+      window.localStorage.setItem(TABS_STORAGE_KEY, payload);
+      metaPersistStateRef.current = {
+        disabled: false,
+        lastPayloadSize: payloadSize,
+      };
+    } catch (error) {
+      console.warn("Failed to persist tabs", error);
+      const quotaExceeded = isQuotaExceededError(error);
+      metaPersistStateRef.current = {
+        disabled: quotaExceeded,
+        lastPayloadSize: payloadSize,
+      };
+    }
+  }, [tabs]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId);
+    } catch (error) {
+      console.warn("Failed to persist active tab", error);
+    }
+  }, [activeTabId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        TAB_COUNTER_STORAGE_KEY,
+        String(tabCounter)
+      );
+    } catch (error) {
+      console.warn("Failed to persist tab counter", error);
+    }
+  }, [tabCounter]);
+
+  return useMemo(
+    () => ({
+      tabs,
+      activeTabId,
+      tabCounter,
+      skipLoadRef,
+      closeDialog,
+      selectTab,
+      addTab,
+      requestCloseTab,
+      confirmCloseTab,
+      cancelCloseTab,
+      setTabTransform,
+      setTabTooltip,
+      renameTab,
+      saveTabData,
+      setTabsExternal: setTabs,
+      setActiveTabId,
+      bumpTabCounter,
+      initialHydrationDone,
+    }),
+    [
+      tabs,
+      activeTabId,
+      tabCounter,
+      closeDialog,
+      selectTab,
+      addTab,
+      requestCloseTab,
+      confirmCloseTab,
+      cancelCloseTab,
+      setTabTransform,
+      setTabTooltip,
+      renameTab,
+      saveTabData,
+      bumpTabCounter,
+      initialHydrationDone,
+    ]
+  );
+}

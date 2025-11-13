@@ -1,0 +1,2 @@
+[run]
+data_file = backend/tests/.coverage

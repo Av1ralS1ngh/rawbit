@@ -1,0 +1,654 @@
+import React from "react";
+import { act, cleanup, render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { MockInstance } from "vitest";
+import type { TopBarProps, ExtraTopBarProps } from "@/components/layout/TopBar";
+import type { FlowNode } from "@/types";
+import type { Edge, ReactFlowInstance, Viewport } from "@xyflow/react";
+
+import Flow from "@/components/Flow";
+import type { NodePorts } from "@/components/dialog/ConnectDialog";
+
+type FileImportCallbacks = {
+  onTooltip?: (filename?: string) => void;
+  onError?: (message: string, details?: unknown[]) => void;
+};
+
+const topBarProps = {
+  current: null as (TopBarProps & ExtraTopBarProps) | null,
+};
+
+const flowCanvasProps = {
+  current: null as Record<string, unknown> | null,
+};
+
+const getCanvasCallbacks = () =>
+  (flowCanvasProps.current ?? {}) as {
+    onPaneClick?: (event: unknown) => void;
+    onMoveEnd?: (event: MouseEvent | TouchEvent | null, viewport: Viewport) => void;
+  };
+
+const setNodesMock = vi.fn();
+const setEdgesMock = vi.fn();
+const setTabTransformMock = vi.fn();
+const saveTabDataMock = vi.fn();
+const scheduleSnapshotMock = vi.fn();
+const setIsSearchHighlightMock = vi.fn();
+const clearHighlightsMock = vi.fn();
+const setInfoDialogMock = vi.fn();
+const setTabTooltipMock = vi.fn();
+const renameTabMock = vi.fn();
+const markPendingAfterDirtyChangeMock = vi.fn();
+
+const mockNodesState: { current: FlowNode[] } = {
+  current: [],
+};
+const mockEdgesState: { current: Edge[] } = {
+  current: [],
+};
+
+const fileImportOptions: { current?: FileImportCallbacks } = {};
+
+const skipLoadRef = { current: false };
+type IdleDeadlineLike = { didTimeout: boolean; timeRemaining: () => number };
+
+const colorPaletteState = {
+  isOpen: false,
+  position: { x: 0, y: 0 },
+  canApply: false,
+  open: vi.fn(),
+  close: vi.fn(),
+  apply: vi.fn(),
+  updateEligibility: vi.fn(),
+};
+
+const connectDialogState: NodePorts & {
+  allPorts: NodePorts[];
+  existingEdges: Edge[];
+  handleApply: ReturnType<typeof vi.fn>;
+  sourcePorts: NodePorts | null;
+  targetPorts: NodePorts | null;
+} = {
+  id: "",
+  label: "",
+  inputs: [],
+  outputs: [],
+  allPorts: [],
+  existingEdges: [],
+  handleApply: vi.fn(),
+  sourcePorts: null,
+  targetPorts: null,
+};
+
+const store = {
+  nodes: [] as FlowNode[],
+  edges: [] as Edge[],
+  panZoom: { setClickDistance: vi.fn() },
+  resetSelectedElements: vi.fn(),
+  unselectNodesAndEdges: vi.fn(),
+};
+
+const reactFlowInstanceMock = {
+  fitView: vi.fn(),
+} as unknown as ReactFlowInstance;
+
+vi.mock("@/components/nodes/CalculationNode", () => ({
+  default: () => null,
+}));
+vi.mock("@/components/nodes/GroupNode", () => ({
+  default: () => null,
+}));
+vi.mock("@/components/nodes/TextInfoNode", () => ({
+  default: () => null,
+}));
+vi.mock("@/components/nodes/OpCodeNode", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/components/layout/TopBar", () => ({
+  TopBar: (props: TopBarProps & ExtraTopBarProps) => {
+    topBarProps.current = props;
+    return <div data-testid="topbar" />;
+  },
+}));
+
+vi.mock("@/components/layout/Sidebar", () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
+}));
+
+vi.mock("@/components/ui/ColorPalette", () => ({
+  ColorPalette: () => <div data-testid="color-palette" />,
+}));
+
+vi.mock("@/components/FlowCanvas", () => ({
+  FlowCanvas: (props: Record<string, unknown> & {
+    onInit?: (instance: ReactFlowInstance) => void;
+  }) => {
+    flowCanvasProps.current = props;
+    const init = props.onInit;
+    React.useEffect(() => {
+      init?.(reactFlowInstanceMock);
+    }, [init]);
+    return <div data-testid="flow-canvas" />;
+  },
+}));
+
+vi.mock("@/components/FlowDialogLayer", () => ({
+  FlowDialogLayer: () => <div data-testid="flow-dialog-layer" />,
+}));
+
+vi.mock("@/components/FlowPanels", () => ({
+  FlowPanels: () => <div data-testid="flow-panels" />,
+}));
+
+vi.mock("@/hooks/useNodeOperations", () => ({
+  useNodeOperations: () => ({
+    nodes: mockNodesState.current,
+    setNodes: setNodesMock,
+    edges: mockEdgesState.current,
+    setEdges: setEdgesMock,
+    onNodesChange: vi.fn(),
+    onEdgesChange: vi.fn(),
+    onConnect: vi.fn(),
+    onDragOver: vi.fn(),
+    onDrop: vi.fn(),
+    onNodeDragStop: vi.fn(),
+    onInit: vi.fn(),
+    groupSelectedNodes: vi.fn(),
+    ungroupSelectedNodes: vi.fn(),
+    canGroupSelectedNodes: () => false,
+    canUngroupSelectedNodes: () => false,
+  }),
+}));
+
+vi.mock("@/hooks/useCopyPaste", () => ({
+  useCopyPaste: () => ({
+    copyNodes: vi.fn(),
+    pasteNodes: vi.fn(),
+    handleMouseMove: vi.fn(),
+    getTopLeftPosition: vi.fn(() => ({ x: 0, y: 0 })),
+    hasCopiedNodes: false,
+  }),
+}));
+
+vi.mock("@/contexts/UndoRedoContext", () => ({
+  UndoRedoProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock("@/hooks/useUndoRedo", () => ({
+  useUndoRedo: () => ({
+    pushState: vi.fn(),
+    history: [],
+    pointer: 0,
+    undo: vi.fn(),
+    redo: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    setActiveTab: vi.fn(),
+    initializeTabHistory: vi.fn(),
+    removeTabHistory: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useCalculation", () => ({
+  useGlobalCalculationLogic: vi.fn(),
+}));
+
+vi.mock("@/hooks/useTheme", () => ({
+  useTheme: () => ({ theme: "light" }),
+}));
+
+vi.mock("@/hooks/useTabs", () => ({
+  useTabs: () => ({
+    tabs: [{ id: "tab-1", title: "Flow 1" }],
+    activeTabId: "tab-1",
+    skipLoadRef,
+    initialHydrationDone: true,
+    closeDialog: { open: false, tabId: null },
+    selectTab: vi.fn(),
+    addTab: vi.fn(),
+    requestCloseTab: vi.fn(),
+    confirmCloseTab: vi.fn(),
+    cancelCloseTab: vi.fn(),
+    setTabTransform: setTabTransformMock,
+    setTabTooltip: setTabTooltipMock,
+    renameTab: renameTabMock,
+    saveTabData: saveTabDataMock,
+  }),
+}));
+
+vi.mock("@/contexts/SnapshotContext", () => ({
+  SnapshotProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock("@/hooks/useSnapshotScheduler", () => ({
+  useSnapshotScheduler: () => ({
+    pushCleanState: vi.fn(),
+    scheduleSnapshot: scheduleSnapshotMock,
+    pendingSnapshotRef: { current: false },
+    skipNextEdgeSnapshotRef: { current: false },
+    skipNextNodeRemovalRef: { current: false },
+    markPendingAfterDirtyChange: markPendingAfterDirtyChangeMock,
+    releaseEdgeSnapshotSkip: vi.fn(),
+    lockEdgeSnapshotSkip: vi.fn(),
+    lockNodeRemovalSnapshotSkip: vi.fn(),
+    releaseNodeRemovalSnapshotSkip: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHighlight", () => ({
+  useHighlight: () => [
+    { highlightedNodes: new Set<string>(), isSearchHighlight: false },
+    {
+      highlightAndFit: vi.fn(),
+      setIsSearchHighlight: setIsSearchHighlightMock,
+      clearHighlights: clearHighlightsMock,
+    },
+  ],
+}));
+
+vi.mock("@/hooks/useShareFlow", () => ({
+  useShareFlow: () => ({
+    shareDialogOpen: false,
+    openShareDialog: vi.fn(),
+    closeShareDialog: vi.fn(),
+    shareCreatedId: null,
+    requestShare: vi.fn(),
+    softGateOpen: false,
+    closeSoftGate: vi.fn(),
+    verifyTurnstile: vi.fn(),
+    infoDialog: { open: false, message: "" },
+    setInfoDialog: setInfoDialogMock,
+    closeInfoDialog: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useColorPalette", () => ({
+  useColorPalette: () => colorPaletteState,
+}));
+
+vi.mock("@/hooks/useMiniMapSize", () => ({
+  useMiniMapSize: () => ({ w: 100, h: 80 }),
+}));
+
+vi.mock("@/hooks/usePanelAutoClose", () => ({
+  usePanelAutoClose: vi.fn(),
+}));
+
+vi.mock("@/hooks/useFlowInteractions", () => ({
+  useFlowInteractions: () => ({
+    onNodesChange: vi.fn(),
+    onEdgesChange: vi.fn(),
+    onConnectWithUndo: vi.fn(),
+    onReconnectWithUndo: vi.fn(),
+    onDropWithUndo: vi.fn(),
+    groupWithUndo: vi.fn(),
+    ungroupWithUndo: vi.fn(),
+    onNodeDragStopWithUndo: vi.fn(),
+    handlePaste: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useFlowHotkeys", () => ({
+  useFlowHotkeys: vi.fn(),
+}));
+
+vi.mock("@/hooks/useSharedFlowLoader", () => ({
+  useSharedFlowLoader: vi.fn(),
+}));
+
+vi.mock("@/hooks/useSimplifiedSave", () => ({
+  useSimplifiedSave: () => ({
+    showConfirmation: false,
+    confirmationMessage: "",
+    promptSave: vi.fn(),
+    confirmSave: vi.fn(),
+    cancelSave: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useSearchHighlights", () => ({
+  useSearchHighlights: () => ({
+    focusSearchHit: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useFileOperations", () => ({
+  useFileOperations: (
+    _nodes: FlowNode[],
+    _edges: Edge[],
+    _onNodesChange: unknown,
+    _onEdgesChange: unknown,
+    options?: FileImportCallbacks
+  ) => {
+    fileImportOptions.current = {
+      onTooltip: options?.onTooltip,
+      onError: options?.onError,
+    };
+    return {
+      fileInputRef: { current: null },
+      saveFlow: vi.fn(),
+      saveSimplifiedFlow: vi.fn(),
+      openFileDialog: vi.fn(),
+      handleFileSelect: vi.fn(),
+    };
+  },
+}));
+
+vi.mock("@/hooks/useConnectPorts", () => ({
+  useConnectDialog: () => connectDialogState,
+}));
+
+vi.mock("@/my_tx_flows/customFlows", () => ({
+  customFlows: [
+    {
+      id: "example-flow",
+      label: "Example flow",
+      data: {
+        nodes: [],
+        edges: [],
+        schemaVersion: 1,
+      },
+    },
+  ],
+}));
+
+vi.mock("@xyflow/react", () => ({
+  ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useReactFlow: () => ({
+    getNodes: () => mockNodesState.current,
+    getEdges: () => mockEdgesState.current,
+  }),
+  useStore: <T,>(selector: (state: typeof store) => T) => selector(store),
+  useStoreApi: () => ({
+    getState: () => store,
+    subscribe: () => () => undefined,
+  }),
+}));
+
+const renderFlow = () => render(<Flow />);
+
+beforeEach(() => {
+  topBarProps.current = null;
+  flowCanvasProps.current = null;
+  mockNodesState.current = [];
+  mockEdgesState.current = [];
+  store.nodes = [];
+  store.edges = [];
+  vi.clearAllMocks();
+  colorPaletteState.isOpen = false;
+  colorPaletteState.canApply = false;
+  colorPaletteState.open.mockClear();
+  colorPaletteState.close.mockClear();
+  colorPaletteState.updateEligibility.mockClear();
+  connectDialogState.sourcePorts = null;
+  connectDialogState.targetPorts = null;
+  connectDialogState.outputs = [];
+  connectDialogState.inputs = [];
+  connectDialogState.allPorts = [];
+  connectDialogState.handleApply.mockClear();
+  skipLoadRef.current = false;
+  localStorage.clear();
+  localStorage.setItem("rawbit.ui.welcomeSeen", "1");
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+// Tests will be added below
+
+describe("Flow autosave scheduling", () => {
+  let rafSpy: MockInstance<Window["requestAnimationFrame"]>;
+  let cancelRafSpy: MockInstance<Window["cancelAnimationFrame"]>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    rafSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb: FrameRequestCallback) => {
+        cb(0);
+        return 1;
+      });
+    cancelRafSpy = vi
+      .spyOn(window, "cancelAnimationFrame")
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    rafSpy.mockRestore();
+    cancelRafSpy.mockRestore();
+  });
+
+  it("saves tab data after raf + timeout when not guarded", () => {
+    renderFlow();
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(saveTabDataMock).toHaveBeenCalledWith("tab-1");
+  });
+
+  it("reschedules when skipLoadRef is true until guard clears", () => {
+    renderFlow();
+    saveTabDataMock.mockClear();
+    skipLoadRef.current = true;
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    expect(saveTabDataMock).not.toHaveBeenCalled();
+
+    skipLoadRef.current = false;
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    expect(saveTabDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels pending frame and timeout on unmount", () => {
+    const clearTimeoutSpy = vi
+      .spyOn(window, "clearTimeout")
+      .mockImplementation(() => undefined);
+    const { unmount } = renderFlow();
+    unmount();
+    expect(cancelRafSpy).toHaveBeenCalled();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
+});
+
+describe("Flow color palette controls", () => {
+  it("opens the palette only when selection is eligible", () => {
+    colorPaletteState.canApply = true;
+    renderFlow();
+    topBarProps.current?.onToggleColorPalette?.(
+      new MouseEvent("click") as unknown as React.MouseEvent
+    );
+    expect(colorPaletteState.updateEligibility).toHaveBeenCalled();
+    expect(colorPaletteState.open).toHaveBeenCalled();
+  });
+
+  it("closes the palette when already open", () => {
+    colorPaletteState.isOpen = true;
+    renderFlow();
+    topBarProps.current?.onToggleColorPalette?.(
+      new MouseEvent("click") as unknown as React.MouseEvent
+    );
+    expect(colorPaletteState.close).toHaveBeenCalled();
+  });
+
+  it("ignores toggle when selection is ineligible", () => {
+    colorPaletteState.canApply = false;
+    renderFlow();
+    topBarProps.current?.onToggleColorPalette?.(
+      new MouseEvent("click") as unknown as React.MouseEvent
+    );
+    expect(colorPaletteState.open).not.toHaveBeenCalled();
+  });
+
+  it("clears highlights and selection on pane clicks", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const rafSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb: FrameRequestCallback) => {
+        cb(0);
+        return 1;
+      });
+    store.nodes = [
+      { id: "node-a", selected: true } as FlowNode,
+      { id: "node-b", selected: false } as FlowNode,
+    ];
+    store.edges = [
+      { id: "edge-a", source: "node-a", target: "node-b", selected: true } as Edge,
+    ];
+
+    await act(async () => {
+      renderFlow();
+    });
+
+    await act(async () => {
+      getCanvasCallbacks().onPaneClick?.(null);
+    });
+
+    expect(colorPaletteState.close).toHaveBeenCalled();
+    expect(setIsSearchHighlightMock).toHaveBeenCalledWith(false);
+    expect(clearHighlightsMock).toHaveBeenCalled();
+    expect(store.resetSelectedElements).toHaveBeenCalled();
+    expect(store.unselectNodesAndEdges).toHaveBeenCalledWith({
+      nodes: expect.any(Array),
+      edges: expect.any(Array),
+    });
+    expect(setNodesMock).toHaveBeenCalled();
+    expect(setEdgesMock).toHaveBeenCalled();
+
+    const nodeUpdater = setNodesMock.mock.calls[0]?.[0] as
+      | ((nodes: FlowNode[]) => FlowNode[])
+      | undefined;
+    const edgeUpdater = setEdgesMock.mock.calls[0]?.[0] as
+      | ((edges: Edge[]) => Edge[])
+      | undefined;
+    expect(nodeUpdater).toBeDefined();
+    expect(edgeUpdater).toBeDefined();
+    const updatedNodes = nodeUpdater!(store.nodes);
+    const updatedEdges = edgeUpdater!(store.edges);
+    expect(updatedNodes?.every((node) => node.selected === false)).toBe(true);
+    expect(updatedEdges?.every((edge) => edge.selected === false)).toBe(true);
+
+    rafSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+describe("Flow palette idle scheduling", () => {
+  afterEach(() => {
+    // @ts-expect-error clear test shim
+    delete (window as Window & { requestIdleCallback?: () => number }).requestIdleCallback;
+    // @ts-expect-error clear test shim
+    delete (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+  });
+
+  it("uses requestIdleCallback when available", () => {
+    const cancelSpy = vi.fn();
+    let idleCallback: ((deadline: IdleDeadlineLike) => void) | null = null;
+    (window as Window & {
+      requestIdleCallback?: (
+        cb: (deadline: IdleDeadlineLike) => void,
+        options?: IdleRequestOptions
+      ) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    }).requestIdleCallback = (
+      cb: (deadline: IdleDeadlineLike) => void
+    ) => {
+      idleCallback = cb;
+      return 42;
+    };
+    (window as Window & { cancelIdleCallback?: (handle: number) => void }).cancelIdleCallback = cancelSpy;
+
+    const { unmount } = renderFlow();
+
+    expect(idleCallback).toBeTruthy();
+    const cb = idleCallback as ((deadline: IdleDeadlineLike) => void) | null;
+    if (cb) {
+      cb({ didTimeout: false, timeRemaining: () => 0 });
+    }
+    expect(colorPaletteState.updateEligibility).toHaveBeenCalled();
+
+    unmount();
+    expect(cancelSpy).toHaveBeenCalledWith(42);
+  });
+
+  it("falls back to setTimeout when requestIdleCallback is unavailable", () => {
+    vi.useFakeTimers();
+    const timeoutSpy = vi.spyOn(window, "setTimeout");
+
+    renderFlow();
+    expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 120);
+
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    expect(colorPaletteState.updateEligibility).toHaveBeenCalled();
+
+    timeoutSpy.mockRestore();
+    vi.useRealTimers();
+  });
+});
+
+describe("Flow connect button enablement", () => {
+  const makePorts = (id: string, type: "source" | "target"): NodePorts => ({
+    id,
+    label: id,
+    inputs:
+      type === "target"
+        ? [{ label: `${id}-input`, handleId: `${id}-input-0` }]
+        : [],
+    outputs:
+      type === "source"
+        ? [{ label: `${id}-output`, handleId: `${id}-output-0` }]
+        : [],
+  });
+
+  it("enables connect when two compatible nodes are selected", () => {
+    mockNodesState.current = [
+      { id: "node-a", type: "calculation", position: { x: 0, y: 0 }, data: {}, selected: true } as FlowNode,
+      { id: "node-b", type: "calculation", position: { x: 0, y: 0 }, data: {}, selected: true } as FlowNode,
+    ];
+    connectDialogState.sourcePorts = makePorts("node-a", "source");
+    connectDialogState.targetPorts = makePorts("node-b", "target");
+
+    renderFlow();
+
+    expect(topBarProps.current?.connectDisabled).toBe(false);
+  });
+
+  it("disables connect when requirements are not met", () => {
+    mockNodesState.current = [
+      { id: "node-a", type: "calculation", position: { x: 0, y: 0 }, data: {}, selected: true } as FlowNode,
+    ];
+    connectDialogState.sourcePorts = makePorts("node-a", "source");
+    connectDialogState.targetPorts = makePorts("node-b", "target");
+
+    renderFlow();
+
+    expect(topBarProps.current?.connectDisabled).toBe(true);
+  });
+});
+
+describe("Flow canvas viewport persistence", () => {
+  it("forwards move events to setTabTransform", () => {
+    renderFlow();
+    getCanvasCallbacks().onMoveEnd?.(null, {
+      x: 10,
+      y: -5,
+      zoom: 1.25,
+    } as Viewport);
+    expect(setTabTransformMock).toHaveBeenCalledWith("tab-1", {
+      x: 10,
+      y: -5,
+      zoom: 1.25,
+    });
+  });
+});

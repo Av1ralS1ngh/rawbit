@@ -1,0 +1,156 @@
+import { act, renderHook } from "@testing-library/react";
+import type { Edge } from "@xyflow/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { SENTINEL_EMPTY, SENTINEL_FORCE00 } from "@/lib/nodes/constants";
+import type { FlowNode } from "@/types";
+
+vi.mock("@/lib/share/scriptStepsCache", () => ({
+  removeScriptSteps: vi.fn(),
+}));
+
+import { useCalcNodeMutations } from "../useCalcNodeMutations";
+import { removeScriptSteps } from "@/lib/share/scriptStepsCache";
+
+describe("useCalcNodeMutations", () => {
+  const nodeId = "node-1";
+
+  let nodes: FlowNode[];
+  let edges: Edge[];
+  let setNodes: ReturnType<typeof vi.fn>;
+  let setEdges: ReturnType<typeof vi.fn>;
+
+  const baseNode = (): FlowNode => ({
+    id: nodeId,
+    type: "calculation",
+    position: { x: 0, y: 0 },
+    data: {
+      functionName: "identity",
+      inputs: { vals: ["aa", "bb"] },
+      showComment: false,
+    },
+    selected: false,
+  });
+
+  beforeEach(() => {
+    nodes = [baseNode()];
+    edges = [
+      {
+        id: "e-1",
+        source: nodeId,
+        target: "node-2",
+        targetHandle: "output-0",
+      },
+    ];
+
+    setNodes = vi.fn((updater) => {
+      nodes = updater(nodes);
+      return nodes;
+    });
+
+    setEdges = vi.fn((updater) => {
+      edges = updater(edges);
+      return edges;
+    });
+
+    vi.clearAllMocks();
+  });
+
+  it("allows sentinel values to overwrite connected inputs", () => {
+    const { result } = renderHook(() =>
+      useCalcNodeMutations(nodeId, setNodes, setEdges)
+    );
+
+    act(() => {
+      result.current.setFieldValue(0, "11", true, false);
+    });
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(nodes[0].data.inputs?.vals?.[0]).toBe("aa");
+
+    act(() => {
+      result.current.setFieldValue(0, SENTINEL_FORCE00, true, true);
+    });
+
+    expect(setNodes).toHaveBeenCalledTimes(1);
+    expect(nodes[0].data.inputs?.vals?.[0]).toBe(SENTINEL_FORCE00);
+    expect(nodes[0].data.dirty).toBe(true);
+    expect(nodes[0].data.error).toBe(false);
+
+    act(() => {
+      result.current.setFieldValue(1, SENTINEL_EMPTY, true, true);
+    });
+
+    expect(nodes[0].data.inputs?.vals?.[1]).toBe(SENTINEL_EMPTY);
+  });
+
+  it("removes a node and guards undo snapshot hooks", () => {
+    const lockEdgeSnapshotSkip = vi.fn();
+    const releaseEdgeSnapshotSkip = vi.fn();
+    const scheduleSnapshot = vi.fn();
+
+    const { result } = renderHook(() =>
+      useCalcNodeMutations(nodeId, setNodes, setEdges, {
+        lockEdgeSnapshotSkip,
+        releaseEdgeSnapshotSkip,
+        scheduleSnapshot,
+      })
+    );
+
+    act(() => {
+      result.current.deleteNode();
+    });
+
+    expect(removeScriptSteps).toHaveBeenCalledWith(nodeId);
+    expect(lockEdgeSnapshotSkip).toHaveBeenCalledTimes(1);
+    expect(setEdges).toHaveBeenCalledTimes(1);
+    expect(edges).toEqual([]);
+    expect(setNodes).toHaveBeenCalledTimes(1);
+    expect(nodes).toEqual([]);
+    expect(scheduleSnapshot).toHaveBeenCalledWith("Node(s) removed", { refresh: true });
+    expect(releaseEdgeSnapshotSkip).not.toHaveBeenCalled();
+  });
+
+  it("releases snapshot guard when nothing is removed", () => {
+    edges = [];
+
+    const lockEdgeSnapshotSkip = vi.fn();
+    const releaseEdgeSnapshotSkip = vi.fn();
+
+    const { result } = renderHook(() =>
+      useCalcNodeMutations(nodeId, setNodes, setEdges, {
+        lockEdgeSnapshotSkip,
+        releaseEdgeSnapshotSkip,
+      })
+    );
+
+    act(() => {
+      result.current.deleteNode();
+    });
+
+    expect(lockEdgeSnapshotSkip).toHaveBeenCalledTimes(1);
+    expect(releaseEdgeSnapshotSkip).toHaveBeenCalledTimes(1);
+    expect(setNodes).toHaveBeenCalledTimes(1);
+    expect(nodes).toEqual([]);
+  });
+
+  it("normalises empty titles and comment toggles", () => {
+    const { result } = renderHook(() =>
+      useCalcNodeMutations(nodeId, setNodes, setEdges)
+    );
+
+    act(() => {
+      result.current.handleTitleUpdate("");
+    });
+    expect(nodes[0].data.title).toBe("N/A");
+
+    act(() => {
+      result.current.toggleComment();
+    });
+    expect(nodes[0].data.showComment).toBe(true);
+
+    act(() => {
+      result.current.handleCommentChange("hello");
+    });
+    expect(nodes[0].data.comment).toBe("hello");
+  });
+});

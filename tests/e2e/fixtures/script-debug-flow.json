@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "name": "playwright-script-debug",
+  "nodes": [
+    {
+      "id": "node_script_verify",
+      "type": "calculation",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "functionName": "script_verification",
+        "title": "Verify Script",
+        "paramExtraction": "multi_val",
+        "numInputs": 6,
+        "inputs": { "vals": ["", "", "", "0", "", ""] },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "scriptSig_hex", "rows": 3 },
+            { "index": 1, "label": "scriptPubKey_hex", "rows": 3 },
+            { "index": 2, "label": "tx_hex", "rows": 3 },
+            { "index": 3, "label": "input_index_to_verify", "rows": 1 },
+            { "index": 4, "label": "exclude_flags", "rows": 1 },
+            { "index": 5, "label": "spent_amount_sats", "rows": 1 }
+          ],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {}
+      }
+    }
+  ],
+  "edges": []
+}

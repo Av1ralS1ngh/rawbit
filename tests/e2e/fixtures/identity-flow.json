@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "name": "playwright-identity",
+  "nodes": [
+    {
+      "id": "node_identity",
+      "type": "calculation",
+      "position": { "x": 350, "y": 200 },
+      "positionAbsolute": { "x": 350, "y": 200 },
+      "width": 330,
+      "height": 220,
+      "data": {
+        "functionName": "identity",
+        "title": "Identity",
+        "numInputs": 0,
+        "showField": true,
+        "value": "",
+        "inputs": { "val": "" },
+        "result": "",
+        "groupInstances": {},
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "INPUT VALUE:", "rows": 1 }
+          ]
+        }
+      }
+    }
+  ],
+  "edges": []
+}

@@ -1,0 +1,506 @@
+/* ------------------------------------------------------------------
+   TextInfoNode – markdown/info canvas with dark mode support
+   Updated: Fixed ResizeObserver + Restored proper text rendering
+------------------------------------------------------------------- */
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useDeferredValue,
+} from "react";
+import { NodeProps, useReactFlow, NodeResizer, Edge } from "@xyflow/react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Minus, Plus, MoreHorizontal, Copy, Trash2, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { mdToHtml } from "@/lib/markdown";
+import { useClipboardLite } from "@/hooks/nodes/useClipboardLite";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
+import { useSnapshotSchedulerContext } from "@/hooks/useSnapshotSchedulerContext";
+import type { CalculationNodeData, FlowNode } from "@/types";
+import { produce, setAutoFreeze, Draft } from "immer";
+
+setAutoFreeze(false); // Immer objects must stay mutable for React-Flow
+
+/* -------------------------------------------------------------
+ *  Constants
+ * ----------------------------------------------------------- */
+const DEFAULT_TEXT = "...";
+const MIN_WIDTH = 360;
+const MIN_HEIGHT = 100;
+const HEADER_HEIGHT = 32; // h-8 in Tailwind = 32px
+
+/* -------------------------------------------------------------
+ *  Search highlight helpers
+ * ----------------------------------------------------------- */
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function unmarkAll(root: HTMLElement) {
+  const marks = root.querySelectorAll("mark.__searchHit");
+  marks.forEach((m) => {
+    const parent = m.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(m.textContent || ""), m);
+    parent.normalize(); // merge adjacent text nodes
+  });
+}
+
+function markAll(root: HTMLElement, term: string): number {
+  const re = new RegExp(escapeRegExp(term), "gi");
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let n: Node | null;
+  while ((n = walker.nextNode())) textNodes.push(n as Text);
+
+  let hits = 0;
+  textNodes.forEach((tn) => {
+    const value = tn.nodeValue || "";
+    if (!value) return;
+    re.lastIndex = 0;
+    if (!re.test(value)) return;
+    re.lastIndex = 0;
+
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(value))) {
+      const start = m.index;
+      const end = start + m[0].length;
+      if (start > last)
+        frag.appendChild(document.createTextNode(value.slice(last, start)));
+      const mark = document.createElement("mark");
+      mark.className = "__searchHit";
+      mark.textContent = value.slice(start, end);
+      // gentle yellow; inline so no global CSS needed
+      mark.style.background = "rgba(234,179,8,0.45)";
+      mark.style.borderRadius = "2px";
+      mark.style.padding = "0 1px";
+      frag.appendChild(mark);
+      hits += 1;
+      last = end;
+    }
+    if (last < value.length)
+      frag.appendChild(document.createTextNode(value.slice(last)));
+    tn.parentNode?.replaceChild(frag, tn);
+  });
+
+  return hits;
+}
+
+export default function TextInfoNode({
+  id,
+  data,
+  selected,
+  width: nodeWidth,
+  height: nodeHeight,
+}: NodeProps<FlowNode>) {
+  /* ───────── hooks & helpers ──────────────────────────────── */
+  const rf = useReactFlow<FlowNode>();
+  const { pushState } = useUndoRedo();
+  const {
+    lockEdgeSnapshotSkip,
+    releaseEdgeSnapshotSkip,
+    scheduleSnapshot,
+  } = useSnapshotSchedulerContext();
+
+  /* ---------- O(1) node patch helper ------------------------ */
+  const updateNode = useCallback(
+    (mutator: (draft: Draft<CalculationNodeData>) => void) => {
+      rf.setNodes((nodes) => {
+        const idx = nodes.findIndex((n) => n.id === id);
+        if (idx === -1) return nodes;
+        const next = [...nodes];
+        const currentData = (next[idx].data ??
+          {}) as CalculationNodeData;
+        next[idx] = {
+          ...next[idx],
+          data: produce(currentData, mutator),
+        };
+        return next;
+      });
+    },
+    [rf, id]
+  );
+
+  /* ───────── node-level data ──────────────────────────────── */
+  const content = typeof data.content === "string" ? data.content : "";
+  const fontSize = typeof data.fontSize === "number" ? data.fontSize : 16;
+  const lineHeight = Math.round(fontSize * 1.5); // Use the same calculation as the second file
+  const borderStyle = data.borderColor ? { borderColor: data.borderColor } : {};
+  const rawTitle = data.title || "Text Node";
+  const { copyId, idCopied } = useClipboardLite({
+    result: undefined,
+    rawTitle,
+    id,
+  });
+
+  // Use node dimensions if available, otherwise fall back to data dimensions
+  const displayWidth = nodeWidth || data.width || MIN_WIDTH;
+  const displayHeight = nodeHeight || data.height || MIN_HEIGHT;
+
+  /* 🔶 Highlight ring (search / edge-select) */
+  const highlightStyles =
+    data.isHighlighted && !selected
+      ? cn(
+          "ring-8 ring-yellow-400 ring-offset-4 ring-offset-background",
+          "shadow-[0_0_10px_4px_rgba(234,179,8,0.80)]"
+        )
+      : "";
+  const selectedStyles = selected
+    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+    : "";
+
+  /* ───────── local editing state ───────────────────────────── */
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState<string>(content || DEFAULT_TEXT);
+  const [showMenu, setShowMenu] = useState(false);
+  const searchMarkTerm = data.searchMark?.term?.trim();
+  const searchMarkTimestamp = data.searchMark?.ts;
+
+  /* keep draft in sync when external content changes */
+  useEffect(() => {
+    if (!isEditing) setDraft(content || DEFAULT_TEXT);
+  }, [content, isEditing]);
+
+  /* -----------------------------------------------------------
+   *  Derived / deferred markdown HTML
+   * --------------------------------------------------------- */
+  const deferredContent = useDeferredValue(content);
+  const formatted = useMemo(() => mdToHtml(deferredContent), [deferredContent]);
+
+  /* refs */
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  /* ───────── textarea height helper ───────────────────────── */
+  const updateTextareaFit = useCallback(() => {
+    if (!textareaRef.current) return;
+    const h = displayHeight - HEADER_HEIGHT;
+    textareaRef.current.style.height = `${h}px`;
+  }, [displayHeight]);
+
+  useEffect(() => {
+    if (isEditing) updateTextareaFit();
+  }, [isEditing, updateTextareaFit]);
+
+  /* wheel isolation inside content div for both modes */
+  useEffect(() => {
+    const div = contentRef.current;
+    if (!div) return;
+    const handle = (e: WheelEvent) => {
+      const max = div.scrollHeight - div.clientHeight;
+      if (max > 0) {
+        e.stopPropagation();
+        div.scrollTop += e.deltaY;
+      }
+    };
+    div.addEventListener("wheel", handle, { passive: false });
+    return () => div.removeEventListener("wheel", handle);
+  }, []);
+
+  /* wheel isolation for textarea when editing */
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea || !isEditing) return;
+    const handle = (e: WheelEvent) => {
+      const max = textarea.scrollHeight - textarea.clientHeight;
+      if (max > 0) {
+        e.stopPropagation();
+        textarea.scrollTop += e.deltaY;
+      }
+    };
+    textarea.addEventListener("wheel", handle, { passive: false });
+    return () => textarea.removeEventListener("wheel", handle);
+  }, [isEditing]);
+
+  /* ───────── font size controls (commits immediately) ───────── */
+  const changeFontSize = useCallback(
+    (delta: number) => {
+      const clamp = (v: number) => Math.min(256, Math.max(8, v));
+      updateNode((d) => {
+        d.fontSize = clamp((d.fontSize || 16) + delta);
+      });
+      setTimeout(() => pushState(rf.getNodes(), rf.getEdges(), "Font Size"), 0);
+    },
+    [updateNode, pushState, rf]
+  );
+
+  /* ───────── editing lifecycle ───────────────────────────── */
+  const startEdit = useCallback(() => {
+    setDraft(content === DEFAULT_TEXT ? "" : content);
+    setIsEditing(true);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      updateTextareaFit();
+    }, 0);
+  }, [content, updateTextareaFit]);
+
+  const commitEdit = useCallback(() => {
+    const newText = draft.trim() ? draft : DEFAULT_TEXT;
+    setIsEditing(false);
+
+    if (newText !== content) {
+      updateNode((d) => {
+        d.content = newText;
+      });
+      setTimeout(() => pushState(rf.getNodes(), rf.getEdges(), "Edit Text"), 0);
+    }
+  }, [draft, content, updateNode, pushState, rf]);
+
+  /* keyboard and change handlers */
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsEditing(false);
+      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        commitEdit();
+      }
+    },
+    [commitEdit]
+  );
+
+  /* ───────── resize handlers (commit immediately) ───────────── */
+  const onResize = useCallback(
+    (_: unknown, { width, height }: { width: number; height: number }) => {
+      updateNode((d) => {
+        d.width = width;
+        d.height = height;
+      });
+      if (isEditing) requestAnimationFrame(updateTextareaFit);
+    },
+    [updateNode, isEditing, updateTextareaFit]
+  );
+
+  const onResizeEnd = useCallback(
+    () =>
+      setTimeout(
+        () => pushState(rf.getNodes(), rf.getEdges(), "Resize Text Node"),
+        0
+      ),
+    [pushState, rf]
+  );
+
+  /* ───────── Simple inline menu handlers (no portal) ───────── */
+  const handleCopyId = useCallback(() => {
+    copyId();
+    setShowMenu(false);
+  }, [copyId]);
+
+  const deleteNode = useCallback(() => {
+    lockEdgeSnapshotSkip();
+    let removedEdge = false;
+    rf.setEdges((eds) => {
+      if (!eds.length) {
+        releaseEdgeSnapshotSkip();
+        return eds;
+      }
+      const filtered = eds.filter((edge: Edge) => {
+        const shouldRemove = edge.source === id || edge.target === id;
+        if (shouldRemove) removedEdge = true;
+        return !shouldRemove;
+      });
+      if (!removedEdge) {
+        releaseEdgeSnapshotSkip();
+      }
+      return filtered;
+    });
+
+    rf.setNodes((nds) => nds.filter((n) => n.id !== id));
+
+    scheduleSnapshot("Node(s) removed", { refresh: true });
+  }, [
+    id,
+    lockEdgeSnapshotSkip,
+    releaseEdgeSnapshotSkip,
+    rf,
+    scheduleSnapshot,
+  ]);
+
+  /* Close menu when clicking outside */
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMenu]);
+
+  /* ───────── Search highlighting effect ───────────────────── */
+  useEffect(() => {
+    if (isEditing) return;
+    const el = contentRef.current;
+    if (!el) return;
+
+    unmarkAll(el);
+
+    if (!searchMarkTerm) return;
+
+    const hits = markAll(el, searchMarkTerm);
+    if (hits > 0) {
+      const first = el.querySelector("mark.__searchHit") as HTMLElement | null;
+      first?.scrollIntoView({
+        block: "center",
+        inline: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [formatted, isEditing, searchMarkTerm, searchMarkTimestamp]);
+
+  /* ───────── JSX ───────────────────────────────────────────── */
+  return (
+    <Card
+      className={cn(
+        "rounded-lg shadow-md bg-card relative",
+        highlightStyles, // yellow halo when data.isHighlighted === true
+        selectedStyles, // blue ring when the node itself is selected
+        data.borderColor ? "border-2" : "border"
+      )}
+      style={{
+        ...borderStyle,
+        width: displayWidth,
+        height: displayHeight,
+        overflow: "visible",
+      }}
+    >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={200}
+        minHeight={100}
+        lineStyle={{ border: "1px dashed var(--muted-foreground)" }}
+        handleStyle={{
+          width: 20,
+          height: 20,
+          backgroundColor: "transparent",
+          border: "2px solid var(--resizer-handle-color)",
+          borderRadius: 4,
+        }}
+        onResize={onResize}
+        onResizeEnd={onResizeEnd}
+      />
+
+      {/* Header – font controls and inline menu */}
+      <div className="flex items-center justify-between h-8 px-2 bg-primary/10 border-b">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => changeFontSize(-2)}
+            title="Smaller font"
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <span className="text-xs text-muted-foreground w-5 text-center">
+            {fontSize}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => changeFontSize(+2)}
+            title="Larger font"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Markdown</span>
+
+          {/* Simple inline menu without portal */}
+          <div className="relative" ref={menuRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-8 z-50 min-w-[160px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <button
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                  onClick={handleCopyId}
+                >
+                  {idCopied ? (
+                    <>
+                      <Check className="h-4 w-4" /> Copied ✓
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" /> Copy ID
+                    </>
+                  )}
+                </button>
+                <div className="my-1 h-px bg-border" />
+                <button
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive hover:bg-accent"
+                  onClick={deleteNode}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete Node
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <CardContent className="p-0 h-[calc(100%-32px)] overflow-hidden">
+        {isEditing ? (
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={handleKeyDown}
+            spellCheck={false}
+            className="nowheel nodrag w-full h-full p-4 bg-transparent focus:outline-none border-0 resize-none"
+            style={{
+              fontSize: `${fontSize}px`,
+              lineHeight: `${lineHeight}px`,
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+              fontFamily:
+                '"Inter Var",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+            }}
+            placeholder="Type markdown here…"
+          />
+        ) : (
+          <div
+            ref={contentRef}
+            className="nowheel nodrag cursor-text p-4 w-full h-full"
+            style={{
+              fontSize: `${fontSize}px`,
+              lineHeight: `${lineHeight}px`,
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+              // Removed whiteSpace: "pre-wrap" - this was causing extra spacing
+              fontFamily:
+                '"Inter Var",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+            }}
+            onClick={(e) => {
+              if (!(e.target as HTMLElement).closest("a")) startEdit();
+            }}
+            dangerouslySetInnerHTML={{ __html: formatted }}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}

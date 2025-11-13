@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "node_input",
+      "type": "calculation",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "functionName": "identity",
+        "title": "Input",
+        "numInputs": 0,
+        "showField": true,
+        "value": "68656c6c6f",
+        "inputs": { "val": "68656c6c6f" },
+        "result": "68656c6c6f",
+        "groupInstances": {},
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "INPUT VALUE:", "rows": 1 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node_hash",
+      "type": "calculation",
+      "position": { "x": 320, "y": 0 },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Hash",
+        "numInputs": 1,
+        "showField": false,
+        "inputs": { "val": "68656c6c6f" },
+        "result": "9595c9df90075148eb06860365df33584b75bff782a510c6cd4883a419833d50",
+        "groupInstances": {},
+        "inputStructure": {
+          "ungrouped": [
+            { "index": 0, "label": "Input Hex:", "rows": 2 }
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_input_hash",
+      "source": "node_input",
+      "target": "node_hash",
+      "targetHandle": "input-0"
+    }
+  ]
+}
