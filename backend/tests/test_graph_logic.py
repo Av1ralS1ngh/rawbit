@@ -592,7 +592,7 @@ def test_bulk_calculate_logic_force_regenerate_calls_function(monkeypatch):
     assert data["dirty"] is False
 
 
-def test_bulk_calculate_logic_force_regenerate_failure_records_error(monkeypatch):
+def test_bulk_calculate_logic_force_regenerate_failure_suppresses_error(monkeypatch):
     def boom():
         raise RuntimeError("fail")
 
@@ -612,10 +612,59 @@ def test_bulk_calculate_logic_force_regenerate_failure_records_error(monkeypatch
     updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
     data = {node["id"]: node for node in updated_nodes}["regen"]["data"]
 
+    assert errors == []
+    assert "error" not in data
+    assert data["dirty"] is False
+
+
+def test_force_regenerate_failure_records_error_for_other_functions(monkeypatch):
+    def boom():
+        raise RuntimeError("fail")
+
+    monkeypatch.setitem(graph_logic.CALC_FUNCTIONS, "dummy_force", boom)
+
+    nodes = [
+        {
+            "id": "regen",
+            "data": {
+                "functionName": "dummy_force",
+                "forceRegenerate": True,
+                "dirty": True,
+            },
+        }
+    ]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
+    data = {node["id"]: node for node in updated_nodes}["regen"]["data"]
+
     assert errors == [{"nodeId": "regen", "error": "fail"}]
     assert data["error"] is True
     assert data["dirty"] is False
     assert "Regenerate fail: fail" in data["extendedError"]
+
+
+def test_random_node_failure_does_not_mark_error(monkeypatch):
+    def boom():
+        raise RuntimeError("fail")
+
+    monkeypatch.setitem(graph_logic.CALC_FUNCTIONS, "random_256", boom)
+
+    nodes = [
+        {
+            "id": "rand",
+            "data": {
+                "functionName": "random_256",
+                "dirty": True,
+            },
+        }
+    ]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
+    data = {node["id"]: node for node in updated_nodes}["rand"]["data"]
+
+    assert errors == []
+    assert "error" not in data
+    assert data["dirty"] is False
 
 
 def test_bulk_calculate_logic_records_function_failure(monkeypatch):

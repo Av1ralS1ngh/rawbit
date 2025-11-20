@@ -43,10 +43,13 @@ interface FlowCanvasProps {
     viewport: Viewport
   ) => void;
   isSelectionModeActive?: boolean;
+  isReadOnly?: boolean;
 }
 
 const MIN_ZOOM = 0.01;
 const MAX_ZOOM = 10;
+const MOBILE_MIN_ZOOM = 0.21;
+const MOBILE_MAX_ZOOM = 4;
 const PRO_OPTIONS = { hideAttribution: true } as const;
 
 export function FlowCanvas({
@@ -69,13 +72,16 @@ export function FlowCanvas({
   onPaneClick,
   onMoveEnd,
   isSelectionModeActive = false,
+  isReadOnly = false,
 }: FlowCanvasProps) {
+  const selectionEnabled = !isReadOnly && isSelectionModeActive;
+  const minZoom = isReadOnly ? MOBILE_MIN_ZOOM : MIN_ZOOM;
+  const maxZoom = isReadOnly ? MOBILE_MAX_ZOOM : MAX_ZOOM;
+
   return (
     <ReactFlow
-      className={cn(
-        isSelectionModeActive ? "cursor-crosshair" : "cursor-grab"
-      )}
-      style={{ cursor: isSelectionModeActive ? "crosshair" : undefined }}
+      className={cn(selectionEnabled ? "cursor-crosshair" : "cursor-grab")}
+      style={{ cursor: selectionEnabled ? "crosshair" : undefined }}
       onlyRenderVisibleElements
       nodeTypes={nodeTypes}
       nodes={nodes}
@@ -90,20 +96,21 @@ export function FlowCanvas({
       onNodeDragStop={onNodeDragStop}
       onPaneClick={onPaneClick}
       onMoveEnd={onMoveEnd}
-      minZoom={MIN_ZOOM}
-      maxZoom={MAX_ZOOM}
+      minZoom={minZoom}
+      maxZoom={maxZoom}
       proOptions={PRO_OPTIONS}
-      connectOnClick
-      edgesReconnectable
-      deleteKeyCode={["Backspace", "Delete"]}
+      connectOnClick={!isReadOnly}
+      edgesReconnectable={!isReadOnly}
+      deleteKeyCode={isReadOnly ? [] : ["Backspace", "Delete"]}
       selectionMode={SelectionMode.Full}
-      selectionOnDrag={isSelectionModeActive}
+      selectionOnDrag={selectionEnabled}
       selectionKeyCode="s"
       multiSelectionKeyCode={["Meta", "Control"]}
-      panOnDrag={isSelectionModeActive ? [1] : [0, 1]}
-      selectNodesOnDrag={isSelectionModeActive}
-      nodesDraggable
-      nodesConnectable
+      panOnDrag={selectionEnabled ? [1] : [0, 1]}
+      selectNodesOnDrag={selectionEnabled}
+      nodesDraggable={!isReadOnly}
+      nodesConnectable={!isReadOnly}
+      elementsSelectable={!isReadOnly}
       disableKeyboardA11y
     >
       <Background />
@@ -133,14 +140,16 @@ export function FlowCanvas({
           maskStrokeWidth={1}
         />
       )}
-      <Controls
-        className="custom-flow-controls"
-        position="bottom-right"
-        showZoom
-        showFitView
-        showInteractive={false}
-        style={{ zIndex: 9999, right: "0.1rem" }}
-      />
+      {!isReadOnly && (
+        <Controls
+          className="custom-flow-controls"
+          position="bottom-right"
+          showZoom
+          showFitView
+          showInteractive={false}
+          style={{ zIndex: 9999, right: "0.1rem", bottom: "0.1rem" }}
+        />
+      )}
     </ReactFlow>
   );
 }

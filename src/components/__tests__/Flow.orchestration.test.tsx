@@ -206,7 +206,7 @@ vi.mock("@/hooks/useTabs", () => ({
     initialHydrationDone: true,
     closeDialog: { open: false, tabId: null },
     selectTab: vi.fn(),
-    addTab: vi.fn(),
+    addTab: vi.fn(() => "tab-2"),
     requestCloseTab: vi.fn(),
     confirmCloseTab: vi.fn(),
     cancelCloseTab: vi.fn(),

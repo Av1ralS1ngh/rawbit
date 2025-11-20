@@ -125,7 +125,7 @@ describe("FirstRunDialog", () => {
     const onLoadExample = vi.fn();
     const user = userEvent.setup();
 
-    renderWithProviders(
+    const { getByText } = renderWithProviders(
       <FirstRunDialog
         open
         flows={exampleFlows}
@@ -133,6 +133,9 @@ describe("FirstRunDialog", () => {
         onLoadExample={onLoadExample}
       />
     );
+    expect(
+      getByText("Pick how you would like to get started.")
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Start empty canvas/i }));
 
@@ -145,7 +148,7 @@ describe("FirstRunDialog", () => {
     const onLoadExample = vi.fn();
     const user = userEvent.setup();
 
-    renderWithProviders(
+    const { getByText } = renderWithProviders(
       <FirstRunDialog
         open
         flows={exampleFlows}
@@ -153,6 +156,9 @@ describe("FirstRunDialog", () => {
         onLoadExample={onLoadExample}
       />
     );
+    expect(
+      getByText("Want a tour instead? Load one of our guided example flows.")
+    ).toBeInTheDocument();
 
     await user.click(screen.getByTestId("mock-select-item-flow-2"));
     await user.click(screen.getByRole("button", { name: /Load example flow/i }));
@@ -167,7 +173,7 @@ describe("FirstRunDialog", () => {
     const onLoadExample = vi.fn();
     const user = userEvent.setup();
 
-    renderWithProviders(
+    const utils = renderWithProviders(
       <FirstRunDialog
         open
         flows={exampleFlows}
@@ -175,10 +181,44 @@ describe("FirstRunDialog", () => {
         onLoadExample={onLoadExample}
       />
     );
+    expect(
+      utils.getByText("Pick how you would like to get started.")
+    ).toBeInTheDocument();
 
     await user.click(screen.getByTestId("mock-dialog-close"));
 
     expect(onStartEmpty).toHaveBeenCalledTimes(1);
+    expect(onLoadExample).not.toHaveBeenCalled();
+  });
+
+  it("can hide the empty canvas option for read-only environments", async () => {
+    const onStartEmpty = vi.fn();
+    const onLoadExample = vi.fn();
+    const user = userEvent.setup();
+
+    const utils = renderWithProviders(
+      <FirstRunDialog
+        open
+        flows={exampleFlows}
+        onStartEmpty={onStartEmpty}
+        onLoadExample={onLoadExample}
+        hideStartEmpty
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Start empty canvas/i })
+    ).not.toBeInTheDocument();
+    expect(
+      utils.getByText("Mobile mode is read-only — load an example to explore the canvas.")
+    ).toBeInTheDocument();
+    expect(
+      utils.getByText("Load one of our guided example flows to look around.")
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mock-dialog-close"));
+
+    expect(onStartEmpty).not.toHaveBeenCalled();
     expect(onLoadExample).not.toHaveBeenCalled();
   });
 });

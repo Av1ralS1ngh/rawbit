@@ -65,6 +65,7 @@ interface UseSharedFlowLoaderOptions {
   activeTabId: string;
   setInfoDialog: (state: { open: boolean; message: string }) => void;
   flowInstanceRef: React.MutableRefObject<ReactFlowInstance | null>;
+  ensureShareImportTab?: () => string | null | Promise<string | null>;
 }
 
 export function useSharedFlowLoader({
@@ -78,6 +79,7 @@ export function useSharedFlowLoader({
   activeTabId,
   setInfoDialog,
   flowInstanceRef,
+  ensureShareImportTab,
 }: UseSharedFlowLoaderOptions) {
   const loadedSharedIdRef = useRef<string | null>(null);
   const loadingSharedIdRef = useRef<string | null>(null);
@@ -183,14 +185,29 @@ export function useSharedFlowLoader({
         const sharedNodes = parsedData.nodes;
         const sharedEdges = parsedData.edges;
 
-        const alreadyHadNodes = getNodes().length > 0;
+        let targetTabId = activeTabId;
+        const initialNodes = getNodes();
+        const initialEdges = getEdges();
+        const hadContent = initialNodes.length > 0 || initialEdges.length > 0;
+
+        if (hadContent && ensureShareImportTab) {
+          const ensuredId = await ensureShareImportTab();
+          if (ensuredId) {
+            targetTabId = ensuredId;
+          }
+        }
+
+        const currentNodes = getNodes();
+        const currentEdges = getEdges();
+        const targetWasEmpty =
+          currentNodes.length === 0 && currentEdges.length === 0;
 
         const { nodes: mergedNodes, edges: mergedEdges } = importWithFreshIds<
           FlowNode,
           Edge
         >({
-          currentNodes: getNodes(),
-          currentEdges: getEdges(),
+          currentNodes,
+          currentEdges,
           importNodes: sharedNodes,
           importEdges: sharedEdges,
           dedupeEdges: true,
@@ -248,8 +265,10 @@ export function useSharedFlowLoader({
 
         if (cancelled) return;
 
-        setTabTooltip(activeTabId, `Shared: ${sharedId}`);
-        if (!alreadyHadNodes) {
+        if (targetTabId) {
+          setTabTooltip(targetTabId, `Shared: ${sharedId}`);
+        }
+        if (targetWasEmpty && targetTabId) {
           const metaName = (parsedData as { meta?: { name?: unknown } }).meta
             ?.name;
           const candidateTitles = [
@@ -262,7 +281,7 @@ export function useSharedFlowLoader({
               (value): value is string =>
                 typeof value === "string" && value.trim().length > 0
             ) ?? `Shared ${sharedId}`;
-          renameTab(activeTabId, desiredTitle, { onlyIfEmpty: true });
+          renameTab(targetTabId, desiredTitle, { onlyIfEmpty: true });
         }
 
         loadedSharedIdRef.current = sharedId;
@@ -317,5 +336,6 @@ export function useSharedFlowLoader({
     setInfoDialog,
     setTabTooltip,
     renameTab,
+    ensureShareImportTab,
   ]);
 }

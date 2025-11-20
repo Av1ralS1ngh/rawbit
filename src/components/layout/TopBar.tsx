@@ -39,6 +39,7 @@ import {
   Twitter,
   MessageCircle,
   Mail,
+  Youtube,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -251,8 +252,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const isKeyS = (event: KeyboardEvent) =>
-      event.key?.toLowerCase() === "s";
+    const isKeyS = (event: KeyboardEvent) => event.key?.toLowerCase() === "s";
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isKeyS(event)) {
@@ -453,10 +453,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
             )}
           >
             <SquareMousePointer
-              className={cn(
-                "h-7 w-7",
-                isSelectionModeActive && "text-primary"
-              )}
+              className={cn("h-7 w-7", isSelectionModeActive && "text-primary")}
             />
           </Button>
           {/* 🔍 search panel */}
@@ -570,7 +567,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
             <DropdownMenuContent align="end" side="bottom">
               <DropdownMenuItem asChild>
                 <a
-                  href="https://github.com/rawBit-io/"
+                  href="https://github.com/rawBit-io/rawbit"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -588,6 +585,17 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
                 >
                   <MessageCircle className="h-4 w-4" />
                   <span>Reddit</span>
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://www.youtube.com/@rawBit-io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Youtube className="h-4 w-4" />
+                  <span>YouTube</span>
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -677,7 +685,9 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
                               }
                             }}
                             value={renameDraft}
-                            onChange={(event) => setRenameDraft(event.target.value)}
+                            onChange={(event) =>
+                              setRenameDraft(event.target.value)
+                            }
                             onBlur={commitRename}
                             onClick={(event) => event.stopPropagation()}
                             onKeyDown={(event) => {

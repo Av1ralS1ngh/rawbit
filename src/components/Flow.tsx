@@ -25,10 +25,12 @@ import OpCodeNode from "@/components/nodes/OpCodeNode";
 import { TopBar } from "@/components/layout/TopBar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ColorPalette } from "@/components/ui/ColorPalette";
+import { Button } from "@/components/ui/button";
 import { FlowCanvas } from "@/components/FlowCanvas";
 import { FlowDialogLayer } from "@/components/FlowDialogLayer";
 import { FlowPanels } from "@/components/FlowPanels";
 import { FirstRunDialog } from "@/components/dialog/FirstRunDialog";
+import { Sun, Moon } from "lucide-react";
 
 import { useNodeOperations } from "@/hooks/useNodeOperations";
 import { useFileOperations } from "@/hooks/useFileOperations";
@@ -68,6 +70,7 @@ import { useFlowInteractions } from "@/hooks/useFlowInteractions";
 import { useSearchHighlights } from "@/hooks/useSearchHighlights";
 import { useSharedFlowLoader } from "@/hooks/useSharedFlowLoader";
 import { useSimplifiedSave } from "@/hooks/useSimplifiedSave";
+import { shouldBlockMobile } from "@/lib/device";
 
 const COLORABLE_NODE_TYPES = new Set([
   "calculation",
@@ -150,6 +153,8 @@ function FlowContent() {
   const [showMiniMap, setShowMiniMap] = useState(false);
   const [isSelectionLocked, setIsSelectionLocked] = useState(false);
   const [isSelectionHotKeyActive, setIsSelectionHotKeyActive] = useState(false);
+  const [isMobileBlocked, setIsMobileBlocked] = useState(false);
+  const isMobileReadOnly = isMobileBlocked;
   const isSelectionMode = isSelectionLocked || isSelectionHotKeyActive;
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const activeTabIdRef = useRef<string | null>(null);
@@ -163,7 +168,7 @@ function FlowContent() {
     setRevTick(graphRev.current);
     return graphRev.current;
   }, []);
-  const { theme } = useTheme(); // "light" | "dark" | "system"
+  const { theme, setTheme } = useTheme(); // "light" | "dark" | "system"
   const isDark =
     theme === "dark" ||
     (theme === "system" &&
@@ -177,6 +182,37 @@ function FlowContent() {
     () => customFlows.map((flow) => ({ id: flow.id, label: flow.label })),
     []
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    type ExtendedNavigator = Navigator & {
+      userAgentData?: { mobile?: boolean };
+    };
+    const nav: ExtendedNavigator | undefined =
+      typeof window.navigator !== "undefined"
+        ? (window.navigator as ExtendedNavigator)
+        : undefined;
+
+    const hasCoarsePointer = () =>
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches;
+
+    const updateMobileBlock = () => {
+      setIsMobileBlocked(
+        shouldBlockMobile({
+          width: window.innerWidth,
+          coarsePointer: hasCoarsePointer(),
+          userAgent: nav?.userAgent,
+          userAgentDataMobile: nav?.userAgentData?.mobile,
+        })
+      );
+    };
+
+    updateMobileBlock();
+    window.addEventListener("resize", updateMobileBlock);
+    return () => window.removeEventListener("resize", updateMobileBlock);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -225,7 +261,11 @@ function FlowContent() {
 
   const RHS_PANEL_W = 256; // Tailwind w-64  (=16 rem)
   const MM_GAP = 44.8; // 2.8 rem  (space beside controls)
-  const rightPanelOpen = showUndoRedoPanel || showErrorPanel || showSearchPanel;
+  const showUndoRedoPanelUI = isMobileReadOnly ? false : showUndoRedoPanel;
+  const showErrorPanelUI = isMobileReadOnly ? false : showErrorPanel;
+  const showSearchPanelUI = isMobileReadOnly ? false : showSearchPanel;
+  const rightPanelOpen =
+    showUndoRedoPanelUI || showErrorPanelUI || showSearchPanelUI;
   const miniMapOffset = rightPanelOpen ? RHS_PANEL_W + MM_GAP : MM_GAP;
 
   const flowInstanceRef = useRef<ReactFlowInstance | null>(null);
@@ -510,6 +550,21 @@ function FlowContent() {
   useEffect(() => {
     activeTabIdRef.current = activeTabId;
   }, [activeTabId]);
+
+  const ensureShareImportTab = useCallback(async () => {
+    const currentTabId = activeTabIdRef.current ?? activeTabId;
+    if (!currentTabId) return null;
+    const existingNodes = getNodes();
+    const existingEdges = getEdges();
+    if (existingNodes.length === 0 && existingEdges.length === 0) {
+      return currentTabId;
+    }
+    const newId = addTab();
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+    return newId;
+  }, [activeTabId, addTab, getEdges, getNodes]);
 
   const activeCalcState = calcStateByTab[activeTabId] ?? DEFAULT_TAB_CALC_STATE;
   const calcStatus = activeCalcState.status;
@@ -1117,6 +1172,7 @@ function FlowContent() {
     activeTabId,
     setInfoDialog,
     flowInstanceRef,
+    ensureShareImportTab,
   });
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -1400,81 +1456,88 @@ function FlowContent() {
           style={{ visibility: isFlowVisible ? "visible" : "hidden" }}
         >
           {/* Top bar */}
-          <TopBar
-            isSidebarOpen={isSidebarOpen}
-            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-            tabs={tabs}
-            activeTabId={activeTabId}
-            onTabSelect={handleSelectTab}
-            onAddTab={handleAddTab}
-            onCloseTab={handleCloseTab}
-            onRenameTab={(id, title) => renameTab(id, title)}
-            fileInputRef={fileInputRef}
-            onSave={saveFlow}
-            onSaveSimplified={handleSaveSimplified}
-            onLoad={openFileDialog}
-            onFileSelect={handleFileSelect}
-            canCopy={nodes.some((n) => n.selected)}
-            hasCopiedNodes={hasCopiedNodes}
-            onCopy={copyNodes}
-            onPaste={() => handlePaste()}
-            calcStatus={calcStatus}
-            errorInfo={errorInfo}
-            errorCount={errorInfo.length}
-            showErrorPanel={showErrorPanel}
-            setShowErrorPanel={setShowErrorPanel}
-            onRetryAll={handleRetryAll}
-            hasLimitErrors={hasLimitErrors}
-            showUndoRedoPanel={showUndoRedoPanel}
-            setShowUndoRedoPanel={setShowUndoRedoPanel}
-            onToggleColorPalette={handleToggleColorPalette}
-            isColorPaletteOpen={isColorPaletteOpen}
-            canColorSelection={canColorSelection}
-            canGroupSelectedNodes={canGroupSelectedNodes}
-            canUngroupSelectedNodes={canUngroupSelectedNodes}
-            connectDisabled={
-              !(
-                exactlyTwoSelected &&
-                sourcePorts?.outputs.length &&
-                targetPorts?.inputs.length
-              )
-            }
-            onConnectClick={() => setConnectOpen(true)}
-            onGroup={groupWithUndo}
-            onUngroup={ungroupWithUndo}
-            onSearchClick={() => {
-              setShowUndoRedoPanel(false); // never overlap
-              setShowErrorPanel(false);
-              setShowSearchPanel((v) => !v); // toggle
-            }}
-            setShowSearchPanel={setShowSearchPanel}
-            showMiniMap={showMiniMap}
-            onToggleMiniMap={() => setShowMiniMap((v) => !v)}
-            isSelectionModeActive={isSelectionMode}
-            onToggleSelectionMode={() => setIsSelectionLocked((v) => !v)}
-            onShare={handleShareClick}
-            shareDisabled={nodes.length === 0}
-          />
+          {!isMobileReadOnly && (
+            <TopBar
+              isSidebarOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              tabs={tabs}
+              activeTabId={activeTabId}
+              onTabSelect={handleSelectTab}
+              onAddTab={handleAddTab}
+              onCloseTab={handleCloseTab}
+              onRenameTab={(id, title) => renameTab(id, title)}
+              fileInputRef={fileInputRef}
+              onSave={saveFlow}
+              onSaveSimplified={handleSaveSimplified}
+              onLoad={openFileDialog}
+              onFileSelect={handleFileSelect}
+              canCopy={nodes.some((n) => n.selected)}
+              hasCopiedNodes={hasCopiedNodes}
+              onCopy={copyNodes}
+              onPaste={() => handlePaste()}
+              calcStatus={calcStatus}
+              errorInfo={errorInfo}
+              errorCount={errorInfo.length}
+              showErrorPanel={showErrorPanel}
+              setShowErrorPanel={setShowErrorPanel}
+              onRetryAll={handleRetryAll}
+              hasLimitErrors={hasLimitErrors}
+              showUndoRedoPanel={showUndoRedoPanel}
+              setShowUndoRedoPanel={setShowUndoRedoPanel}
+              onToggleColorPalette={handleToggleColorPalette}
+              isColorPaletteOpen={isColorPaletteOpen}
+              canColorSelection={canColorSelection}
+              canGroupSelectedNodes={canGroupSelectedNodes}
+              canUngroupSelectedNodes={canUngroupSelectedNodes}
+              connectDisabled={
+                !(
+                  exactlyTwoSelected &&
+                  sourcePorts?.outputs.length &&
+                  targetPorts?.inputs.length
+                )
+              }
+              onConnectClick={() => setConnectOpen(true)}
+              onGroup={groupWithUndo}
+              onUngroup={ungroupWithUndo}
+              onSearchClick={() => {
+                setShowUndoRedoPanel(false); // never overlap
+                setShowErrorPanel(false);
+                setShowSearchPanel((v) => !v); // toggle
+              }}
+              setShowSearchPanel={setShowSearchPanel}
+              showMiniMap={showMiniMap}
+              onToggleMiniMap={() => setShowMiniMap((v) => !v)}
+              isSelectionModeActive={isSelectionMode}
+              onToggleSelectionMode={() => setIsSelectionLocked((v) => !v)}
+              onShare={handleShareClick}
+              shareDisabled={nodes.length === 0}
+            />
+          )}
 
           {/* Sidebar */}
-          <Sidebar
-            isOpen={isSidebarOpen}
-            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          />
+          {!isMobileReadOnly && (
+            <Sidebar
+              isOpen={isSidebarOpen}
+              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
+          )}
 
           {/* Main canvas */}
           <main
             className={cn(
-              "absolute top-14 bottom-0 flex transition-all duration-300",
-              isSidebarOpen ? "left-64 right-0" : "left-0 right-0",
-              tabs.length > 0 && "pt-10"
+              "absolute bottom-0 left-0 right-0 flex transition-all duration-300",
+              isMobileReadOnly ? "top-0" : "top-14",
+              !isMobileReadOnly && isSidebarOpen && "md:left-64",
+              !isMobileReadOnly && tabs.length > 0 && "pt-10"
             )}
           >
             <div
               className={cn(
                 "relative flex-1 overflow-hidden",
-                (showUndoRedoPanel || showErrorPanel || showSearchPanel) &&
-                  "mr-64"
+                (showUndoRedoPanelUI ||
+                  showErrorPanelUI ||
+                  showSearchPanelUI) &&
+                  "md:mr-64"
               )}
             >
               <FlowCanvas
@@ -1497,36 +1560,73 @@ function FlowContent() {
                 onPaneClick={handlePaneClick}
                 onMoveEnd={onMoveEnd}
                 isSelectionModeActive={isSelectionMode}
+                isReadOnly={isMobileReadOnly}
               />
+              {isMobileReadOnly && (
+                <div className="pointer-events-none absolute inset-x-0 top-4 mx-auto w-11/12 max-w-md">
+                  <div className="pointer-events-auto rounded-lg border border-border bg-background/90 px-4 py-3 text-center text-sm font-medium shadow-sm backdrop-blur flex flex-col items-center gap-2">
+                    <span>
+                      raw₿it is optimized for desktop. You’re viewing a read-only
+                      mobile layout.
+                    </span>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowWelcomeDialog(true)}
+                        className="h-8 px-3 text-xs font-medium"
+                      >
+                        Load example flows
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setTheme(theme === "light" ? "dark" : "light")
+                        }
+                        className="h-8 px-2 text-xs font-medium relative"
+                        aria-label="Toggle theme"
+                      >
+                        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <FlowPanels
-              showUndoRedoPanel={showUndoRedoPanel}
-              setShowUndoRedoPanel={setShowUndoRedoPanel}
-              showErrorPanel={showErrorPanel}
-              setShowErrorPanel={setShowErrorPanel}
-              errorInfo={errorInfo}
-              nodes={nodes}
-              showSearchPanel={showSearchPanel}
-              setShowSearchPanel={setShowSearchPanel}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              edges={edges}
-              highlightAndFit={highlightAndFit}
-              highlightedNodes={highlightedNodes}
-              centerOnNode={centerOnNode}
-              focusSearchHit={focusSearchHit}
-              hasMultipleTabs={tabs.length > 0}
-            />
+            {!isMobileReadOnly && (
+              <FlowPanels
+                showUndoRedoPanel={showUndoRedoPanel}
+                setShowUndoRedoPanel={setShowUndoRedoPanel}
+                showErrorPanel={showErrorPanel}
+                setShowErrorPanel={setShowErrorPanel}
+                errorInfo={errorInfo}
+                nodes={nodes}
+                showSearchPanel={showSearchPanel}
+                setShowSearchPanel={setShowSearchPanel}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                edges={edges}
+                highlightAndFit={highlightAndFit}
+                highlightedNodes={highlightedNodes}
+                centerOnNode={centerOnNode}
+                focusSearchHit={focusSearchHit}
+                hasMultipleTabs={tabs.length > 0}
+              />
+            )}
           </main>
 
           {/* 🎨 ColorPalette - MOVED HERE, outside ReactFlow, with higher z-index */}
-          <ColorPalette
-            isOpen={isColorPaletteOpen}
-            position={colorPalettePosition}
-            onColorSelect={handleColorSelect}
-            onClose={closePalette}
-          />
+          {!isMobileReadOnly && (
+            <ColorPalette
+              isOpen={isColorPaletteOpen}
+              position={colorPalettePosition}
+              onColorSelect={handleColorSelect}
+              onClose={closePalette}
+            />
+          )}
 
           {/* dialogs */}
           <FlowDialogLayer
@@ -1559,6 +1659,8 @@ function FlowContent() {
             flows={exampleFlowOptions}
             onStartEmpty={handleWelcomeStartEmpty}
             onLoadExample={handleWelcomeLoadExample}
+            hideStartEmpty={isMobileReadOnly}
+            onOpenChange={setShowWelcomeDialog}
           />
         </div>
       </FlowActionsProvider>

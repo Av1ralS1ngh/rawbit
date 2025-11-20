@@ -26,6 +26,8 @@ interface FirstRunDialogProps {
   flows: ExampleFlowOption[];
   onStartEmpty: () => void;
   onLoadExample: (flowId: string) => void;
+  hideStartEmpty?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const FALLBACK_FLOW_ID = "";
@@ -35,6 +37,8 @@ export function FirstRunDialog({
   flows,
   onStartEmpty,
   onLoadExample,
+  hideStartEmpty = false,
+  onOpenChange,
 }: FirstRunDialogProps) {
   const actionRef = useRef<"empty" | "example" | null>(null);
   const defaultFlowId = useMemo(
@@ -71,38 +75,49 @@ export function FirstRunDialog({
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (nextOpen) return;
-    if (actionRef.current === null) {
+    if (nextOpen) {
+      onOpenChange?.(true);
+      return;
+    }
+    if (actionRef.current === null && !hideStartEmpty) {
       actionRef.current = "empty";
       onStartEmpty();
+      onOpenChange?.(false);
+      return;
     }
+    onOpenChange?.(false);
   };
+
+  const dialogDescription = hideStartEmpty
+    ? "Mobile mode is read-only — load an example to explore the canvas."
+    : "Pick how you would like to get started.";
+  const exampleIntro = hideStartEmpty
+    ? "Load one of our guided example flows to look around."
+    : "Want a tour instead? Load one of our guided example flows.";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Welcome to raw₿it</DialogTitle>
-          <DialogDescription>
-            Pick how you would like to get started.
-          </DialogDescription>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
-          <div className="rounded-md border p-4 space-y-3 bg-muted/20">
-            <div className="text-sm text-muted-foreground">
-              Start from a blank canvas and build your flow by dragging nodes
-              from the sidebar.
+          {!hideStartEmpty && (
+            <div className="rounded-md border p-4 space-y-3 bg-muted/20">
+              <div className="text-sm text-muted-foreground">
+                Start from a blank canvas and build your flow by dragging nodes
+                from the sidebar.
+              </div>
+              <Button variant="default" onClick={handleStartEmpty}>
+                Start empty canvas
+              </Button>
             </div>
-            <Button variant="default" onClick={handleStartEmpty}>
-              Start empty canvas
-            </Button>
-          </div>
+          )}
 
           <div className="rounded-md border p-4 space-y-3">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">
-                Want a tour instead? Load one of our guided example flows.
-              </p>
+              <p className="text-sm text-muted-foreground">{exampleIntro}</p>
             </div>
             {flows.length ? (
               <>

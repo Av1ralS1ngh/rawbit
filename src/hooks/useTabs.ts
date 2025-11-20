@@ -380,7 +380,7 @@ export interface UseTabsResult {
   initialHydrationDone: boolean;
   closeDialog: CloseDialogState;
   selectTab: (tabId: string) => void;
-  addTab: () => void;
+  addTab: () => string;
   requestCloseTab: (tabId: string) => void;
   confirmCloseTab: () => void;
   cancelCloseTab: () => void;
@@ -666,7 +666,7 @@ export function useTabs({
     ]
   );
 
-  const addTab = useCallback(() => {
+  const addTab = useCallback((): string => {
     skipLoadRef.current = true;
     saveTabData(activeTabId);
 
@@ -700,6 +700,7 @@ export function useTabs({
     setActiveTabCtx(newId);
 
     runViewportRestore(newTab);
+    return newId;
   }, [
     activeTabId,
     baseSetEdges,

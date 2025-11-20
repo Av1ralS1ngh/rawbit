@@ -112,8 +112,9 @@ CALC_FUNCTIONS = {
     "address_to_scriptpubkey": address_to_scriptpubkey,
     "bip67_sort_pubkeys": bip67_sort_pubkeys,
     "check_result": check_result,
-
 }
+
+_NO_ERROR_FUNCTIONS = {"random_256"}
 
 
 _HAS_SIGALRM = hasattr(signal, "SIGALRM") and hasattr(signal, "setitimer")
@@ -530,14 +531,19 @@ def bulk_calculate_logic(nodes, edges):
                     try:
                         data.update({"result": func(), "dirty": False})
                     except Exception as e:
-                        data.update(
-                            {
-                                "error": True,
-                                "extendedError": f"Regenerate fail: {e}",
-                                "dirty": False,
-                            }
-                        )
-                        errors.append({"nodeId": nid, "error": str(e)})
+                        if fn_name in _NO_ERROR_FUNCTIONS:
+                            data["dirty"] = False
+                            data.pop("error", None)
+                            data.pop("extendedError", None)
+                        else:
+                            data.update(
+                                {
+                                    "error": True,
+                                    "extendedError": f"Regenerate fail: {e}",
+                                    "dirty": False,
+                                }
+                            )
+                            errors.append({"nodeId": nid, "error": str(e)})
                     continue
 
                 # ─── build inputs ───────────────────────────────────────────
@@ -621,14 +627,19 @@ def bulk_calculate_logic(nodes, edges):
                 except Exception as exc:
                     if isinstance(exc, CalculationTimeoutError):
                         raise
-                    data.update(
-                        {
-                            "error": True,
-                            "extendedError": f"Calculation failed: {exc}",
-                            "dirty": False,
-                        }
-                    )
-                    errors.append({"nodeId": nid, "error": str(exc)})
+                    if fn_name in _NO_ERROR_FUNCTIONS:
+                        data["dirty"] = False
+                        data.pop("error", None)
+                        data.pop("extendedError", None)
+                    else:
+                        data.update(
+                            {
+                                "error": True,
+                                "extendedError": f"Calculation failed: {exc}",
+                                "dirty": False,
+                            }
+                        )
+                        errors.append({"nodeId": nid, "error": str(exc)})
 
     except CalculationTimeoutError as exc:
         message = str(exc) if str(exc) else _timeout_message(timeout_seconds)
