@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import {
+  forwardRef,
   useCallback,
   useEffect,
   useRef,
@@ -37,12 +38,10 @@ import {
   Globe,
   Github,
   Twitter,
-  MessageCircle,
   Mail,
-  Youtube,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -131,6 +130,39 @@ export type ExtraTopBarProps = {
   isSelectionModeActive?: boolean;
   onToggleSelectionMode?: () => void;
 };
+
+type TopBarIconButtonProps = ButtonProps & {
+  tooltip: string;
+};
+
+const TopBarIconButton = forwardRef<HTMLButtonElement, TopBarIconButtonProps>(
+  ({ tooltip, disabled, className, children, ...props }, ref) => {
+    const ariaLabel = props["aria-label"] ?? tooltip;
+    const button = (
+      <Button
+        {...props}
+        ref={ref}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        title={disabled ? undefined : tooltip}
+        className={className}
+      >
+        {children}
+      </Button>
+    );
+
+    if (!disabled) {
+      return button;
+    }
+
+    return (
+      <span className="inline-flex" title={tooltip}>
+        {button}
+      </span>
+    );
+  }
+);
+TopBarIconButton.displayName = "TopBarIconButton";
 
 /* -------------------------------------------------------------------------- */
 /*  TopBar                                                                    */
@@ -314,11 +346,11 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
         {/* ---------- LEFT cluster ------------------------------------ */}
         <div className="flex items-center px-2">
           {/* sidebar toggle */}
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            title="Sidebar"
+            tooltip="Sidebar"
           >
             <PanelLeft
               className={cn(
@@ -326,96 +358,99 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
                 !isSidebarOpen && "rotate-180"
               )}
             />
-          </Button>
+          </TopBarIconButton>
           {/* file IO */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button variant="ghost" size="icon" onClick={onLoad} title="Load">
+          <TopBarIconButton
+            variant="ghost"
+            size="icon"
+            onClick={onLoad}
+            tooltip="Load"
+          >
             <FileUp className="h-7 w-7" />
-          </Button>
-          <Button
+          </TopBarIconButton>
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={handleSaveClick}
-            title="Save (hold S for simplified)"
+            tooltip="Save (hold S for simplified)"
             aria-label="Save"
             aria-description="Hold S while clicking to download a simplified flow export"
           >
             <Save className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           {/* clipboard */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onCopy}
             disabled={!canCopy}
-            title="Copy nodes"
+            tooltip="Copy nodes (Ctrl/Cmd+C)"
           >
             <Copy className="h-7 w-7" />
-          </Button>
-          <Button
+          </TopBarIconButton>
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onPaste}
             disabled={!hasCopiedNodes}
-            title="Paste nodes"
+            tooltip="Paste nodes (Ctrl/Cmd+V)"
           >
             <ClipboardPaste className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           {/* connect */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onConnectClick}
             disabled={connectDisabled}
-            title={
-              connectDisabled ? "Select exactly two nodes" : "Connect nodes"
-            }
+            tooltip="Connect nodes / copy inputs (select 2 nodes)"
           >
             <Share2 className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           {/* group / ungroup */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onGroup}
             disabled={isGroupDisabled}
-            title="Group"
+            tooltip="Group"
           >
             <Square className="h-7 w-7" />
-          </Button>
-          <Button
+          </TopBarIconButton>
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onUngroup}
             disabled={isUngroupDisabled}
-            title="Ungroup"
+            tooltip="Ungroup"
           >
             <SquareSplitVertical className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           {/* undo / redo / history */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={undo}
             disabled={!canUndo}
-            title="Undo"
+            tooltip="Undo"
           >
             <Undo className="h-7 w-7" />
-          </Button>
-          <Button
+          </TopBarIconButton>
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={redo}
             disabled={!canRedo}
-            title="Redo"
+            tooltip="Redo"
           >
             <Redo className="h-7 w-7" />
-          </Button>
-          <Button
+          </TopBarIconButton>
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={() => {
@@ -424,27 +459,27 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
               setShowSearchPanel?.(false);
               setShowUndoRedoPanel?.(!showUndoRedoPanel);
             }}
-            title="History"
+            tooltip="History"
           >
             <History className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           {/* colour palette */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onToggleColorPalette}
             disabled={!isColorPaletteOpen && !canColorSelection}
-            title="Colour palette"
+            tooltip="Colour palette"
           >
             <Palette className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onToggleSelectionMode}
-            title="Selection tool (click to toggle or hold S + drag with LMB)"
+            tooltip="Selection tool (click to toggle or hold S + drag with LMB)"
             aria-pressed={isSelectionModeActive}
             data-active={isSelectionModeActive || undefined}
             className={cn(
@@ -455,20 +490,20 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
             <SquareMousePointer
               className={cn("h-7 w-7", isSelectionModeActive && "text-primary")}
             />
-          </Button>
+          </TopBarIconButton>
           {/* 🔍 search panel */}
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onToggleMiniMap}
-            title={showMiniMap ? "Hide minimap" : "Show minimap"}
+            tooltip={showMiniMap ? "Hide minimap" : "Show minimap"}
           >
             <MapPinned className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />{" "}
           {/* Search shortcut */}
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={() => {
@@ -476,10 +511,10 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
               setShowErrorPanel?.(false);
               onSearchClick?.();
             }}
-            title="Search nodes"
+            tooltip="Search nodes"
           >
             <Search className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
         </div>
 
         {/* ---------- RIGHT cluster ----------------------------------- */}
@@ -530,39 +565,39 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
           )}
 
           {/* add tab */}
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onAddTab}
-            title="New tab"
+            tooltip="New tab"
           >
             <Plus className="h-6 w-6" />
-          </Button>
+          </TopBarIconButton>
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px" />
 
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={onShare}
             disabled={shareDisabled}
-            title="Share snapshot"
+            tooltip="Share snapshot"
           >
             <Share className="h-7 w-7" />
-          </Button>
+          </TopBarIconButton>
 
           {/* community links */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <TopBarIconButton
                 variant="ghost"
                 size="icon"
                 aria-label="Community & Links"
-                title="Community & Links"
+                tooltip="Community & Links"
                 className="focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 <Globe className="h-5 w-5" />
-              </Button>
+              </TopBarIconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
               <DropdownMenuItem asChild>
@@ -574,28 +609,6 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
                 >
                   <Github className="h-4 w-4" />
                   <span>GitHub</span>
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://www.reddit.com/r/rawbit"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Reddit</span>
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://www.youtube.com/@rawBit-io"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Youtube className="h-4 w-4" />
-                  <span>YouTube</span>
                 </a>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -624,15 +637,15 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
           <Separator orientation="vertical" className="mx-1 h-6 w-px" />
 
           {/* theme switch */}
-          <Button
+          <TopBarIconButton
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            title="Toggle theme"
+            tooltip="Toggle theme"
           >
             <Sun className="h-7 w-7 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-7 w-7 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
+          </TopBarIconButton>
         </div>
       </div>
 

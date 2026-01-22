@@ -15,6 +15,8 @@ import TX_Malleability from "@/my_tx_flows/p7_TX_malleability.json";
 import SegWit_Intro from "@/my_tx_flows/p8_SegWit_intro.json";
 import SegWit_P2WSH from "@/my_tx_flows/p9_SegWit_P2WSH.json";
 import Wrapped_Addresses from "@/my_tx_flows/p10_Wrapped_Addresses.json";
+import Taproot_Intro from "@/my_tx_flows/p11_Taproot_intro.json";
+import Taproot_Script from "@/my_tx_flows/p12_Taproot_script.json";
 
 // Then build the array, casting each import to FlowData:
 export const customFlows = [
@@ -68,5 +70,15 @@ export const customFlows = [
     id: "flow-10",
     label: "Wrapped Addresses",
     data: Wrapped_Addresses as unknown as FlowData,
+  },
+  {
+    id: "flow-11",
+    label: "Taproot intro",
+    data: Taproot_Intro as unknown as FlowData,
+  },
+  {
+    id: "flow-12",
+    label: "Taproot Script",
+    data: Taproot_Script as unknown as FlowData,
   },
 ];

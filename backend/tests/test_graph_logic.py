@@ -7,6 +7,7 @@ pytest.importorskip("bitcointx")
 pytest.importorskip("secp256k1")
 
 from backend import graph_logic
+from backend.calc_functions import calc_func as calc
 from config import (
     CALCULATION_TIMEOUT_NODE_ID,
 )
@@ -107,6 +108,94 @@ def test_build_multi_val_params_precedence(monkeypatch):
         "2": "from-edge",
         "3": "manual",
     }
+
+
+@pytest.mark.parametrize(
+    "leaf_index, expected_path",
+    [
+        (
+            0,
+            "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba"
+            "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+        ),
+        (
+            1,
+            "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60"
+            "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+        ),
+    ],
+)
+def test_taproot_tree_builder_output_values_selected_leaf(leaf_index, expected_path):
+    leaf_a = "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60"
+    leaf_b = "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba"
+    leaf_c = "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+
+    node = {
+        "id": "tree",
+        "type": "calculation",
+        "data": {
+            "functionName": "taproot_tree_builder",
+            "taprootLeafIndex": leaf_index,
+            "inputs": {
+                "vals": {
+                    "0": leaf_a,
+                    "1": leaf_b,
+                    "2": leaf_c,
+                }
+            },
+            "inputStructure": {
+                "ungrouped": [
+                    {"index": 0},
+                    {"index": 1},
+                    {"index": 2},
+                ]
+            },
+        },
+    }
+
+    nodes, errors = graph_logic.bulk_calculate_logic([node], [])
+    assert errors == []
+    data = list(nodes)[0]["data"]
+    assert data["outputValues"]["output-1"] == expected_path
+
+
+def test_taproot_tree_builder_output_values_leaf_c_path():
+    leaf_a = "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60"
+    leaf_b = "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba"
+    leaf_c = "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+
+    left = bytes.fromhex(leaf_a)
+    right = bytes.fromhex(leaf_b)
+    left, right = sorted([left, right])
+    expected_path = calc.tagged_hash(["TapBranch", (left + right).hex()])
+
+    node = {
+        "id": "tree",
+        "type": "calculation",
+        "data": {
+            "functionName": "taproot_tree_builder",
+            "taprootLeafIndex": 2,
+            "inputs": {
+                "vals": {
+                    "0": leaf_a,
+                    "1": leaf_b,
+                    "2": leaf_c,
+                }
+            },
+            "inputStructure": {
+                "ungrouped": [
+                    {"index": 0},
+                    {"index": 1},
+                    {"index": 2},
+                ]
+            },
+        },
+    }
+
+    nodes, errors = graph_logic.bulk_calculate_logic([node], [])
+    assert errors == []
+    data = list(nodes)[0]["data"]
+    assert data["outputValues"]["output-1"] == expected_path
 
 
 def test_enforce_deadline_skips_signal_when_not_main(monkeypatch):

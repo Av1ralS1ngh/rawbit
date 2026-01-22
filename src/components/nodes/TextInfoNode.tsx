@@ -363,7 +363,7 @@ export default function TextInfoNode({
   return (
     <Card
       className={cn(
-        "rounded-lg shadow-md bg-card relative",
+        "rounded-lg shadow-md bg-card relative overflow-visible",
         highlightStyles, // yellow halo when data.isHighlighted === true
         selectedStyles, // blue ring when the node itself is selected
         data.borderColor ? "border-2" : "border"
@@ -372,20 +372,24 @@ export default function TextInfoNode({
         ...borderStyle,
         width: displayWidth,
         height: displayHeight,
-        overflow: "visible",
       }}
     >
       <NodeResizer
         isVisible={selected}
         minWidth={200}
         minHeight={100}
-        lineStyle={{ border: "1px dashed var(--muted-foreground)" }}
+        lineStyle={{
+          border: "1px dashed var(--muted-foreground)",
+          pointerEvents: "none",
+        }}
         handleStyle={{
-          width: 20,
-          height: 20,
-          backgroundColor: "transparent",
+          width: 24,
+          height: 24,
+          backgroundColor: "hsl(var(--background))",
           border: "2px solid var(--resizer-handle-color)",
-          borderRadius: 4,
+          borderRadius: 6,
+          boxShadow: "0 0 0 2px hsl(var(--background))",
+          pointerEvents: "auto",
         }}
         onResize={onResize}
         onResizeEnd={onResizeEnd}

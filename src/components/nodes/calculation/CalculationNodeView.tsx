@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useLayoutEffect, useRef, useState } from "react";
 
 import { Handle, Position } from "@xyflow/react";
 import {
@@ -88,6 +88,7 @@ interface CalculationNodeViewProps {
     connectionStatus: ConnectionStatus;
   };
   isInputConnected: (fieldIndex: number) => boolean;
+  getInputMeta?: (fieldIndex: number) => { value: unknown; error: boolean } | undefined;
   mut: UseCalcNodeMutationsResult;
   group: UseGroupInstancesResult;
   clip: ClipboardLiteResult;
@@ -107,12 +108,174 @@ type FieldDefinition = BaseFieldDefinition & {
   allowEmptyBlank?: boolean;
 };
 
+type AsciiTreeNode = {
+  label: string;
+  left?: AsciiTreeNode;
+  right?: AsciiTreeNode;
+};
+
+const LEAF_HASH_GROUP_TITLE = "LEAF_HASHES[]";
+
+const alphaLabel = (index: number) => {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let label = "";
+  let n = index;
+  while (true) {
+    const rem = n % 26;
+    label = alphabet[rem] + label;
+    n = Math.floor(n / 26);
+    if (n === 0) break;
+    n -= 1;
+  }
+  return label;
+};
+
+const defaultLeafLabel = (index: number) => `Leaf ${alphaLabel(index)}`;
+
+const buildTaprootTree = (labels: string[]): AsciiTreeNode | null => {
+  if (!labels.length) return null;
+  let nodes: AsciiTreeNode[] = labels.map((label) => ({ label }));
+  while (nodes.length > 1) {
+    const next: AsciiTreeNode[] = [];
+    for (let index = 0; index < nodes.length; index += 2) {
+      const left = nodes[index];
+      const right = nodes[index + 1];
+      if (!right) {
+        next.push(left);
+        continue;
+      }
+      next.push({ label: "branch", left, right });
+    }
+    nodes = next;
+  }
+  return nodes[0];
+};
+
+const renderAsciiTree = (node: AsciiTreeNode) => {
+  const GAP = 2;
+  const render = (
+    current: AsciiTreeNode
+  ): { lines: string[]; width: number; height: number; middle: number } => {
+    const label = String(current.label);
+    if (!current.left && !current.right) {
+      return {
+        lines: [label],
+        width: label.length,
+        height: 1,
+        middle: Math.floor(label.length / 2),
+      };
+    }
+
+    const left = current.left ? render(current.left) : null;
+    const right = current.right ? render(current.right) : null;
+
+    if (!left || !right) {
+      const child = left ?? right;
+      if (!child) {
+        return {
+          lines: [label],
+          width: label.length,
+          height: 1,
+          middle: Math.floor(label.length / 2),
+        };
+      }
+
+      const extra = Math.max(0, label.length - child.width);
+      const padLeft = Math.floor(extra / 2);
+      const padRight = extra - padLeft;
+      const width = child.width + padLeft + padRight;
+      const childPos = padLeft + child.middle;
+      const labelStart = Math.max(
+        0,
+        Math.floor(width / 2) - Math.floor(label.length / 2)
+      );
+      const firstLine =
+        " ".repeat(labelStart) +
+        label +
+        " ".repeat(Math.max(0, width - labelStart - label.length));
+      let secondLine = "";
+      for (let index = 0; index < width; index += 1) {
+        if (index === childPos) {
+          secondLine += left ? "/" : "\\";
+        } else {
+          secondLine += " ";
+        }
+      }
+      const merged = child.lines.map(
+        (line) => " ".repeat(padLeft) + line + " ".repeat(padRight)
+      );
+      return {
+        lines: [firstLine, secondLine, ...merged],
+        width,
+        height: child.height + 2,
+        middle: Math.floor(width / 2),
+      };
+    }
+
+    const baseWidth = left.width + GAP + right.width;
+    let padLeft = 0;
+    let padRight = 0;
+    if (label.length > baseWidth) {
+      const extra = label.length - baseWidth;
+      padLeft = Math.floor(extra / 2);
+      padRight = extra - padLeft;
+    }
+    const width = baseWidth + padLeft + padRight;
+    const leftStart = padLeft;
+    const rightStart = padLeft + left.width + GAP;
+    const leftPos = leftStart + left.middle;
+    const rightPos = rightStart + right.middle;
+    const rootCenter = Math.floor((leftPos + rightPos) / 2);
+    const labelStart = Math.max(
+      0,
+      rootCenter - Math.floor(label.length / 2)
+    );
+    const firstLine =
+      " ".repeat(labelStart) +
+      label +
+      " ".repeat(Math.max(0, width - labelStart - label.length));
+    let secondLine = "";
+    for (let index = 0; index < width; index += 1) {
+      if (index === leftPos) {
+        secondLine += "/";
+      } else if (index === rightPos) {
+        secondLine += "\\";
+      } else {
+        secondLine += " ";
+      }
+    }
+    const height = Math.max(left.height, right.height);
+    const merged = [];
+    for (let index = 0; index < height; index += 1) {
+      const leftLine = left.lines[index] ?? " ".repeat(left.width);
+      const rightLine = right.lines[index] ?? " ".repeat(right.width);
+      merged.push(
+        " ".repeat(padLeft) +
+          leftLine +
+          " ".repeat(GAP) +
+          rightLine +
+          " ".repeat(padRight)
+      );
+    }
+    return {
+      lines: [firstLine, secondLine, ...merged],
+      width,
+      height: height + 2,
+      middle: rootCenter,
+    };
+  };
+
+  const { lines } = render(node);
+  return lines.map((line) => line.replace(/\s+$/g, "")).join("\n");
+};
+
 export function CalculationNodeView({
   selected,
   data,
   rawTitle,
   derived,
   isInputConnected,
+  getInputMeta,
   mut,
   group,
   clip,
@@ -126,6 +289,14 @@ export function CalculationNodeView({
 }: CalculationNodeViewProps) {
   const [showCode, setShowCode] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  const [pathHandleTop, setPathHandleTop] = useState<number | null>(null);
+  const [parityHandleTop, setParityHandleTop] = useState<number | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const pathRowRef = useRef<HTMLDivElement | null>(null);
+  const pathTriggerRef =
+    useRef<React.ElementRef<typeof SelectTrigger> | null>(null);
+  const parityRowRef = useRef<HTMLDivElement | null>(null);
+  const parityValueRef = useRef<HTMLDivElement | null>(null);
 
   const highlightStyles =
     data.isHighlighted && !selected
@@ -140,9 +311,69 @@ export function CalculationNodeView({
 
   const showField = singleValue?.showField ?? false;
   const showHandle = singleValue?.showHandle ?? false;
+  const isTaprootTreeBuilder = data.functionName === "taproot_tree_builder";
+  const isTaprootTweakXonly =
+    data.functionName === "taproot_tweak_xonly_pubkey";
+  const outputPorts =
+    Array.isArray(data.outputPorts) && data.outputPorts.length > 0
+      ? data.outputPorts
+      : isTaprootTreeBuilder
+      ? [
+          { label: "root", handleId: "" },
+          { label: "path", handleId: "output-1" },
+        ]
+      : [{ label: "out", handleId: "" }];
+  const taprootTree = data.taprootTree as
+    | {
+        leafCount?: number;
+        leafLabels?: string[];
+        paths?: string[][];
+        display?: unknown;
+      }
+    | undefined;
+  const parityValue =
+    data.outputValues && typeof data.outputValues === "object"
+      ? (data.outputValues as Record<string, unknown>)["output-1"]
+      : undefined;
+  const parityDisplay =
+    parityValue === undefined || parityValue === null || parityValue === ""
+      ? "--"
+      : String(parityValue);
 
   const handleCopyId = () => {
     clip.copyId();
+  };
+
+  const resolveConnectedField = (
+    fieldIndex: number,
+    rawValue: string | undefined,
+    connected: boolean,
+    fallbackPlaceholder?: string
+  ) => {
+    const meta = getInputMeta?.(fieldIndex);
+    const upstreamValue = meta?.value;
+    const upstreamValueString =
+      upstreamValue === undefined || upstreamValue === null
+        ? ""
+        : String(upstreamValue);
+    const hasRawValue = rawValue !== "" && rawValue !== undefined;
+    const hasUpstreamValue = upstreamValueString !== "";
+    const displayValue =
+      !hasRawValue && connected && hasUpstreamValue
+        ? upstreamValueString
+        : rawValue;
+
+    const placeholder = connected
+      ? rawValue === SENTINEL_EMPTY
+        ? "--EMPTY--"
+        : !hasRawValue && meta?.error
+        ? "Upstream error"
+        : !hasRawValue && !hasUpstreamValue
+        ? "Connected (no output)"
+        : "Connected"
+      : fallbackPlaceholder;
+
+    return { displayValue, placeholder };
   };
 
   const makeRenderSingleField =
@@ -152,6 +383,12 @@ export function CalculationNodeView({
       const rawValue = getVal(data.inputs?.vals, fieldIndex) as
         | string
         | undefined;
+      const resolved = resolveConnectedField(
+        fieldIndex,
+        rawValue,
+        connected,
+        field.placeholder
+      );
       const fieldLabel = data.customFieldLabels?.[fieldIndex] || field.label;
       const handleOffset = scope.startsWith("between-") ? -32 : -16;
 
@@ -176,20 +413,15 @@ export function CalculationNodeView({
           handleId={`input-${fieldIndex}`}
           connected={connected}
           label={fieldLabel}
-          placeholder={
-            connected
-              ? rawValue === SENTINEL_EMPTY
-                ? "--EMPTY--"
-                : "Connected"
-              : field.placeholder
-          }
-          value={rawValue}
+          placeholder={resolved.placeholder}
+          value={resolved.displayValue}
           small={field.small}
           rows={field.rows}
           handleOffset={handleOffset}
           disableHandle={field.unconnectable}
           allowEmpty00={field.allowEmpty00}
           allowEmptyBlank={field.allowEmptyBlank}
+          emptyLabel={field.emptyLabel}
           comment={field.comment}
           onChange={(value) =>
             mut.setFieldValue(
@@ -214,6 +446,12 @@ export function CalculationNodeView({
     const rawValue = getVal(data.inputs?.vals, fieldIndex) as
       | string
       | undefined;
+    const resolved = resolveConnectedField(
+      fieldIndex,
+      rawValue,
+      connected,
+      field.placeholder
+    );
     const fieldLabel = data.customFieldLabels?.[fieldIndex] || field.label;
 
     if (field.options) {
@@ -238,20 +476,15 @@ export function CalculationNodeView({
         handleId={`input-${fieldIndex}`}
         connected={connected}
         label={fieldLabel}
-        placeholder={
-          connected
-            ? rawValue === SENTINEL_EMPTY
-              ? "--EMPTY--"
-              : "Connected"
-            : field.placeholder
-        }
-        value={rawValue}
+        placeholder={resolved.placeholder}
+        value={resolved.displayValue}
         small={field.small}
         rows={field.rows}
         handleOffset={-33}
         disableHandle={field.unconnectable}
         allowEmpty00={field.allowEmpty00}
         allowEmptyBlank={field.allowEmptyBlank}
+        emptyLabel={field.emptyLabel}
         onChange={(value) =>
           mut.setFieldValue(
             fieldIndex,
@@ -276,8 +509,169 @@ export function CalculationNodeView({
     );
   };
 
+  const taprootLeafLabels = (() => {
+    if (!isTaprootTreeBuilder) return [];
+    const groupDef = data.inputStructure?.groups?.find(
+      (group) => group.title === LEAF_HASH_GROUP_TITLE
+    );
+    if (!groupDef || groupDef.fields.length === 0) return [];
+    const fieldOffset = groupDef.fields[0].index ?? 0;
+    const keys = groupInstanceKeys(groupDef)
+      .slice()
+      .sort((a, b) => a - b);
+    const leafCount =
+      typeof taprootTree?.leafCount === "number"
+        ? taprootTree.leafCount
+        : keys.length;
+    if (!leafCount) return [];
+
+    const labels: string[] = [];
+    for (let index = 0; index < leafCount; index += 1) {
+      const baseIndex = keys[index];
+      const fieldIndex =
+        typeof baseIndex === "number" ? baseIndex + fieldOffset : undefined;
+      const customLabel =
+        fieldIndex !== undefined
+          ? data.customFieldLabels?.[fieldIndex]
+          : undefined;
+      const trimmedLabel =
+        typeof customLabel === "string" ? customLabel.trim() : "";
+      labels.push(trimmedLabel || defaultLeafLabel(index));
+    }
+    return labels;
+  })();
+
+  const taprootLeafIndex =
+    taprootLeafLabels.length > 0
+      ? Math.min(
+          Math.max(
+            typeof data.taprootLeafIndex === "number"
+              ? data.taprootLeafIndex
+              : 0,
+            0
+          ),
+          taprootLeafLabels.length - 1
+        )
+      : 0;
+
+  const taprootTreeDisplay = (() => {
+    if (!taprootTree) return "";
+    const fallbackDisplay =
+      typeof taprootTree.display === "string"
+        ? taprootTree.display
+        : JSON.stringify(taprootTree, null, 2) ?? "";
+    if (!taprootLeafLabels.length) return fallbackDisplay;
+    const tree = buildTaprootTree(taprootLeafLabels);
+    if (!tree) return fallbackDisplay;
+    if (!tree.left && !tree.right) {
+      return renderAsciiTree({ label: "root", left: tree });
+    }
+    tree.label = "root";
+    return renderAsciiTree(tree);
+  })();
+
+  useLayoutEffect(() => {
+    if (!isTaprootTreeBuilder) return;
+    const cardEl = cardRef.current;
+    const rowEl = pathRowRef.current;
+    const triggerEl = pathTriggerRef.current;
+    const targetEl = triggerEl ?? rowEl;
+    if (!cardEl || !targetEl) return;
+
+    const updatePosition = () => {
+      const cardHeight = cardEl.offsetHeight;
+      if (!cardHeight) return;
+      const cardRect = cardEl.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+      if (!cardRect.height || !targetRect.height) return;
+      const scaleY = cardRect.height / cardHeight;
+      const rawTop =
+        targetRect.top - cardRect.top + targetRect.height / 2;
+      const nextTop = scaleY ? rawTop / scaleY : rawTop;
+      if (!Number.isFinite(nextTop)) return;
+      const clampedTop = Math.min(Math.max(nextTop, 0), cardHeight);
+      setPathHandleTop(clampedTop);
+    };
+
+    updatePosition();
+    const schedule =
+      typeof window !== "undefined" && window.requestAnimationFrame
+        ? window.requestAnimationFrame
+        : (cb: () => void) => setTimeout(cb, 0);
+    const cancel =
+      typeof window !== "undefined" && window.cancelAnimationFrame
+        ? window.cancelAnimationFrame
+        : (id: number) => clearTimeout(id);
+    const rafId = schedule(updatePosition);
+
+    if (typeof ResizeObserver === "undefined") {
+      return () => cancel(rafId as number);
+    }
+
+    const observer = new ResizeObserver(() => {
+      updatePosition();
+    });
+    observer.observe(cardEl);
+    observer.observe(targetEl);
+
+    return () => {
+      cancel(rafId as number);
+      observer.disconnect();
+    };
+  }, [isTaprootTreeBuilder, taprootLeafLabels.length, taprootTreeDisplay, showComment]);
+
+  useLayoutEffect(() => {
+    if (!isTaprootTweakXonly) return;
+    const cardEl = cardRef.current;
+    const rowEl = parityRowRef.current;
+    const targetEl = parityValueRef.current ?? rowEl;
+    if (!cardEl || !targetEl) return;
+
+    const updatePosition = () => {
+      const cardHeight = cardEl.offsetHeight;
+      if (!cardHeight) return;
+      const cardRect = cardEl.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+      if (!cardRect.height || !targetRect.height) return;
+      const scaleY = cardRect.height / cardHeight;
+      const rawTop =
+        targetRect.top - cardRect.top + targetRect.height / 2;
+      const nextTop = scaleY ? rawTop / scaleY : rawTop;
+      if (!Number.isFinite(nextTop)) return;
+      const clampedTop = Math.min(Math.max(nextTop, 0), cardHeight);
+      setParityHandleTop(clampedTop);
+    };
+
+    updatePosition();
+    const schedule =
+      typeof window !== "undefined" && window.requestAnimationFrame
+        ? window.requestAnimationFrame
+        : (cb: () => void) => setTimeout(cb, 0);
+    const cancel =
+      typeof window !== "undefined" && window.cancelAnimationFrame
+        ? window.cancelAnimationFrame
+        : (id: number) => clearTimeout(id);
+    const rafId = schedule(updatePosition);
+
+    if (typeof ResizeObserver === "undefined") {
+      return () => cancel(rafId as number);
+    }
+
+    const observer = new ResizeObserver(() => {
+      updatePosition();
+    });
+    observer.observe(cardEl);
+    observer.observe(targetEl);
+
+    return () => {
+      cancel(rafId as number);
+      observer.disconnect();
+    };
+  }, [isTaprootTweakXonly, parityDisplay, showComment]);
+
   return (
     <Card
+      ref={cardRef}
       className={cn(
         "relative flex flex-col border-2 bg-card font-mono text-primary shadow-md transition-colors",
         selectedStyles,
@@ -551,6 +945,64 @@ export function CalculationNodeView({
             </Button>
           </div>
 
+          {isTaprootTreeBuilder && taprootLeafLabels.length > 0 ? (
+            <div
+              ref={pathRowRef}
+              className="relative mt-3 flex items-center justify-between"
+            >
+              <span className="text-xs font-medium">Merkle Path Leaf:</span>
+              <Select
+                value={String(taprootLeafIndex)}
+                onValueChange={(value) =>
+                  mut.setTaprootLeafIndex(Number(value))
+                }
+              >
+                <SelectTrigger
+                  ref={pathTriggerRef}
+                  className="h-7 w-40"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {taprootLeafLabels.map((label, index) => (
+                    <SelectItem key={`${label}-${index}`} value={String(index)}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+
+          {isTaprootTweakXonly ? (
+            <div
+              ref={parityRowRef}
+              className="relative mt-3 flex items-center justify-between"
+            >
+              <span className="text-xs font-medium">Output Key Parity:</span>
+              <div
+                ref={parityValueRef}
+                className="flex h-7 min-w-[3.5rem] items-center justify-center rounded-md border border-input bg-background px-2 text-xs font-mono"
+              >
+                {parityDisplay}
+              </div>
+            </div>
+          ) : null}
+
+          {taprootTreeDisplay ? (
+            <div className="mt-3 border-t border-border pt-2">
+              <TerminalField
+                label="Taproot Tree:"
+                value={taprootTreeDisplay}
+                readOnly={true}
+                rows={Math.min(
+                  12,
+                  Math.max(4, taprootTreeDisplay.split("\n").length)
+                )}
+              />
+            </div>
+          ) : null}
+
           {data.networkDependent && (
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs font-medium">Network:</span>
@@ -593,12 +1045,77 @@ export function CalculationNodeView({
         )}
       </CardContent>
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-3 !w-3 !border-2 !border-primary !bg-background"
-        style={{ top: "50%", transform: "translate(50%, -50%)" }}
-      />
+      {isTaprootTreeBuilder ? (
+        <>
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="!h-3 !w-3 !border-2 !border-primary !bg-background"
+            style={{ top: "50%", transform: "translate(50%, -50%)" }}
+          />
+          {pathHandleTop !== null && taprootLeafLabels.length > 0 ? (
+            <Handle
+              type="source"
+              id="output-1"
+              position={Position.Right}
+              className="!h-3 !w-3 !border-2 !border-primary !bg-background"
+              style={{
+                top: `${pathHandleTop}px`,
+                transform: "translate(50%, -50%)",
+              }}
+            />
+          ) : null}
+        </>
+      ) : isTaprootTweakXonly ? (
+        <>
+          <Handle
+            type="source"
+            position={Position.Right}
+            className="!h-3 !w-3 !border-2 !border-primary !bg-background"
+            style={{ top: "50%", transform: "translate(50%, -50%)" }}
+          />
+          {parityHandleTop !== null ? (
+            <Handle
+              type="source"
+              id="output-1"
+              position={Position.Right}
+              className="!h-3 !w-3 !border-2 !border-primary !bg-background"
+              style={{
+                top: `${parityHandleTop}px`,
+                transform: "translate(50%, -50%)",
+              }}
+            />
+          ) : null}
+        </>
+      ) : (
+        outputPorts.map((port, index) => {
+          const top = `${((index + 1) / (outputPorts.length + 1)) * 100}%`;
+          const handleId = port.handleId || undefined;
+          const showLabel =
+            outputPorts.length > 1 &&
+            !isTaprootTreeBuilder &&
+            !isTaprootTweakXonly;
+          return (
+            <React.Fragment key={`${port.handleId || "out"}-${index}`}>
+              {showLabel ? (
+                <div
+                  className="absolute right-5 text-[10px] text-muted-foreground"
+                  style={{ top, transform: "translateY(-50%)" }}
+                >
+                  {port.label}
+                </div>
+              ) : null}
+              <Handle
+                type="source"
+                id={handleId}
+                position={Position.Right}
+                className="!h-3 !w-3 !border-2 !border-primary !bg-background"
+                style={{ top, transform: "translate(50%, -50%)" }}
+              />
+            </React.Fragment>
+          );
+        })
+      )}
 
       <Suspense fallback={null}>
         <ScriptExecutionSteps

@@ -280,8 +280,8 @@ test.describe('Clipboard and tabs workflows', () => {
     await expect(scriptNode).toBeVisible({ timeout: 15_000 });
     await clearSelection(page);
 
-    const copyButton = page.getByTitle('Copy nodes');
-    const pasteButton = page.getByTitle('Paste nodes');
+    const copyButton = page.getByRole('button', { name: 'Copy nodes (Ctrl/Cmd+C)' });
+    const pasteButton = page.getByRole('button', { name: 'Paste nodes (Ctrl/Cmd+V)' });
 
     await expect(pasteButton).toBeDisabled();
 
@@ -373,8 +373,8 @@ test.describe('Clipboard and tabs workflows', () => {
     await loadFixture(page, 'hash-flow.json');
     await clearSelection(page);
 
-    const copyButton = page.getByTitle('Copy nodes');
-    const pasteButton = page.getByTitle('Paste nodes');
+    const copyButton = page.getByRole('button', { name: 'Copy nodes (Ctrl/Cmd+C)' });
+    const pasteButton = page.getByRole('button', { name: 'Paste nodes (Ctrl/Cmd+V)' });
     await expect(pasteButton).toBeDisabled();
 
     const inputNode = page.locator('[data-id="node_input"]');

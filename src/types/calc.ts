@@ -84,6 +84,8 @@ export interface ScriptExecutionResult {
   scriptPubKey?: string;
   redeemScript?: string;
   witnessScript?: string;
+  /** Raw witness stack items as supplied (Taproot key-path, etc.) */
+  witnessStack?: string[];
   isValid?: boolean;
   steps?: StepData[];
   error?: string;

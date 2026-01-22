@@ -20,9 +20,35 @@ import {
 
 import { useTheme } from "@/hooks/useTheme";
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
-  "http://localhost:5007";
+const DEFAULT_LOCAL_API = "http://localhost:5007";
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"]);
+
+function isLocalHost(hostname?: string) {
+  if (!hostname) return false;
+  return LOCAL_HOSTS.has(hostname.toLowerCase());
+}
+
+function resolveApiBase(): { baseUrl: string; forcedLocal: boolean } {
+  const envBase =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
+    DEFAULT_LOCAL_API;
+  const allowRemote =
+    (import.meta.env.VITE_ALLOW_REMOTE_API || "")
+      .toString()
+      .toLowerCase() === "true";
+  const isPageLocal = typeof window !== "undefined" && isLocalHost(window.location.hostname);
+
+  try {
+    const envUrl = new URL(envBase);
+    const isEnvLocal = isLocalHost(envUrl.hostname);
+    if (import.meta.env.DEV && isPageLocal && !isEnvLocal && !allowRemote) {
+      return { baseUrl: DEFAULT_LOCAL_API, forcedLocal: true };
+    }
+    return { baseUrl: envBase, forcedLocal: false };
+  } catch {
+    return { baseUrl: DEFAULT_LOCAL_API, forcedLocal: true };
+  }
+}
 
 interface NodeCodeDialogProps {
   open: boolean;
@@ -67,8 +93,9 @@ export function NodeCodeDialog({
     setLoading(true);
     setError("");
     setCode("");
+    const api = resolveApiBase();
 
-    fetch(`${API_BASE_URL}/code?functionName=${encodeURIComponent(functionName)}`)
+    fetch(`${api.baseUrl}/code?functionName=${encodeURIComponent(functionName)}`)
       .then((res) => res.json())
       .then((resp) => {
         setLoading(false);

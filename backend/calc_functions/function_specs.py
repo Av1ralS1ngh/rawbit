@@ -21,6 +21,100 @@ FUNCTION_SPECS = {
         "params": {}
     },
 
+    "tagged_hash": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "xonly_pubkey_from_private_key": {
+        "paramExtraction": "single_val",
+        "params": {
+            "val": {"type": "string", "required": True}
+        }
+    },
+    "xonly_pubkey": {
+        "paramExtraction": "single_val",
+        "params": {
+            "val": {"type": "string", "required": True}
+        }
+    },
+    "even_y_private_key": {
+        "paramExtraction": "single_val",
+        "params": {
+            "val": {"type": "string", "required": True}
+        }
+    },
+
+    "p2tr_address_from_xonly": {
+        "paramExtraction": "val_with_network",
+        "params": {
+            "val": {"type": "string", "required": True},
+            "selectedNetwork": {"type": "string", "required": False}
+        }
+    },
+
+    "taproot_tweak_xonly_pubkey": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+    "taproot_tweaked_privkey": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+    "taproot_output_pubkey_from_xonly": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+    "taproot_tree_builder": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "schnorr_sign_bip340": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "schnorr_verify_bip340": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "taproot_sighash_default": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "musig2_aggregate_pubkeys": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "schnorr_batch_verify_demo": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
    
    
     "public_key_from_private_key": {

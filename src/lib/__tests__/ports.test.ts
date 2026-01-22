@@ -82,4 +82,37 @@ describe("buildPorts", () => {
     ]);
     expect(new Set(handles).size).toBe(handles.length);
   });
+
+  it("does not add generic numInputs handles when grouped fields are present", () => {
+    const node = {
+      id: "prevouts",
+      type: "calculation",
+      position: { x: 0, y: 0 },
+      data: {
+        functionName: "concat_all",
+        numInputs: 2,
+        inputStructure: {
+          groups: [
+            {
+              title: "PREVOUTS[]",
+              baseIndex: 0,
+              fields: [
+                { index: 0, label: "TXID[32]:" },
+                { index: 10, label: "VOUT[4]:" },
+              ],
+            },
+          ],
+        },
+        groupInstanceKeys: {
+          "PREVOUTS[]": [0],
+        },
+      },
+    } as FlowNode;
+
+    const ports = buildPorts(node);
+    const handles = ports.inputs.map((p) => p.handleId);
+
+    expect(handles).toEqual(["input-0", "input-10"]);
+    expect(handles).not.toContain("input-1");
+  });
 });

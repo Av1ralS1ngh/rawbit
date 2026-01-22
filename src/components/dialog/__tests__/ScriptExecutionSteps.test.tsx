@@ -60,6 +60,79 @@ describe("ScriptExecutionSteps", () => {
     expect(screen.getByText(/Step 1\/2 — Phase 1/i)).toBeInTheDocument();
   });
 
+  it("shows taproot witness details even without an explicit witnessStack", () => {
+    render(
+      <ScriptExecutionSteps
+        open
+        onClose={vi.fn()}
+        scriptResult={{
+          isValid: true,
+          steps: [
+            {
+              pc: -1,
+              opcode: 0,
+              opcode_name: "taproot_schnorr_verify",
+              stack_before: ["aa", "bbcc"],
+              stack_after: ["01"],
+              phase: "taproot",
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Phase 4 \(taproot\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/witnessStack/i)).toBeInTheDocument();
+    expect(screen.getAllByText("bbcc").length).toBeGreaterThan(0);
+  });
+
+  it("hides witnessStack when witnessScript is present (segwit/script-path)", () => {
+    render(
+      <ScriptExecutionSteps
+        open
+        onClose={vi.fn()}
+        scriptResult={{
+          isValid: true,
+          witnessScript: "76a91488ac",
+          witnessStack: ["aa", "bb"],
+          steps: [
+            {
+              pc: 0,
+              opcode: 0,
+              opcode_name: "OP_0",
+              stack_before: [],
+              stack_after: ["aa", "bb"],
+              phase: "witnessScript",
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.queryByText(/witnessStack/i)).not.toBeInTheDocument();
+  });
+
+  it("shows a taproot key-path explainer banner", () => {
+    render(
+      <ScriptExecutionSteps
+        open
+        onClose={vi.fn()}
+        scriptResult={{
+          isValid: true,
+          steps: [
+            { pc: -1, opcode: 0, opcode_name: "taproot_witness", stack_before: ["aa"], stack_after: ["aa"], phase: "taproot" },
+            { pc: -1, opcode: 0, opcode_name: "taproot_schnorr_verify", stack_before: ["aa"], stack_after: ["01"], phase: "taproot" },
+          ],
+          witnessStack: ["aa"],
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText(/Taproot key-path spend: no witnessScript/i)
+    ).toBeInTheDocument();
+  });
+
   it("copies the trace to the clipboard with feedback", async () => {
     render(
       <ScriptExecutionSteps

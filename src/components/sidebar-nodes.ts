@@ -802,6 +802,175 @@ export const allSidebarNodes: NodeTemplate[] = [
       baseHeight: 120,
     },
   },
+  {
+    functionName: "concat_all",
+    label: "P2TR Witness (Key-Path)",
+    category: "Transaction Templates",
+    subcategory: "Taproot",
+    description:
+      "Witness for Taproot key-path spend (item_count, sig_length, signature)",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "P2TR Witness (Key-Path)",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: { vals: ["01", "40", ""] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "ITEM_COUNT (1B):",
+            rows: 1,
+            placeholder: "01",
+            comment: "Usually 0x01 for key-path",
+          },
+          {
+            index: 1,
+            label: "SIG_LENGTH (VarInt):",
+            rows: 1,
+            placeholder: "40",
+            comment: "Length of Schnorr sig (0x40 for 64 bytes)",
+          },
+          {
+            index: 2,
+            label: "SIGNATURE (64-65B hex):",
+            rows: 2,
+            placeholder: "<sig>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+      baseHeight: 100,
+    },
+  },
+  {
+    functionName: "concat_all",
+    label: "Taproot Control Block",
+    category: "Transaction Templates",
+    subcategory: "Taproot",
+    description:
+      "Build the control block for a script-path spend (parity byte + internal key + optional merkle path).",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "Taproot Control Block",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: { vals: { 0: "c0" } },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "First Byte (c0/c1):",
+            rows: 1,
+            placeholder: "c0 or c1",
+          },
+          {
+            index: 100,
+            label: "Internal Key P:",
+            rows: 2,
+            placeholder: "<32B x-only pubkey>",
+          },
+          {
+            index: 200,
+            label: "Merkle Path:",
+            rows: 3,
+            placeholder: "<concat of 32B siblings>",
+            allowEmptyBlank: true,
+            emptyLabel: "empty",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+      baseHeight: 120,
+    },
+  },
+  {
+    functionName: "concat_all",
+    label: "P2TR Witness (Script-Path)",
+    category: "Transaction Templates",
+    subcategory: "Taproot",
+    description:
+      "Witness for Taproot script-path spend (stack items + script + control block)",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "P2TR Witness (Script-Path)",
+      paramExtraction: "multi_val",
+      numInputs: 7, // item_count + one stack item + script + control block
+      inputs: { vals: ["", "", "", "", "", ""] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "ITEM_COUNT (1B):",
+            rows: 1,
+            placeholder: "Number of stack items",
+          },
+        ],
+        groups: [
+          {
+            title: "STACK_ITEMS[]",
+            baseIndex: 100,
+            expandable: true,
+            fieldCountToAdd: 2,
+            minInstances: 1,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "ITEM_LENGTH (VarInt):",
+                rows: 1,
+                placeholder: "<len>",
+              },
+              {
+                index: 10,
+                label: "ITEM_BYTES (hex):",
+                rows: 2,
+                placeholder: "<stack item>",
+                allowEmptyBlank: true,
+                comment:
+                  'Toggle "∅" to push an empty element (e.g., OP_IF false branch).',
+              },
+            ],
+          },
+        ],
+        afterGroups: [
+          {
+            index: 200,
+            label: "SCRIPT_LENGTH (VarInt):",
+            rows: 1,
+            placeholder: "<len(script)>",
+          },
+          {
+            index: 210,
+            label: "SCRIPT (hex):",
+            rows: 3,
+            placeholder: "<tapscript hex>",
+          },
+          {
+            index: 220,
+            label: "CONTROL_BLOCK_LENGTH (VarInt):",
+            rows: 1,
+            placeholder: "<len(control block)>",
+          },
+          {
+            index: 230,
+            label: "CONTROL_BLOCK (hex):",
+            rows: 3,
+            placeholder: "<control block hex>",
+          },
+        ],
+      },
+      groupInstances: { "STACK_ITEMS[]": 1 },
+      groupInstanceKeys: { "STACK_ITEMS[]": [100] },
+      result: "",
+      baseHeight: 140,
+    },
+  },
   // DATA TO SIGN (SEGWIT) Node - Builds BIP143 signing data WITHOUT sighash
   {
     functionName: "concat_all",
@@ -899,6 +1068,111 @@ export const allSidebarNodes: NodeTemplate[] = [
       },
       groupInstances: {},
       baseHeight: 200,
+    },
+  },
+  // DATA TO SIGN (TAPROOT) Node - Builds key-path SigMsg (epoch 0x00, SIGHASH_DEFAULT)
+  {
+    functionName: "concat_all",
+    label: "Data to Sign (Taproot)",
+    category: "Transaction Templates",
+    subcategory: "Components",
+    description:
+      "Builds Taproot key-path SigMsg (epoch 0x00, SIGHASH_DEFAULT) for one input; run TapSighash tagged hash on the result",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "Data to Sign (Taproot)",
+      paramExtraction: "multi_val",
+      numInputs: 11,
+      inputs: { vals: [] },
+
+      version: 0,
+      result: "",
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "EPOCH:",
+            rows: 1,
+            placeholder: "00",
+            comment: "Fixed 0x00 for current Taproot epoch",
+          },
+          {
+            index: 10,
+            label: "HASH TYPE:",
+            rows: 1,
+            placeholder: "00",
+            comment: "0x00 = SIGHASH_DEFAULT (key-path)",
+          },
+          {
+            index: 20,
+            label: "VERSION[4] (LE):",
+            rows: 1,
+            placeholder: "02000000",
+            comment: "Transaction version (little-endian)",
+          },
+          {
+            index: 30,
+            label: "LOCKTIME[4] (LE):",
+            rows: 1,
+            placeholder: "00000000",
+            comment: "nLockTime (little-endian)",
+          },
+          {
+            index: 40,
+            label: "HASH_PREVOUTS[32]:",
+            rows: 2,
+            placeholder: "SHA256 of all outpoints",
+            comment: "⚡ SHARED: txidLE||vout for every input (single SHA256)",
+          },
+          {
+            index: 50,
+            label: "HASH_AMOUNTS[32]:",
+            rows: 2,
+            placeholder: "SHA256 of all amounts (8B LE each)",
+            comment: "⚡ SHARED: amounts for every input (8-byte LE)",
+          },
+          {
+            index: 60,
+            label: "HASH_SCRIPTPUBKEYS[32]:",
+            rows: 2,
+            placeholder: "SHA256 of all scriptPubKeys (len + bytes)",
+            comment: "⚡ SHARED: each with varlen prefix",
+          },
+          {
+            index: 70,
+            label: "HASH_SEQUENCES[32]:",
+            rows: 2,
+            placeholder: "SHA256 of all sequences",
+            comment: "⚡ SHARED: sequences for every input (4-byte LE)",
+          },
+          {
+            index: 80,
+            label: "HASH_OUTPUTS[32]:",
+            rows: 2,
+            placeholder: "SHA256 of all serialized outputs",
+            comment: "⚡ SHARED: amount + script for every output",
+          },
+          {
+            index: 90,
+            label: "SPEND TYPE:",
+            rows: 1,
+            placeholder: "00",
+            comment: "0x00 = key-path, no annex (ext_flag*2 + annex)",
+          },
+          {
+            index: 100,
+            label: "INPUT INDEX[4] (LE):",
+            rows: 1,
+            placeholder: "00000000",
+            comment: "Which input is being signed (little-endian)",
+          },
+        ],
+        groups: [],
+        afterGroups: [],
+      },
+      groupInstances: {},
+      baseHeight: 220,
     },
   },
 
@@ -1007,6 +1281,222 @@ export const allSidebarNodes: NodeTemplate[] = [
       result: "",
     },
   },
+  {
+    functionName: "tagged_hash",
+    label: "Tagged Hash",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description: "Compute tagged_hash(tag, data) used by BIP340/341/342",
+    type: "calculation",
+    nodeData: {
+      functionName: "tagged_hash",
+      title: "Tagged Hash",
+      paramExtraction: "multi_val",
+      numInputs: 2,
+      inputs: { vals: ["BIP0340/challenge", ""] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Tag:",
+            rows: 1,
+            placeholder: "TapTweak / TapLeaf / TapBranch / ...",
+          },
+          {
+            index: 1,
+            label: "Data (hex):",
+            rows: 3,
+            placeholder: "<hex data>",
+          },
+        ],
+      },
+      result: "",
+      groupInstances: {},
+    },
+  },
+  {
+    functionName: "taproot_tree_builder",
+    label: "Taproot Tree Builder",
+    category: "Cryptographic Operations",
+    subcategory: "Taproot",
+    description:
+      "Build a Taproot taptree root from leaf hashes (left-to-right pairing). Also outputs per-leaf paths and tree structure.",
+    type: "calculation",
+    nodeData: {
+      functionName: "taproot_tree_builder",
+      title: "Taproot Tree Builder",
+      paramExtraction: "multi_val",
+      numInputs: 1,
+      inputs: { vals: [] },
+      taprootLeafIndex: 0,
+      outputPorts: [
+        { label: "root", handleId: "" },
+        { label: "path", handleId: "output-1" },
+      ],
+      inputStructure: {
+        ungrouped: [],
+        groups: [
+          {
+            title: "LEAF_HASHES[]",
+            baseIndex: 1000,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 1,
+            maxInstances: 20,
+            fields: [
+              {
+                index: 0,
+                label: "Leaf Hash (TapLeaf hex):",
+                rows: 2,
+                placeholder: "<32B hex>",
+                comment:
+                  "Order defines the policy tree (paired left-to-right).",
+              },
+            ],
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: { "LEAF_HASHES[]": 1 },
+      groupInstanceKeys: { "LEAF_HASHES[]": [1000] },
+      result: "",
+    },
+  },
+  {
+    functionName: "schnorr_sign_bip340",
+    label: "Schnorr Sign (BIP340)",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description:
+      "Create a 64-byte BIP340 Schnorr signature (Taproot key-path). Uses deterministic nonce if Aux Rand is empty.",
+    type: "calculation",
+    nodeData: {
+      functionName: "schnorr_sign_bip340",
+      title: "Schnorr Sign (BIP340)",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: {
+        vals: ["", "", "__EMPTY__"],
+      },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Private Key (32B hex):",
+            rows: 2,
+            placeholder: "<privkey hex>",
+          },
+          {
+            index: 1,
+            label: "Message Hash (32B hex):",
+            rows: 2,
+            placeholder: "<msg32 hex>",
+          },
+          {
+            index: 2,
+            label: "Aux Rand (32B hex, optional):",
+            rows: 2,
+            placeholder: "32B hex",
+            allowEmptyBlank: true,
+            unconnectable: false,
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "schnorr_verify_bip340",
+    label: "Schnorr Verify (BIP340)",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description: "Verify a 64-byte BIP340 Schnorr signature",
+    type: "calculation",
+    nodeData: {
+      functionName: "schnorr_verify_bip340",
+      title: "Schnorr Verify (BIP340)",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: { vals: ["", "", ""] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "X-only PubKey (32B hex):",
+            rows: 2,
+            placeholder: "<x-only pubkey>",
+          },
+          {
+            index: 1,
+            label: "Message Hash (32B hex):",
+            rows: 2,
+            placeholder: "<msg32 hex>",
+          },
+          {
+            index: 2,
+            label: "Signature (64B hex):",
+            rows: 2,
+            placeholder: "<sig64 hex>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "schnorr_batch_verify_demo",
+    label: "Schnorr Batch Demo",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description: "Illustrate batch verify combination of multiple BIP340 sigs",
+    type: "calculation",
+    nodeData: {
+      functionName: "schnorr_batch_verify_demo",
+      title: "Schnorr Batch Demo",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: { vals: [] },
+      inputStructure: {
+        groups: [
+          {
+            title: "TRIPLES[] (pk,msg,sig)",
+            baseIndex: 0,
+            expandable: true,
+            fieldCountToAdd: 3,
+            minInstances: 1,
+            maxInstances: 6,
+            fields: [
+              {
+                index: 0,
+                label: "X-only PubKey:",
+                rows: 2,
+                placeholder: "<32B hex>",
+              },
+              {
+                index: 1,
+                label: "Message Hash:",
+                rows: 2,
+                placeholder: "<32B hex>",
+              },
+              {
+                index: 2,
+                label: "Signature:",
+                rows: 2,
+                placeholder: "<64B hex>",
+              },
+            ],
+          },
+        ],
+        ungrouped: [],
+        afterGroups: [],
+      },
+      groupInstances: { "TRIPLES[] (pk,msg,sig)": 1 },
+      groupInstanceKeys: { "TRIPLES[] (pk,msg,sig)": [0] },
+      result: "",
+    },
+  },
 
   // ------------------------------------------------------------------
   // KEY & ADDRESS
@@ -1049,6 +1539,230 @@ export const allSidebarNodes: NodeTemplate[] = [
       inputs: { val: "" },
     },
   },
+  {
+    functionName: "xonly_pubkey",
+    label: "Even-Y PrivKey → X-only PubKey",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Derive x-only public key (Taproot/Schnorr). Input should already be even-Y (use Even-Y PrivKey first).",
+    type: "calculation",
+    nodeData: {
+      functionName: "xonly_pubkey",
+      title: "Even-Y PrivKey → X-only PubKey",
+      numInputs: 1,
+      inputs: { val: "" },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Even-Y Private Key (32B hex):",
+            rows: 2,
+            placeholder: "<privkey hex>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "even_y_private_key",
+    label: "PrivKey → Even-Y PrivKey",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Adjust secret so corresponding x-only pubkey has even Y (Taproot tweak helper).",
+    type: "calculation",
+    nodeData: {
+      functionName: "even_y_private_key",
+      title: "PrivKey → Even-Y PrivKey",
+      numInputs: 1,
+      inputs: { val: "" },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Private Key (32B hex):",
+            rows: 2,
+            placeholder: "<privkey hex>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "xonly_pubkey_from_private_key",
+    label: "PrivKey → X-only PubKey",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Derive x-only pubkey, parity bit, and parity-adjusted secret for Taproot/Schnorr",
+    type: "calculation",
+    nodeData: {
+      functionName: "xonly_pubkey_from_private_key",
+      title: "PrivKey → X-only PubKey",
+      numInputs: 1,
+      inputs: { val: "" },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Private Key (32B hex):",
+            rows: 2,
+            placeholder: "<privkey hex>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "p2tr_address_from_xonly",
+    label: "X-only → P2TR Address",
+    category: "Key & Address",
+    subcategory: "",
+    description: "Build Taproot bech32m address from x-only pubkey",
+    type: "calculation",
+    nodeData: {
+      functionName: "p2tr_address_from_xonly",
+      title: "X-only → P2TR Address",
+      numInputs: 1,
+      networkDependent: true,
+      selectedNetwork: "testnet",
+      inputs: { selectedNetwork: "testnet", val: "" },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "X-only PubKey (32B hex):",
+            rows: 2,
+            placeholder: "<x-only pubkey>",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "taproot_tweaked_privkey",
+    label: "Taproot Tweak (PrivKey → q')",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Compute tweaked (even-Y) private key for Taproot key-path signing",
+    type: "calculation",
+    nodeData: {
+      functionName: "taproot_tweaked_privkey",
+      title: "Taproot Tweak (PrivKey → q')",
+      paramExtraction: "multi_val",
+      numInputs: 2,
+      inputs: { vals: ["", ""] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Internal Secret Key (32B hex):",
+            rows: 2,
+            placeholder: "<privkey hex>",
+          },
+          {
+            index: 1,
+            label: "Merkle Root (32B hex, optional):",
+            rows: 2,
+            placeholder: "leave empty for key-path only",
+            allowEmptyBlank: true,
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "taproot_tweak_xonly_pubkey",
+    label: "Taproot Tweak (X-only → Q)",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Verifier-side TapTweak using internal x-only pubkey to get output Q and parity byte",
+    type: "calculation",
+    nodeData: {
+      functionName: "taproot_tweak_xonly_pubkey",
+      title: "Taproot Tweak (X-only → Q)",
+      paramExtraction: "multi_val",
+      numInputs: 2,
+      inputs: { vals: ["", ""] },
+      outputPorts: [
+        { label: "Q (x-only)", handleId: "" },
+        { label: "parity (c0/c1)", handleId: "output-1" },
+      ],
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Internal X-only PubKey (32B hex):",
+            rows: 2,
+            placeholder: "<x-only pubkey>",
+          },
+          {
+            index: 1,
+            label: "Merkle Root (32B hex, optional):",
+            rows: 2,
+            placeholder: "leave empty for key-path only",
+            allowEmptyBlank: true,
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_aggregate_pubkeys",
+    label: "MuSig2 Aggregate PubKeys",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Lightweight MuSig2-style aggregation: coefficients + aggregated x-only pubkey",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_aggregate_pubkeys",
+      title: "MuSig2 Aggregate PubKeys",
+      paramExtraction: "multi_val",
+      numInputs: 2,
+      inputs: { vals: [] },
+      inputStructure: {
+        groups: [
+          {
+            title: "XONLY_PUBKEYS[]",
+            baseIndex: 0,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "X-only PubKey:",
+                rows: 2,
+                placeholder: "<32B hex>",
+              },
+            ],
+          },
+        ],
+        ungrouped: [],
+        afterGroups: [],
+      },
+      groupInstances: { "XONLY_PUBKEYS[]": 2 },
+      groupInstanceKeys: { "XONLY_PUBKEYS[]": [0, 100] },
+      result: "",
+    },
+  },
 
   // ------------------------------------------------------------------
   // UTILITY
@@ -1064,8 +1778,8 @@ export const allSidebarNodes: NodeTemplate[] = [
       functionName: "script_verification",
       title: "Verify Script",
       paramExtraction: "multi_val",
-      numInputs: 6, // Updated from 4 to 6
-      inputs: { vals: ["", "", "", "0", "", ""] }, // Added two more empty strings
+      numInputs: 6,
+      inputs: { vals: ["", "", "", "0", "", ""] },
       inputStructure: {
         ungrouped: [
           {
@@ -1110,15 +1824,42 @@ export const allSidebarNodes: NodeTemplate[] = [
             allowEmptyBlank: true,
           },
         ],
-        groups: [],
+        groups: [
+          {
+            title: "Taproot Prevouts (vin order)",
+            baseIndex: 100,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 0,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "prevout_amount_sats",
+                rows: 1,
+                placeholder: "Amount (sats)",
+                allowEmptyBlank: true,
+              },
+              {
+                index: 1,
+                label: "prevout_scriptPubKey_hex",
+                rows: 3,
+                placeholder: "Hex-encoded scriptPubKey",
+                allowEmptyBlank: true,
+              },
+            ],
+          },
+        ],
         afterGroups: [],
       },
       groupInstances: {},
+      groupInstanceKeys: {},
       result: "",
 
       error: false,
     },
   },
+
   {
     functionName: "hash160_to_p2sh_address",
     label: "HASH160 → P2SH Address",
@@ -1646,6 +2387,58 @@ export const allSidebarNodes: NodeTemplate[] = [
       baseHeight: 80,
     },
   },
+  // SCRIPTS Node - Concatenates compact_size(scriptPubKey) + scriptPubKey per input
+  {
+    functionName: "concat_all",
+    label: "scriptPubKeys",
+    category: "Transaction Templates",
+    subcategory: "Components",
+    description:
+      "Builds compact_size(scriptPubKey) || scriptPubKey for each input (Taproot hash_scripts)",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "scriptPubKeys",
+      paramExtraction: "multi_val",
+      numInputs: 2, // Initial: 1 input (2 fields)
+      inputs: { vals: [] },
+
+      version: 0,
+      result: "",
+      inputStructure: {
+        ungrouped: [],
+        groups: [
+          {
+            title: "scriptPubKeys",
+            baseIndex: 0,
+            expandable: true,
+            fieldCountToAdd: 2,
+            minInstances: 1,
+            maxInstances: 99,
+            instanceLabelPrefix: "Input",
+            fields: [
+              {
+                index: 0,
+                label: "Compact Size:",
+                placeholder: "<compact_size>",
+                rows: 1,
+              },
+              {
+                index: 10,
+                label: "scriptPubKey:",
+                placeholder: "<scriptPubKey>",
+                rows: 3,
+              },
+            ],
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: { scriptPubKeys: 1 },
+      groupInstanceKeys: { scriptPubKeys: [0] },
+      baseHeight: 120,
+    },
+  },
 
   // OUTPOINT Node - Single outpoint (txid + vout) for specific input signing
   {
@@ -1973,6 +2766,170 @@ export const allSidebarNodes: NodeTemplate[] = [
         ],
       },
       groupInstances: {},
+    },
+  },
+  {
+    functionName: "concat_all",
+    label: "Taproot Preimage (Base)",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description:
+      "Build Taproot SigMsg fields 0–10 (epoch, sighash_type, version, locktime, hash_*). hash_outputs is optional (NONE/SINGLE).",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "Taproot Preimage (Base)",
+      paramExtraction: "multi_val",
+      numInputs: 11,
+      inputs: {
+        vals: [
+          "00", // epoch
+          "00", // sighash_type
+          "02000000", // version
+          "00000000", // locktime
+          "", // hash_prevouts
+          "", // hash_amounts
+          "", // hash_scripts
+          "", // hash_sequences
+          "", // hash_outputs (optional)
+          "00", // spend_type
+          "00000000", // input_index
+        ],
+      },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "EPOCH (1B):",
+            rows: 1,
+            placeholder: "00",
+            comment: "Version byte for future sighash upgrades (always 00 now)",
+          },
+          {
+            index: 1,
+            label: "SIGHASH_TYPE (1B):",
+            rows: 1,
+            placeholder: "00 / 01 / 02 / 03",
+            comment: "Taproot sighash flag (BIP342 semantics)",
+          },
+          {
+            index: 2,
+            label: "VERSION (4B LE):",
+            rows: 1,
+            placeholder: "01000000",
+            comment: "Transaction version (little-endian)",
+          },
+          {
+            index: 3,
+            label: "LOCKTIME (4B LE):",
+            rows: 1,
+            placeholder: "00000000",
+            comment: "nLockTime (little-endian)",
+          },
+          {
+            index: 4,
+            label: "HASH_PREVOUTS (32B):",
+            rows: 2,
+            placeholder: "<sha256 of all outpoints>",
+            comment: "Shared across inputs: sha256 of all outpoints",
+          },
+          {
+            index: 5,
+            label: "HASH_AMOUNTS (32B):",
+            rows: 2,
+            placeholder: "<sha256 of all amounts>",
+            comment: "NEW in Taproot: sha256 of all input amounts",
+          },
+          {
+            index: 6,
+            label: "HASH_SCRIPTS (32B):",
+            rows: 2,
+            placeholder: "<sha256 of all scriptPubKeys>",
+            comment: "NEW in Taproot: sha256 of all input scriptPubKeys",
+          },
+          {
+            index: 7,
+            label: "HASH_SEQUENCES (32B):",
+            rows: 2,
+            placeholder: "<sha256 of all sequences>",
+            comment: "Shared across inputs: sha256 of all sequences",
+          },
+          {
+            index: 8,
+            label: "HASH_OUTPUTS (32B, optional):",
+            rows: 2,
+            placeholder: "<sha256 of outputs, leave empty for NONE>",
+            allowEmptyBlank: true,
+            comment:
+              'Sha256 of all outputs; toggle "Allow Empty/None" for SIGHASH_NONE/SINGLE.',
+          },
+          {
+            index: 9,
+            label: "SPEND_TYPE (1B):",
+            rows: 1,
+            placeholder: "00 (key) / 02 (script)",
+            comment: "00 = key-path, 02 = script-path (annex sets bit 0x01)",
+          },
+          {
+            index: 10,
+            label: "INPUT_INDEX (4B LE):",
+            rows: 1,
+            placeholder: "00000000",
+            comment:
+              "Little-endian vin index being signed (0-based; 00000000 for single-input txs)",
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
+    },
+  },
+  {
+    functionName: "concat_all",
+    label: "Taproot Preimage (Script Add-on)",
+    category: "Cryptographic Operations",
+    subcategory: "",
+    description:
+      "Append script-path fields (tapleaf_hash, key_version, codesep_pos) to the base Taproot preimage",
+    type: "calculation",
+    nodeData: {
+      functionName: "concat_all",
+      title: "Taproot Preimage (Script Add-on)",
+      paramExtraction: "multi_val",
+      numInputs: 4,
+      inputs: { vals: ["", "", "00", "ffffffff"] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "BASE_PREIMAGE (hex):",
+            rows: 3,
+            placeholder: "Connect from Taproot Preimage (Base)",
+          },
+          {
+            index: 1,
+            label: "TAPLEAF_HASH (32B):",
+            rows: 2,
+            placeholder: "<hash of script leaf>",
+          },
+          {
+            index: 2,
+            label: "KEY_VERSION (1B):",
+            rows: 1,
+            placeholder: "00",
+            unconnectable: true,
+          },
+          {
+            index: 3,
+            label: "CODESEP_POS (4B LE):",
+            rows: 1,
+            placeholder: "ffffffff",
+            unconnectable: true,
+          },
+        ],
+      },
+      groupInstances: {},
+      result: "",
     },
   },
   {

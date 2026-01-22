@@ -23,6 +23,7 @@ from calc_functions.calc_func import (
 
     double_sha256_hex,
     sha256_hex,
+    tagged_hash,
     sign_as_bitcoin_core_low_r,
     hash160_hex,
     varint_encoded_byte_length,
@@ -33,6 +34,19 @@ from calc_functions.calc_func import (
     int_to_script_bytes, 
     text_to_hex,
     blocks_to_sequence_number,
+    xonly_pubkey_from_private_key,
+    xonly_pubkey,
+    even_y_private_key,
+    p2tr_address_from_xonly,
+    taproot_tweak_xonly_pubkey,
+    taproot_tweaked_privkey,
+    taproot_output_pubkey_from_xonly,
+    taproot_tree_builder,
+    schnorr_sign_bip340,
+    schnorr_verify_bip340,
+    taproot_sighash_default,
+    musig2_aggregate_pubkeys,
+    schnorr_batch_verify_demo,
     hash160_to_p2sh_address,
     date_to_unix_timestamp,
     reverse_bytes_4,
@@ -82,6 +96,7 @@ CALC_FUNCTIONS = {
     "satoshi_to_8_le": satoshi_to_8_le,
 
     "double_sha256_hex": double_sha256_hex,
+    "tagged_hash": tagged_hash,
     "sign_as_bitcoin_core_low_r": sign_as_bitcoin_core_low_r,
     "hash160_hex": hash160_hex,
     "varint_encoded_byte_length": varint_encoded_byte_length,
@@ -93,6 +108,19 @@ CALC_FUNCTIONS = {
     "int_to_script_bytes": int_to_script_bytes,
     "text_to_hex": text_to_hex,
     "blocks_to_sequence_number": blocks_to_sequence_number,
+    "xonly_pubkey_from_private_key": xonly_pubkey_from_private_key,
+    "xonly_pubkey": xonly_pubkey,
+    "even_y_private_key": even_y_private_key,
+    "p2tr_address_from_xonly": p2tr_address_from_xonly,
+    "taproot_tweak_xonly_pubkey": taproot_tweak_xonly_pubkey,
+    "taproot_tweaked_privkey": taproot_tweaked_privkey,
+    "taproot_output_pubkey_from_xonly": taproot_output_pubkey_from_xonly,
+    "taproot_tree_builder": taproot_tree_builder,
+    "schnorr_sign_bip340": schnorr_sign_bip340,
+    "schnorr_verify_bip340": schnorr_verify_bip340,
+    "taproot_sighash_default": taproot_sighash_default,
+    "musig2_aggregate_pubkeys": musig2_aggregate_pubkeys,
+    "schnorr_batch_verify_demo": schnorr_batch_verify_demo,
     "hash160_to_p2sh_address": hash160_to_p2sh_address,
     "date_to_unix_timestamp": date_to_unix_timestamp,
     "reverse_bytes_4": reverse_bytes_4,
@@ -346,9 +374,22 @@ def build_none_params(*_):
     return {}
 
 
+def _resolve_upstream(get_res, nid, handle=None):
+    if handle in ("", None):
+        return get_res(nid)
+    try:
+        return get_res(nid, handle)
+    except TypeError:
+        return get_res(nid)
+
+
 def build_single_val_params(node, edges, _map, get_res):
     nid = node["id"]
-    upstream = [get_res(e["source"]) for e in edges if e["target"] == nid]
+    upstream = [
+        _resolve_upstream(get_res, e["source"], e.get("sourceHandle"))
+        for e in edges
+        if e["target"] == nid
+    ]
     
     if len(upstream) > 1:
         raise ValueError("Multiple inputs connected to single-value node")
@@ -418,7 +459,8 @@ def _multi_common(node, edges, get_res):
             sparse_out[str(idx)] = SENTINEL_EMPTY
 
         elif idx in edge_by:                       # ③
-            v = get_res(edge_by[idx]["source"])
+            edge = edge_by[idx]
+            v = _resolve_upstream(get_res, edge["source"], edge.get("sourceHandle"))
             sparse_out[str(idx)] = v               # keep for display
 
         else:                                      # ④
@@ -483,8 +525,14 @@ def bulk_calculate_logic(nodes, edges):
 
     # VS Code greys this because it's *nested* and only referenced
     # inside builder functions via closure; it IS used at runtime.
-    def get_res(nid):
-        return node_map[nid]["data"].get("result")
+    def get_res(nid, handle=None):
+        data = node_map[nid]["data"]
+        if handle:
+            outputs = data.get("outputValues")
+            if isinstance(outputs, dict) and handle in outputs:
+                return outputs.get(handle)
+            return None
+        return data.get("result")
 
     timeout_seconds = CALCULATION_TIMEOUT_SECONDS
     deadline_at = (
@@ -508,6 +556,9 @@ def bulk_calculate_logic(nodes, edges):
                 fn_name = data.get("functionName")
                 data.pop("scriptDebugSteps", None)
                 data.pop("extendedError", None)
+                if fn_name == "taproot_tree_builder":
+                    data["taprootTree"] = None
+                    data.pop("outputValues", None)
 
                 func = CALC_FUNCTIONS.get(fn_name)
                 if not func:
@@ -590,6 +641,35 @@ def bulk_calculate_logic(nodes, edges):
                                 "true" if parsed.get("isValid") else "false"
                             )
                             data["scriptDebugSteps"] = parsed
+                        except Exception:
+                            data["result"] = result
+                    elif fn_name == "taproot_tweak_xonly_pubkey":
+                        try:
+                            parsed = json.loads(result)
+                            output_xonly = parsed.get("output_xonly_pubkey", result)
+                            parity_bit = parsed.get("output_parity")
+                            parity_byte = "c1" if str(parity_bit) == "1" else "c0"
+                            data["result"] = output_xonly
+                            data["outputValues"] = {"output-1": parity_byte}
+                        except Exception:
+                            data["result"] = result
+                            data.pop("outputValues", None)
+                    elif fn_name == "taproot_tree_builder":
+                        try:
+                            parsed = json.loads(result)
+                            data["result"] = parsed.get("root", result)
+                            data["taprootTree"] = parsed
+                            data.pop("outputValues", None)
+                            paths = parsed.get("paths") or []
+                            try:
+                                leaf_index = int(data.get("taprootLeafIndex", 0))
+                            except Exception:
+                                leaf_index = 0
+                            if leaf_index < 0 or leaf_index >= len(paths):
+                                leaf_index = 0
+                            data["taprootLeafIndex"] = leaf_index
+                            path_hex = "".join(paths[leaf_index]) if paths else ""
+                            data["outputValues"] = {"output-1": path_hex}
                         except Exception:
                             data["result"] = result
                     else:

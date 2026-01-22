@@ -16,36 +16,92 @@ import type { CalculationNodeData, RecalcResponse } from "@/types";
 import { setScriptSteps } from "@/lib/share/scriptStepsCache";
 import { measureFlowBytes, formatBytes } from "@/lib/flow/schema";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5007";
+const DEFAULT_LOCAL_API = "http://localhost:5007";
+const LOCAL_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "::1",
+  "[::1]",
+  "0.0.0.0",
+]);
+
+type ResolvedApi = {
+  baseUrl: string;
+  url: URL;
+  forcedLocal: boolean;
+  allowRemote: boolean;
+  isPageLocal: boolean;
+};
+
+function isLocalHost(hostname: string | undefined) {
+  if (!hostname) return false;
+  return LOCAL_HOSTS.has(hostname.toLowerCase());
+}
+
+function resolveApiBase(): ResolvedApi {
+  const envBase = import.meta.env.VITE_API_BASE_URL || DEFAULT_LOCAL_API;
+  const allowRemote =
+    (import.meta.env.VITE_ALLOW_REMOTE_API || "")
+      .toString()
+      .toLowerCase() === "true";
+  const isPageLocal =
+    typeof window !== "undefined" && isLocalHost(window.location.hostname);
+
+  let baseUrl = envBase;
+  let forcedLocal = false;
+  try {
+    const envUrl = new URL(envBase);
+    const isEnvLocal = isLocalHost(envUrl.hostname);
+    if (import.meta.env.DEV && isPageLocal && !isEnvLocal && !allowRemote) {
+      baseUrl = DEFAULT_LOCAL_API;
+      forcedLocal = true;
+    }
+  } catch {
+    baseUrl = DEFAULT_LOCAL_API;
+    forcedLocal = true;
+  }
+
+  return {
+    baseUrl,
+    url: new URL(baseUrl),
+    forcedLocal,
+    allowRemote,
+    isPageLocal,
+  };
+}
 
 type BackendLimits = {
   maxPayloadBytes?: number;
 };
 
-let backendLimitsPromise: Promise<BackendLimits> | null = null;
+const backendLimitsCache = new Map<string, Promise<BackendLimits>>();
 
-async function loadBackendLimits(): Promise<BackendLimits> {
-  if (!backendLimitsPromise) {
-    backendLimitsPromise = (async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/healthz`, {
-          headers: { accept: "application/json" },
-        });
-        if (!res.ok) return {};
-        const json = await res.json();
-        const limitsBlock = json?.limits ?? {};
-        const maxPayload = limitsBlock?.maxPayloadBytes ?? json?.maxPayloadBytes;
+async function loadBackendLimits(baseUrl: string): Promise<BackendLimits> {
+  if (!backendLimitsCache.has(baseUrl)) {
+    backendLimitsCache.set(
+      baseUrl,
+      (async () => {
+        try {
+          const res = await fetch(`${baseUrl}/healthz`, {
+            headers: { accept: "application/json" },
+          });
+          if (!res.ok) return {};
+          const json = await res.json();
+          const limitsBlock = json?.limits ?? {};
+          const maxPayload =
+            limitsBlock?.maxPayloadBytes ?? json?.maxPayloadBytes;
 
-        return {
-          maxPayloadBytes: typeof maxPayload === "number" ? maxPayload : undefined,
-        };
-      } catch {
-        return {};
-      }
-    })();
+          return {
+            maxPayloadBytes:
+              typeof maxPayload === "number" ? maxPayload : undefined,
+          };
+        } catch {
+          return {};
+        }
+      })()
+    );
   }
-  return backendLimitsPromise;
+  return backendLimitsCache.get(baseUrl)!;
 }
 function annotateDirtyNodesWithError(
   nodes: Node<CalculationNodeData>[],
@@ -72,6 +128,7 @@ function stripNodeForBackend(
   delete dataClone.extendedError;
   delete dataClone.scriptDebugSteps;
   delete dataClone.scriptSteps;
+  delete dataClone.taprootTree;
   delete dataClone.banner;
   delete dataClone.tooltip;
   delete dataClone.comment;
@@ -101,7 +158,15 @@ export async function recalculateGraph(
 ): Promise<RecalcResponse> {
   log("flow", `Sending ${nodes.length} nodes to backend`);
 
-  const backendLimits = await loadBackendLimits();
+  const api = resolveApiBase();
+  if (api.forcedLocal) {
+    log(
+      "flow",
+      `Overriding remote API_BASE_URL with local default (${DEFAULT_LOCAL_API})`
+    );
+  }
+
+  const backendLimits = await loadBackendLimits(api.baseUrl);
 
   const payloadNodes = nodes.map(stripNodeForBackend);
   const payload = { nodes: payloadNodes, edges, version };
@@ -125,7 +190,7 @@ export async function recalculateGraph(
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
-    const res = await fetch(`${API_BASE_URL}/bulk_calculate`, {
+    const res = await fetch(`${api.baseUrl}/bulk_calculate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: payloadJson,
@@ -154,7 +219,7 @@ export async function recalculateGraph(
       (error as { name?: unknown }).name === "AbortError";
     const message = isTimeout
       ? "Calculation timed out after 5 s. Update any input in this flow to trigger another run."
-      : API_BASE_URL.includes("localhost")
+      : isLocalHost(api.url.hostname)
       ? "Backend not running. Start it with: python routes.py"
       : "Cannot connect to calculation service. Please try again later.";
 

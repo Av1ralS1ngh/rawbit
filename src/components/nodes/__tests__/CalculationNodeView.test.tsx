@@ -31,6 +31,7 @@ import { CalculationNodeView } from "../calculation/CalculationNodeView";
 function createMut() {
   return {
     setFieldValue: vi.fn(),
+    setTaprootLeafIndex: vi.fn(),
     updateFieldLabel: vi.fn(),
     updateGroupTitle: vi.fn(),
     handleNetworkChange: vi.fn(),

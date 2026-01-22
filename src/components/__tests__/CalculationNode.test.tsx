@@ -16,6 +16,8 @@ vi.mock("@/components/nodes/calculation/CalculationNodeView", () => ({
 
 vi.mock("@xyflow/react", () => ({
   useReactFlow: () => ({ setNodes: vi.fn(), setEdges: vi.fn() }),
+  useStore: (selector: (state: { edges: unknown[]; nodes: unknown[] }) => unknown) =>
+    selector({ edges: [], nodes: [] }),
 }));
 
 vi.mock("@/hooks/useSnapshotSchedulerContext", () => ({

@@ -4,8 +4,10 @@ import App from "./App";
 import "@xyflow/react/dist/style.css";
 import "./index.css";
 import { ThemeProvider } from "./components/layout/theme-provider";
+import { patchResizeObserver } from "./lib/patchResizeObserver";
 
 if (typeof window !== "undefined") {
+  patchResizeObserver();
   window.__RAWBIT_VERSION__ = __APP_VERSION__;
 }
 

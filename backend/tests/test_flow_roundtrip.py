@@ -182,6 +182,26 @@ FLOW_SCENARIOS = [
             "script": "true",
         },
     },
+    {
+        "name": "p11_Taproot_intro.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p11_Taproot_intro.json",
+        "node_changes": {
+            "node_BAQ8AStm": "100001",
+            "node_Mu0y2UYe": "73999",
+            "node_rMQMqEQv": "175316",
+        },
+        "txid_node": "node_aHlpgSNx",
+        "script_node": "node_OG0Z4ug8",
+    },
+    {
+        "name": "p12_Taproot_script.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p12_Taproot_script.json",
+        "node_changes": {
+            "node_jueQA2SJ": "169001",
+        },
+        "txid_node": "node_XMEEqBNt",
+        "script_node": "node_xlsj74j",
+    },
 ]
 
 
@@ -229,6 +249,19 @@ def _run(nodes, edges):
     return {node["id"]: node for node in updated_nodes}
 
 
+def _script_output_snapshot(node_map):
+    outputs = {}
+    for node_id, node in node_map.items():
+        data = node.get("data") or {}
+        if data.get("functionName") != "script_verification":
+            continue
+        outputs[node_id] = {
+            "result": data.get("result"),
+            "steps": copy.deepcopy(data.get("scriptDebugSteps")),
+        }
+    return outputs
+
+
 def _set_node_value(nodes, node_id, value):
     for node in nodes:
         if node["id"] == node_id:
@@ -253,6 +286,7 @@ def test_flow_roundtrip_restores_txid_and_script_steps(scenario):
     original_script_data = baseline_map[script_node_id]["data"]
     original_script_result = original_script_data["result"]
     original_script_steps = copy.deepcopy(original_script_data.get("scriptDebugSteps"))
+    original_script_outputs = _script_output_snapshot(baseline_map)
 
     expected = scenario.get("expected_results")
     if expected:
@@ -289,7 +323,9 @@ def test_flow_roundtrip_restores_txid_and_script_steps(scenario):
 
     final_map = _run(scenario_nodes, edges)
     final_script_data = final_map[script_node_id]["data"]
+    final_script_outputs = _script_output_snapshot(final_map)
 
     assert final_map[txid_node_id]["data"]["result"] == original_txid
     assert final_script_data["result"] == original_script_result
     assert final_script_data.get("scriptDebugSteps") == original_script_steps
+    assert final_script_outputs == original_script_outputs

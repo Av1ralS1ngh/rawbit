@@ -30,7 +30,7 @@ import { FlowCanvas } from "@/components/FlowCanvas";
 import { FlowDialogLayer } from "@/components/FlowDialogLayer";
 import { FlowPanels } from "@/components/FlowPanels";
 import { FirstRunDialog } from "@/components/dialog/FirstRunDialog";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Github } from "lucide-react";
 
 import { useNodeOperations } from "@/hooks/useNodeOperations";
 import { useFileOperations } from "@/hooks/useFileOperations";
@@ -807,14 +807,10 @@ function FlowContent() {
     const instance = flowInstanceRef.current;
     if (!instance) return;
 
-    const currentNodes = getNodes();
-    const currentEdges = getEdges();
-    if (!currentNodes.length && !currentEdges.length) return;
-
-    requestAnimationFrame(() =>
-      instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 })
-    );
-  }, [getEdges, getNodes]);
+    const runFit = () => instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
+    // Use a double rAF so the React Flow store has applied imported nodes/edges
+    requestAnimationFrame(() => requestAnimationFrame(runFit));
+  }, []);
 
   const handleImportTooltip = useCallback(
     (filename?: string) => {
@@ -1569,7 +1565,8 @@ function FlowContent() {
                       raw₿it is optimized for desktop. You’re viewing a read-only
                       mobile layout.
                     </span>
-                    <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex w-full items-center gap-2">
+                      <div className="flex-1" />
                       <Button
                         variant="outline"
                         size="sm"
@@ -1578,18 +1575,35 @@ function FlowContent() {
                       >
                         Load example flows
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setTheme(theme === "light" ? "dark" : "light")
-                        }
-                        className="h-8 px-2 text-xs font-medium relative"
-                        aria-label="Toggle theme"
-                      >
-                        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                      </Button>
+                      <div className="flex flex-1 items-center justify-end gap-2">
+                        <Button
+                          asChild
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-medium"
+                          aria-label="GitHub"
+                        >
+                          <a
+                            href="https://github.com/rawBit-io/rawbit"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <Github className="h-5 w-5" />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs font-medium"
+                          onClick={() =>
+                            setTheme(theme === "light" ? "dark" : "light")
+                          }
+                          aria-label="Toggle theme"
+                        >
+                          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

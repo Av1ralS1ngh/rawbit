@@ -14,6 +14,7 @@ export interface FieldDefinition {
   rows?: number;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  emptyLabel?: string;
   unconnectable?: boolean;
   comment?: string;
   options?: string[];
@@ -28,6 +29,7 @@ export interface GroupDefinition {
   fieldCountToAdd?: number; // how many fields one click should add
   minInstances?: number;
   maxInstances?: number;
+  instanceLabelPrefix?: string; // optional per-instance header label (e.g., "Input")
 }
 
 export interface InputStructure {
@@ -101,6 +103,10 @@ export interface CalculationNodeData extends Record<string, unknown> {
   unwiredCount?: number; // how many of those handles are currently *unwired*
   scriptDebugSteps?: ScriptExecutionResult | null;
   scriptSteps?: ScriptExecutionResult | null;
+  taprootTree?: Record<string, unknown> | null;
+  taprootLeafIndex?: number;
+  outputPorts?: { label: string; handleId: string }[];
+  outputValues?: Record<string, unknown>;
   banner?: unknown;
   tooltip?: unknown;
 }

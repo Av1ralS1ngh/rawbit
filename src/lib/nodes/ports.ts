@@ -9,7 +9,15 @@ export function buildPorts(n: FlowNode): NodePorts {
     data.customFieldLabels?.[idx] ?? fallback ?? `in ${idx}`;
 
   const label = data.title || data.functionName || n.id;
-  const outputs: PortInfo[] = [{ label: "out", handleId: "" }];
+  const outputs: PortInfo[] =
+    Array.isArray(data.outputPorts) && data.outputPorts.length > 0
+      ? data.outputPorts
+      : data.functionName === "taproot_tree_builder"
+      ? [
+          { label: "root", handleId: "" },
+          { label: "path", handleId: "output-1" },
+        ]
+      : [{ label: "out", handleId: "" }];
 
   const handleLabels = new Map<string, string>();
   const registerHandle = (index: number, fallbackLabel?: string) => {
@@ -30,12 +38,6 @@ export function buildPorts(n: FlowNode): NodePorts {
 
   const numInputs = data.numInputs;
   const hasExplicitNumInputs = typeof numInputs === "number";
-
-  if (hasExplicitNumInputs && (numInputs as number) > 0) {
-    for (let i = 0; i < numInputs; i += 1) {
-      registerHandle(i);
-    }
-  }
 
   const ungrouped = inputStructure?.ungrouped ?? [];
   ungrouped.forEach((field) => {
@@ -60,6 +62,18 @@ export function buildPorts(n: FlowNode): NodePorts {
 
   const afterGroups = inputStructure?.afterGroups ?? [];
   afterGroups.forEach((field) => registerHandle(field.index, field.label));
+
+  const betweenGroups = inputStructure?.betweenGroups ?? {};
+  const hasGroupedStructure =
+    groups.length > 0 || Object.keys(betweenGroups).length > 0;
+
+  if (hasExplicitNumInputs && (numInputs as number) > 0 && !hasGroupedStructure) {
+    for (let i = 0; i < numInputs; i += 1) {
+      if (!handleLabels.has(`input-${i}`)) {
+        registerHandle(i);
+      }
+    }
+  }
 
   if (handleLabels.size === 0) {
     const hasInputs = Boolean(

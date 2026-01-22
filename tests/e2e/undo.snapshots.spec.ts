@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { computeNodeResult, enrichNodesForSuccess, parseBulkRequestPayload } from './fixtures';
-import { loadFixture } from './utils';
+import { loadFixture, waitForBulkResponse } from './utils';
 
 const MOVE_OFFSET = { x: 140, y: 120 };
 
@@ -83,19 +83,22 @@ test.describe('Undo snapshots for interactions', () => {
     const endX = newHandleBox.x + newHandleBox.width / 2;
     const endY = newHandleBox.y + newHandleBox.height / 2;
 
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY, { steps: 10 });
-    await page.mouse.up();
+    await waitForBulkResponse(page, async () => {
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      await page.mouse.move(endX, endY, { steps: 10 });
+      await page.mouse.up();
+    });
 
     const reconnectedEdgeButton = page.getByRole('button', {
       name: 'Edge from node_input to node_passthrough',
     });
-
     await expect(reconnectedEdgeButton).toBeVisible();
     await expect(originalEdgeButton).toHaveCount(0);
 
-    await page.getByTitle('Undo').click();
+    const undoButton = page.getByTitle('Undo');
+    await expect(undoButton).toBeEnabled({ timeout: 10_000 });
+    await undoButton.click();
     await expect(originalEdgeButton).toBeVisible();
     await expect(reconnectedEdgeButton).toHaveCount(0);
   });

@@ -24,3 +24,16 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 ### Fixed
 
 - Random 32-byte node no longer gets stuck in error when the backend hiccups (new backend tests cover regen/normal paths).
+
+## [0.3.0] - 2026-01-22
+
+### Added
+
+- Taproot lessons (L11 key-path, L12 script-path/MAST) with new Taproot node templates and calc helpers (taptree, control block, preimage builders, scriptPubKeys builder).
+- Taproot-aware script verification and tapscript opcode catalog updates (incl. OP_CHECKSIGADD).
+- Mobile read-only banner polish with a GitHub shortcut and tighter action layout.
+
+### Fixed
+
+- Calculation UX improvements (removed input-completeness gating, stabilized script step UI, and connected-input display fixes).
+- ResizeObserver drag warnings in the canvas/text node.

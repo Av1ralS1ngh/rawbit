@@ -73,29 +73,33 @@ describe("TopBar", () => {
   it("disables share and undo buttons based on props", () => {
     render(<TopBar {...baseProps} />);
 
-    expect(screen.getByTitle("Share snapshot")).toBeDisabled();
-    expect(screen.getByTitle("Undo")).toBeDisabled();
-    expect(screen.getByTitle("Redo")).not.toBeDisabled();
-    expect(screen.getByTitle("Group")).toBeDisabled();
-    expect(screen.getByTitle("Ungroup")).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Share snapshot" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Redo" })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Group" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Ungroup" })).not.toBeDisabled();
   });
 
   it("invokes toggles for minimap, selection mode, and theme", () => {
     render(<TopBar {...baseProps} shareDisabled={false} />);
 
-    fireEvent.click(screen.getByTitle("Hide minimap"));
+    fireEvent.click(screen.getByRole("button", { name: "Hide minimap" }));
     expect(baseProps.onToggleMiniMap).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByTitle("Selection tool (click to toggle or hold S + drag with LMB)"));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Selection tool (click to toggle or hold S + drag with LMB)",
+      })
+    );
     expect(baseProps.onToggleSelectionMode).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByTitle("Toggle theme"));
+    fireEvent.click(screen.getByRole("button", { name: "Toggle theme" }));
     expect(setThemeMock).toHaveBeenCalledWith("dark");
   });
 
   it("opens share dialog handler when enabled", () => {
     render(<TopBar {...baseProps} shareDisabled={false} />);
-    fireEvent.click(screen.getByTitle("Share snapshot"));
+    fireEvent.click(screen.getByRole("button", { name: "Share snapshot" }));
     expect(baseProps.onShare).toHaveBeenCalled();
   });
 
@@ -147,7 +151,7 @@ describe("TopBar", () => {
       />
     );
 
-    fireEvent.click(screen.getByTitle("Search nodes"));
+    fireEvent.click(screen.getByRole("button", { name: "Search nodes" }));
 
     expect(setShowUndoRedoPanel).toHaveBeenCalledWith(false);
     expect(setShowErrorPanel).toHaveBeenCalledWith(false);
@@ -187,12 +191,12 @@ describe("TopBar", () => {
     );
 
     fireEvent.keyDown(window, { key: "s" });
-    fireEvent.click(screen.getByTitle("Save (hold S for simplified)"));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSaveSimplified).toHaveBeenCalled();
     expect(onSave).not.toHaveBeenCalled();
 
     fireEvent.keyUp(window, { key: "s" });
-    fireEvent.click(screen.getByTitle("Save (hold S for simplified)"));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalled();
   });
 });

@@ -19,6 +19,7 @@ export interface FieldWithHandleProps {
   disableHandle?: boolean;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  emptyLabel?: string;
   comment?: string;
 }
 
@@ -43,7 +44,8 @@ function fieldWithHandlePropsAreEqual(
     prev.handleOffset === next.handleOffset &&
     prev.disableHandle === next.disableHandle &&
     prev.allowEmpty00 === next.allowEmpty00 &&
-    prev.allowEmptyBlank === next.allowEmptyBlank
+    prev.allowEmptyBlank === next.allowEmptyBlank &&
+    prev.emptyLabel === next.emptyLabel
   );
 }
 
@@ -64,11 +66,12 @@ export const FieldWithHandle = React.memo(function FieldWithHandleComponent({
   disableHandle = false,
   allowEmpty00 = false,
   allowEmptyBlank = false,
+  emptyLabel,
 }: FieldWithHandleProps) {
   const displayValue =
     value === SENTINEL_EMPTY || value === SENTINEL_FORCE00
       ? value === SENTINEL_EMPTY
-        ? "empty"
+        ? emptyLabel ?? "empty"
         : "00"
       : value;
 
@@ -114,6 +117,7 @@ export const FieldWithHandle = React.memo(function FieldWithHandleComponent({
         onLabelChange={onLabelChange}
         allowEmpty00={allowEmpty00}
         allowEmptyBlank={allowEmptyBlank}
+        emptyLabel={emptyLabel}
         is00={value === SENTINEL_FORCE00}
         isBlank={value === SENTINEL_EMPTY}
         onToggle00={toggle00}

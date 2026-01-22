@@ -50,7 +50,7 @@
 - Have Bob verify and co‑sign the refund before any funds are committed.
 - Fund the multisig on‑chain after the refund is secured.
 - Make off‑chain payments by updating a “latest commitment” transaction that splits funds; Alice signs and sends it to Bob.
-- Bob can complete the signature and broadcast the most recent commitment at any time to settle on‑chain.
+- Bob can complete the signature and broadcast the most recent commitment at any time before the timeout to settle on‑chain.
 
 # Lesson 7: Transaction Malleability (Pre‑SegWit) and the Fix
 
@@ -97,3 +97,21 @@ This flow demonstrates that SegWit's advantages become even more pronounced as s
 - **The Test:** A legacy **2-of-3 P2SH multisig** spend is compared against a **P2SH-wrapped P2WSH** spend for the same 2-of-3 policy.
 - **The Mechanism:** The savings are amplified. Not only are the multiple signatures moved to the discounted witness field, but the **entire 105-byte multisig script (`witnessScript`)** is also moved. In the legacy version, this large script had to be included in the costly `scriptSig`.
 - **The Result:** A dramatic fee reduction of over **46%**. This proves that P2WSH is vastly more efficient for smart contracts, multisig, and other complex transactions than its P2SH predecessor
+
+# Lesson 11: Taproot Key-Path Spends
+
+- Taproot combines three BIPs: BIP340 (Schnorr), BIP341 (P2TR), BIP342 (Tapscript).
+- Generate a key, normalize to even‑Y, and derive the 32‑byte x‑only pubkey.
+- Tweak it: `Q = P + tagged_hash("TapTweak", P) · G` → bech32m address.
+- Build the BIP341 sighash (commits to all inputs’ amounts and scriptPubKeys).
+- Sign with the tweaked privkey → 64‑byte Schnorr signature; witness = `[signature]`.
+- Also covers multi‑input signing, soft‑fork compatibility, and the BIP86 proof‑of‑no‑scripts.
+
+# Lesson 12: Taproot Script‑Path Spends & MAST
+
+- Contrast key‑path vs script‑path; script‑path witness is `[script_args] [script] [control_block]`.
+- Build tapleaves: `tagged_hash("TapLeaf", leaf_version || compact_size(script) || script)` (leaf_version = `0xc0`).
+- Build the Merkle tree: sort siblings, hash with `TapBranch`, and commit the root into `Q`.
+- Construct the control block: `[c0/c1 parity] [internal key P] [merkle path]`.
+- Script‑path sighash: `SPEND_TYPE = 0x02`, append `tapleaf_hash || key_version (00) || codesep_pos (ffffffff)`.
+- Example 3‑leaf inheritance tree (owner, heir after CSV, 2‑of‑2 via `OP_CHECKSIGADD`) and a script‑path spend that reveals only the used leaf.

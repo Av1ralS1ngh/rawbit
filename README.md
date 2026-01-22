@@ -6,7 +6,7 @@ _rawBit is a visual, node-based editor for constructing and understanding Bitcoi
 
 ## Flow Examples
 
-rawBit ships with **10 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit, but each is standalone — start anywhere.
+rawBit ships with **12 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit and Taproot, but each is standalone — start anywhere.
 
 - **Lessons 1–2:** P2PKH, P2PK, multisig, and P2SH fundamentals
 - **Lessons 3–4:** Timelocks (nLockTime / nSequence), CLTV/CSV patterns
@@ -15,6 +15,8 @@ rawBit ships with **10 hands-on example lessons** you can load, tweak, and inspe
 - **Lesson 8:** SegWit P2WPKH (BIP143 preimage, witness)
 - **Lesson 9:** SegWit P2WSH (multisig & conditional scripts)
 - **Lesson 10:** Fee savings: wrapped SegWit vs legacy
+- **Lesson 11:** Taproot key-path spend (P2TR, Schnorr)
+- **Lesson 12:** Taproot script-path spend (taptree, control block, tapscript)
 
 All example transactions were broadcast to **testnet3** and can be verified on explorers.
 
@@ -27,7 +29,7 @@ All example transactions were broadcast to **testnet3** and can be verified on e
 3. Open a script node → **step through** opcodes and inspect the stack.
 4. Copy a node’s **Python implementation** from the inspector to discuss/learn.
 
-**More lessons coming:** Taproot, Lightning HTLCs, CoinJoin, PSBT workflows, and covenant proposals.
+**More lessons coming:** Lightning HTLCs, Miniscript, CoinJoin, PSBT workflows, and covenant proposals.
 
 ---
 
@@ -38,7 +40,7 @@ All example transactions were broadcast to **testnet3** and can be verified on e
 ## What is rawBit
 
 - **Build raw Bitcoin transactions from scratch—no coding required:** Drag predefined nodes for keys, scripts, and math to build complete Bitcoin transactions.
-- **Compare formats side-by-side:** P2PKH, P2SH-P2WPKH/P2WSH, native SegWit (v0).
+- **Compare formats side-by-side:** P2PKH, P2SH-P2WPKH/P2WSH, native SegWit (v0), Taproot (v1).
 - **See how serialization really changes:** Tweak `nSequence`, `nLockTime`, witness vs. non-witness data, and `SIGHASH` types and watch sizes, weight, TXID/WTXID update live.
 - **Trust-but-verify artifacts:** Inspect and copy preimages, scripts, stack traces, weights, and fees; open any node to view the exact Python behind it.
 - **Script debugger:** Step through script execution with stack diffs after each opcode to pinpoint **where** and **why** validation fails.

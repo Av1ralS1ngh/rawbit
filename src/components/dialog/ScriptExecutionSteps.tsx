@@ -27,6 +27,37 @@ import {
 
 /* ---------- helpers ------------------------------------------------ */
 
+function WitnessStackPane({
+  items,
+  consumed,
+  highlighted = false,
+}: {
+  items: string[];
+  consumed?: boolean[];
+  highlighted?: boolean;
+}) {
+  if (!items.length) return null;
+
+  return (
+    <div className="mb-3 text-xs">
+      <div className="font-bold mb-1">witnessStack (top → first):</div>
+      <div className="h-24 overflow-auto border p-2 break-words font-mono space-y-1">
+        {items.map((it, i) => (
+          <div
+            key={`${it}-${i}`}
+            className={cn(
+              "whitespace-pre-wrap",
+              highlighted && consumed?.[i] && "font-bold text-green-700"
+            )}
+          >
+            {it}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- opcode cheat-sheet ----------------------------------- */
 const OPCODES: Record<string, string> = {
   /* constant pushes */
@@ -269,12 +300,25 @@ export default function ScriptExecutionSteps({
       `isValid: ${scriptResult.isValid}`,
     ];
     if (scriptResult.error) lines.push(`FinalError: ${scriptResult.error}`);
+    const taprootKeyPathCopy =
+      (scriptResult.steps || []).some((s) => s.phase === "taproot") &&
+      !scriptResult.witnessScript;
+    if (taprootKeyPathCopy) {
+      lines.push(
+        "Taproot key-path spend: no witnessScript; pseudo-steps: taproot_witness → taproot_sighash → taproot_schnorr_verify."
+      );
+    }
+    if (scriptResult.witnessStack?.length && !scriptResult.witnessScript) {
+      lines.push(`witnessStack: [${scriptResult.witnessStack.join(", ")}]`);
+    }
     lines.push("");
     (scriptResult.steps || []).forEach((s, i) => {
+      const stackBefore = s.stack_before ?? [];
+      const stackAfter = s.stack_after ?? [];
       lines.push(
         `Step #${i}  PC=${s.pc}  opcode_name=${s.opcode_name}`,
-        `StackBefore: [${s.stack_before.join(", ")}]`,
-        `StackAfter: [${s.stack_after.join(", ")}]`,
+        `StackBefore: [${stackBefore.join(", ")}]`,
+        `StackAfter: [${stackAfter.join(", ")}]`,
         ...(s.failed ? [`ERROR: ${s.error ?? "Unknown error"}`] : []),
         "-----------"
       );
@@ -316,13 +360,28 @@ export default function ScriptExecutionSteps({
   const spkHex = scriptPubKeyInputHex || scriptResult.scriptPubKey || "";
   const redeemHex = scriptResult.redeemScript ?? "";
   const witnessHex = scriptResult.witnessScript ?? "";
+  const witnessStack =
+    scriptResult.witnessStack ??
+    steps.find(
+      (s) => s.phase === "taproot" && Array.isArray(s.stack_before)
+    )?.stack_before ??
+    [];
 
   const pretty = prettify(step.opcode, step.opcode_name);
   const explain = opcodeExplanation(pretty);
 
-  const beforeR = [...step.stack_before].reverse();
-  const afterR = [...step.stack_after].reverse();
+  const stepStackBefore = step.stack_before ?? [];
+  const stepStackAfter = step.stack_after ?? [];
+  const beforeR = [...stepStackBefore].reverse();
+  const afterR = [...stepStackAfter].reverse();
   const consumed = consumedFlags(beforeR, afterR, step.opcode_name);
+  const taprootPhase = phase === "taproot";
+  const isTaprootKeyPath = taprootPhase && !witnessHex;
+  const witnessStackDisplay = taprootPhase
+    ? beforeR
+    : [...witnessStack].reverse();
+  const showWitnessStack =
+    (taprootPhase || !witnessHex) && witnessStackDisplay.length > 0;
 
   const phaseText =
     phase === "scriptSig"
@@ -331,6 +390,8 @@ export default function ScriptExecutionSteps({
       ? "Phase 2 (scriptPubKey)"
       : phase === "redeemScript"
       ? "Phase 3 (redeemScript)"
+      : phase === "taproot"
+      ? "Phase 4 (taproot)"
       : "Phase 4 (witnessScript)";
 
   return (
@@ -374,6 +435,14 @@ export default function ScriptExecutionSteps({
             </div>
           </div>
 
+          {isTaprootKeyPath && (
+            <div className="mb-3 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+              Taproot key-path spend: no witnessScript is executed. The pseudo-steps
+              below load the witness stack, compute the Taproot tagged sighash, and
+              verify the Schnorr signature against the output key.
+            </div>
+          )}
+
           {/* panes */}
           <ScriptPane
             scriptHex={ssHex}
@@ -408,11 +477,20 @@ export default function ScriptExecutionSteps({
             <ScriptPane
               scriptHex={witnessHex}
               offset={0}
-              pc={phase === "witnessScript" ? step.pc : -1}
+              pc={
+                phase === "witnessScript" || phase === "taproot" ? step.pc : -1
+              }
               opcodeName={pretty}
               label="witnessScript"
-              highlighted={phase === "witnessScript"}
+              highlighted={phase === "witnessScript" || phase === "taproot"}
               isInScriptPubKey={false}
+            />
+          )}
+          {showWitnessStack && (
+            <WitnessStackPane
+              items={witnessStackDisplay}
+              consumed={taprootPhase ? consumed : undefined}
+              highlighted={taprootPhase}
             />
           )}
 
@@ -463,7 +541,12 @@ export default function ScriptExecutionSteps({
           </div>
         </div>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {scriptResult?.error && (
+            <div className="text-sm text-destructive">
+              FinalError: {scriptResult.error}
+            </div>
+          )}
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

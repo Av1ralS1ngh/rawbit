@@ -5,6 +5,7 @@ import json
 from decimal import Decimal
 
 import pytest
+from ecdsa import SigningKey
 
 pytest.importorskip("hypothesis")
 from hypothesis import given, strategies as st
@@ -22,7 +23,7 @@ from bitcointx.core import (
     CTxInWitness,
     b2x,
 )
-from bitcointx.core.script import CScript, CScriptWitness
+from bitcointx.core.script import CScript, CScriptWitness, SignatureHashSchnorr
 import secp256k1
 
 SAMPLE_PRIV_KEY = "01".rjust(64, "0")
@@ -198,6 +199,123 @@ def test_double_and_single_sha256():
     assert calc.sha256_hex("ff") == (
         "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89"
     )
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Taproot / Schnorr helpers
+# ──────────────────────────────────────────────────────────────────────
+def test_tagged_hash_matches_manual():
+    tag = "TapTweak"
+    data_hex = ""
+    out = calc.tagged_hash([tag, data_hex])
+
+    tag_hash = hashlib.sha256(tag.encode("utf-8")).digest()
+    manual = hashlib.sha256(tag_hash + tag_hash + b"").hexdigest()
+    assert out == manual
+
+
+def test_xonly_pubkey_parity_and_secret_adjust():
+    res = json.loads(calc.xonly_pubkey_from_private_key(SAMPLE_PRIV_KEY))
+    # G has even Y
+    assert res["xonly_pubkey"] == "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    assert res["parity"] == 0
+    assert res["secret_key"] == SAMPLE_PRIV_KEY
+    assert calc.xonly_pubkey(SAMPLE_PRIV_KEY) == res["xonly_pubkey"]
+    assert calc.even_y_private_key(SAMPLE_PRIV_KEY) == SAMPLE_PRIV_KEY
+
+    # pick a key with odd Y and ensure it flips to n-d
+    odd_priv = "02".rjust(64, "0")
+    res_odd = json.loads(calc.xonly_pubkey_from_private_key(odd_priv))
+    sk_int = int(odd_priv, 16)
+    curve_n = calc.SECP256k1.order  # type: ignore[attr-defined]
+    vk = SigningKey.from_string(bytes.fromhex(odd_priv), curve=calc.SECP256k1).get_verifying_key()  # type: ignore[attr-defined]
+    y_bytes = vk.to_string()[32:]
+    parity_from_vk = y_bytes[-1] & 1
+    assert res_odd["parity"] == parity_from_vk
+    adjusted = (curve_n - sk_int) % curve_n if parity_from_vk else sk_int
+    assert int(res_odd["secret_key"], 16) == adjusted
+    assert calc.xonly_pubkey(odd_priv) == res_odd["xonly_pubkey"]
+    assert int(calc.even_y_private_key(odd_priv), 16) == adjusted
+
+
+def test_p2tr_address_from_xonly_returns_address_only():
+    xonly = "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    address = calc.p2tr_address_from_xonly(xonly)
+    # hrp defaults to bcrt (regtest) in tests
+    assert isinstance(address, str)
+    assert address.startswith("bcrt1p")
+
+
+def test_taproot_tweak_xonly_matches_private_version():
+    xonly = "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    from_pub = json.loads(calc.taproot_tweak_xonly_pubkey([xonly, ""]))
+    assert len(from_pub["tweak"]) == 64
+    assert len(from_pub["output_xonly_pubkey"]) == 64
+    assert calc.taproot_output_pubkey_from_xonly([xonly, ""]) == from_pub["output_xonly_pubkey"]
+    assert calc.taproot_tweaked_privkey([SAMPLE_PRIV_KEY, ""])
+
+
+def test_schnorr_sign_and_verify_roundtrip():
+    msg = "00" * 32
+    sig = calc.schnorr_sign_bip340([SAMPLE_PRIV_KEY, msg, "00" * 32])
+    assert len(sig) == 128
+    pub_xonly = json.loads(calc.xonly_pubkey_from_private_key(SAMPLE_PRIV_KEY))["xonly_pubkey"]
+    assert calc.schnorr_verify_bip340([pub_xonly, msg, sig]) == "true"
+
+
+def test_taproot_sighash_default_shapes():
+    tx_hex = build_sample_tx_hex()
+    amounts = json.dumps([0])  # dummy amount for the single input
+    spks = json.dumps(["5120" + "00" * 32])
+    res = json.loads(calc.taproot_sighash_default([tx_hex, 0, amounts, spks]))
+    assert len(res["sighash"]) == 64
+    assert len(res["sha_prevouts"]) == 64
+    assert len(res["sha_outputs"]) == 64
+    assert res["hash_type"] == 0
+
+
+def test_taproot_tree_builder_paths_and_root():
+    leaf_a = "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60"
+    leaf_b = "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba"
+    leaf_c = "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+
+    def tapbranch_hex(left_hex: str, right_hex: str) -> str:
+        left = bytes.fromhex(left_hex)
+        right = bytes.fromhex(right_hex)
+        left, right = sorted([left, right])
+        tag_hash = hashlib.sha256(b"TapBranch").digest()
+        return hashlib.sha256(tag_hash + tag_hash + left + right).hexdigest()
+
+    res = json.loads(calc.taproot_tree_builder([leaf_a, leaf_b, leaf_c]))
+
+    assert res["root"] == "33fae60e42155f64da2ed49f02e81cff0d913a2c526b43896a940e2acc6177ef"
+    assert res["leafCount"] == 3
+    assert res["leafLabels"] == ["A", "B", "C"]
+    assert res["leafHashes"] == [leaf_a, leaf_b, leaf_c]
+    assert res["structure"] == "((A,B),C)"
+    assert res["paths"][0] == [leaf_b, leaf_c]
+    assert res["paths"][1] == [leaf_a, leaf_c]
+    assert res["paths"][2] == [tapbranch_hex(leaf_a, leaf_b)]
+
+
+def test_musig2_aggregate_pubkeys():
+    pk1 = json.loads(calc.xonly_pubkey_from_private_key(SAMPLE_PRIV_KEY))["xonly_pubkey"]
+    pk2 = json.loads(calc.xonly_pubkey_from_private_key("02".rjust(64, "0")))["xonly_pubkey"]
+    res = json.loads(calc.musig2_aggregate_pubkeys([pk1, pk2]))
+    assert len(res["aggregated_pubkey"]) == 64
+    assert len(res["coefficients"]) == 2
+
+
+def test_schnorr_batch_verify_demo_single_entry():
+    msg = "11" * 32
+    sig = calc.schnorr_sign_bip340([SAMPLE_PRIV_KEY, msg, "00" * 32])
+    pk = json.loads(calc.xonly_pubkey_from_private_key(SAMPLE_PRIV_KEY))["xonly_pubkey"]
+    res = json.loads(calc.schnorr_batch_verify_demo([pk, msg, sig]))
+    assert res["left_scalar"].startswith("0x")
+    assert len(res["right_xonly"]) == 64
+    assert isinstance(res["weights"], list)
+    assert len(res["weights"]) == 1
+    assert res["weights"][0] != 0
 
 
 def test_sign_and_verify_low_r_signature():
@@ -538,6 +656,34 @@ def test_script_verification_p2wsh_op_true_succeeds():
     assert result["usesWitness"] is True
     assert any(step.get("phase") == "witnessScript" for step in result["steps"])
     assert result.get("amountUsed") == 1000
+
+
+def test_script_verification_taproot_keypath_single_input():
+    # Build a simple key-path Taproot spend: 1 input, signature only
+    internal_sk = "11" * 32
+    internal_xonly = json.loads(calc.xonly_pubkey_from_private_key(internal_sk))["xonly_pubkey"]
+    output_xonly = calc.taproot_output_pubkey_from_xonly([internal_xonly])
+    script_pubkey_hex = "5120" + output_xonly
+
+    txin = CMutableTxIn(COutPoint(b"\x00" * 32, 0))
+    txout = CMutableTxOut(0, CScript([0]))
+    tx = CMutableTransaction(vin=[txin], vout=[txout])
+
+    spent_outputs = [CMutableTxOut(5000, CScript(bytes.fromhex(script_pubkey_hex)))]
+    sighash = SignatureHashSchnorr(tx, 0, spent_outputs)
+    tweaked_sk = calc.taproot_tweaked_privkey([internal_sk])
+    sig = bytes.fromhex(calc.schnorr_sign_bip340([tweaked_sk, sighash.hex()]))
+
+    tx.wit.vtxinwit = (CTxInWitness(scriptWitness=CScriptWitness([sig])),)
+    tx_hex = b2x(tx.serialize())
+
+    result = json.loads(
+        calc.script_verification(["", script_pubkey_hex, tx_hex, 0, "", "5000"])
+    )
+
+    assert result["isValid"] is True
+    assert result["usesWitness"] is True
+    assert result.get("amountUsed") == 5000
 
 
 def test_encode_script_push_data_big_boundaries():

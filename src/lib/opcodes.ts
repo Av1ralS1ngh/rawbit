@@ -22,7 +22,7 @@ export const OP_CODES = {
     {
       name: "OP_CHECKSIG",
       hex: "ac",
-      description: "Verifies a signature against a pubkey",
+      description: "Verifies a signature against a pubkey (Schnorr in Tapscript)",
     },
     {
       name: "OP_EQUAL",
@@ -41,10 +41,9 @@ export const OP_CODES = {
     {
       name: "OP_CHECKMULTISIG",
       hex: "ae",
-      description: "Checks multiple signatures",
+      description: "Checks multiple signatures (disabled in Tapscript)",
     },
   ],
-  /* ------- (everything below is identical to your original file) ------- */
   scriptTemplates: [
     {
       name: "P2PKH_PREFIX",
@@ -67,6 +66,11 @@ export const OP_CODES = {
       name: "P2WSH_REDEEM",
       hex: "0020",
       description: "Version 0 + PUSH(32) for witness program",
+    },
+    {
+      name: "P2TR_PREFIX",
+      hex: "5120",
+      description: "OP_1 + PUSH(32) for taproot witness program",
     },
     {
       name: "OP_RETURN_PREFIX",
@@ -285,18 +289,29 @@ export const OP_CODES = {
     {
       name: "OP_CHECKSIG",
       hex: "ac",
-      description: "Checks signature against pubkey",
+      description: "Checks signature against pubkey (Schnorr in Tapscript)",
     },
-    { name: "OP_CHECKSIGVERIFY", hex: "ad", description: "CHECKSIG + VERIFY" },
+    {
+      name: "OP_CHECKSIGVERIFY",
+      hex: "ad",
+      description: "CHECKSIG + VERIFY (Schnorr in Tapscript)",
+    },
     {
       name: "OP_CHECKMULTISIG",
       hex: "ae",
-      description: "Checks multiple signatures",
+      description: "Checks multiple signatures (disabled in Tapscript)",
     },
     {
       name: "OP_CHECKMULTISIGVERIFY",
       hex: "af",
-      description: "MULTISIG + VERIFY",
+      description: "MULTISIG + VERIFY (disabled in Tapscript)",
+    },
+  ],
+  tapscript: [
+    {
+      name: "OP_CHECKSIGADD",
+      hex: "ba",
+      description: "Tapscript: adds 1 to a counter if signature is valid",
     },
   ],
   timelock: [
@@ -312,6 +327,8 @@ export const OP_CODES = {
     },
   ],
   reserved: [
+    // Note: OP_SUCCESSx opcodes are intentionally omitted; in Tapscript they
+    // immediately succeed and are reserved for future upgrades.
     { name: "OP_NOP1", hex: "b0", description: "Reserved for future use" },
     { name: "OP_NOP4", hex: "b3", description: "Reserved for future use" },
     { name: "OP_NOP5", hex: "b4", description: "Reserved for future use" },
@@ -336,6 +353,7 @@ export const categoryNames: Record<OpCodeCategories, string> = {
   bitwiseLogic: "Bitwise Logic",
   arithmetic: "Arithmetic",
   cryptographic: "Cryptographic",
+  tapscript: "Tapscript (BIP342)",
   timelock: "Timelock",
   reserved: "Reserved",
 };

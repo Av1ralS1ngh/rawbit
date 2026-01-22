@@ -310,7 +310,7 @@ describe("Flow orchestration integration", () => {
     expect(history.at(-1)).toBe("OK");
   });
 
-  it("clears dirty flags locally when nodes are not ready for calculation", async () => {
+  it("recalculates even when multi-value inputs are empty", async () => {
     forEachFieldInstanceMock.mockImplementation((_data, cb) => {
       cb(0, { label: "field", index: 0, allowEmptyBlank: true, unconnectable: false });
     });
@@ -337,9 +337,9 @@ describe("Flow orchestration integration", () => {
       );
     });
 
+    await waitFor(() => expect(recalculateGraphMock).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(handles.getNodes()[0]?.data?.dirty).toBe(false));
-    expect(recalculateGraphMock).not.toHaveBeenCalled();
-    expect(removeScriptStepsMock).toHaveBeenCalledWith("calc-1");
+    expect(removeScriptStepsMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("status").textContent).toBe("OK");
   });
 

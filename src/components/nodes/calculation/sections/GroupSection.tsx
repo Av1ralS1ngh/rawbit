@@ -39,6 +39,9 @@ export function GroupSection({
 }: GroupSectionProps) {
   const totalFields = instanceKeys.length * group.fields.length;
   const hasInstances = instanceKeys.length > 0;
+  const showInstanceLabels = Boolean(group.instanceLabelPrefix);
+  const shouldVirtualize =
+    totalFields > VIRTUALIZE_THRESHOLD && !showInstanceLabels;
 
   const renderVirtualItem = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     const instanceIndex = Math.floor(index / group.fields.length);
@@ -78,7 +81,7 @@ export function GroupSection({
       </div>
 
       {hasInstances && (
-        totalFields > VIRTUALIZE_THRESHOLD ? (
+        shouldVirtualize ? (
           <List
             height={Math.min(totalFields * FIELD_ROW_HEIGHT, VIRTUAL_MAX_HEIGHT)}
             itemCount={totalFields}
@@ -89,8 +92,13 @@ export function GroupSection({
             {renderVirtualItem}
           </List>
         ) : (
-          instanceKeys.map((offset) => (
+          instanceKeys.map((offset, instanceIndex) => (
             <div key={`${group.title}-${offset}`} className="mb-4 space-y-3 pl-4">
+              {showInstanceLabels && (
+                <div className="text-sm font-semibold text-primary">
+                  {`> ${group.instanceLabelPrefix} ${instanceIndex}`}
+                </div>
+              )}
               {group.fields.map((field, index) => renderField(offset, field, index))}
             </div>
           ))

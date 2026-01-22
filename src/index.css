@@ -116,8 +116,8 @@
 
   /* Ensure handle extends outside node boundary */
   position: absolute;
-  bottom: -10px !important;
-  right: -10px !important;
+  bottom: -12px !important;
+  right: -12px !important;
 }
 
 /* Make sure the handle is visible and clickable */

@@ -138,7 +138,9 @@ test.describe('Keyboard navigation & accessibility', () => {
     const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
 
     await page.keyboard.press(`${modifier}+c`);
-    await expect(page.locator('button[title="Paste nodes"]')).toBeEnabled();
+    await expect(
+      page.getByRole('button', { name: 'Paste nodes (Ctrl/Cmd+V)' }),
+    ).toBeEnabled();
 
     await page.keyboard.press(`${modifier}+v`);
     await expect.poll(async () => nodesLocator.count()).toBeGreaterThan(initialCount);

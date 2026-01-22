@@ -1,5 +1,7 @@
 import os
+import sys
 import hashlib
+import logging
 import struct
 import binascii
 import json
@@ -7,7 +9,7 @@ import secrets
 from datetime import datetime
 from typing import Any, Union, List, Sequence
 
-from ecdsa import SigningKey, SECP256k1
+from ecdsa import SigningKey, SECP256k1, ellipticcurve
 import secp256k1
 
 import re
@@ -18,7 +20,11 @@ getcontext().prec = 50  # plenty for money math
 
 _INT_DEC_RE = re.compile(r'^[+-]?\d+$', re.ASCII)
 
-from bitcointx.core import CTransaction, b2x
+_CURVE_ORDER = SECP256k1.order
+_CURVE_GEN = SECP256k1.generator
+_CURVE_P = SECP256k1.curve.p()
+
+from bitcointx.core import CTransaction, CTxOut, b2x
 from bitcointx.core.script import CScript
 from bitcointx.core.scripteval import (
     VerifyScriptWithTrace 
@@ -267,6 +273,714 @@ def _bytes_from_even_hex(h: str, *, name: str = "value") -> bytes:
     except ValueError as e:
         raise ValueError(f"{name} is not valid hexadecimal") from e
 
+# ----------------------------------------------------------------------
+# Tagged hash + Schnorr/Taproot helpers
+# ----------------------------------------------------------------------
+_TAG_HASH_CACHE: dict[str, bytes] = {}
+
+
+def _tagged_hash_bytes(tag: str, data: bytes) -> bytes:
+    """Return tagged_hash(tag, data) bytes."""
+    if not isinstance(tag, str) or not tag:
+        raise ValueError("Tag must be a non-empty string")
+
+    tag_hash = _TAG_HASH_CACHE.get(tag)
+    if tag_hash is None:
+        t = hashlib.sha256(tag.encode("utf-8")).digest()
+        _TAG_HASH_CACHE[tag] = t
+        tag_hash = t
+    return hashlib.sha256(tag_hash + tag_hash + data).digest()
+
+
+def tagged_hash(vals: list[str]) -> str:
+    """
+    Compute a tagged hash: SHA256(SHA256(tag)||SHA256(tag)||data).
+
+    vals[0]: tag (string)
+    vals[1]: data (hex)
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [tag, dataHex]")
+    tag = str(vals[0]).strip()
+    data = _bytes_from_even_hex(vals[1], name="data")
+    return _tagged_hash_bytes(tag, data).hex()
+
+
+def _int_to_32(v: int) -> bytes:
+    return v.to_bytes(32, "big")
+
+
+def _lift_x(x: int) -> ellipticcurve.Point:
+    """Lift x-only pubkey to full point with even Y (BIP340)."""
+    if not (0 <= x < _CURVE_P):
+        raise ValueError("X coordinate out of range")
+    alpha = (pow(x, 3, _CURVE_P) + 7) % _CURVE_P
+    beta = pow(alpha, (_CURVE_P + 1) // 4, _CURVE_P)  # p % 4 == 3
+    if (beta * beta - alpha) % _CURVE_P != 0:
+        raise ValueError("X coordinate is not on secp256k1")
+    y = beta if beta % 2 == 0 else _CURVE_P - beta
+    return ellipticcurve.Point(SECP256k1.curve, x, y)
+
+
+def _negate_point(pt: ellipticcurve.Point) -> ellipticcurve.Point:
+    return ellipticcurve.Point(SECP256k1.curve, pt.x(), (-pt.y()) % _CURVE_P)
+
+
+def _bip340_challenge(r_x: bytes, pub_x: bytes, msg: bytes) -> int:
+    return int.from_bytes(
+        _tagged_hash_bytes("BIP0340/challenge", r_x + pub_x + msg),
+        "big",
+    ) % _CURVE_ORDER
+
+
+def _derive_even_pub(seckey_int: int) -> tuple[ellipticcurve.Point, int]:
+    """Return (point with even Y, adjusted secret) per BIP340 rules."""
+    pt = _CURVE_GEN * seckey_int
+    if pt.y() & 1:
+        seckey_int = (_CURVE_ORDER - seckey_int) % _CURVE_ORDER
+        pt = _CURVE_GEN * seckey_int
+    return pt, seckey_int
+
+
+def xonly_pubkey_from_private_key(val: str) -> str:
+    """
+    Derive x-only public key and parity-adjusted secret.
+
+    Returns JSON with:
+      - xonly_pubkey (32B hex)
+      - parity (0 even, 1 odd before adjustment)
+      - secret_key (hex, adjusted so pubkey has even Y)
+    """
+    priv_bytes = _bytes_from_even_hex(val, name="private key")
+    if len(priv_bytes) != 32:
+        raise ValueError("Private key must be exactly 32 bytes (64 hex characters)")
+    d = int.from_bytes(priv_bytes, "big")
+    if not 1 <= d < _CURVE_ORDER:
+        raise ValueError("Private key integer must be in the range [1, n-1]")
+
+    pt = _CURVE_GEN * d
+    parity = pt.y() & 1
+    if parity:
+        d = (_CURVE_ORDER - d) % _CURVE_ORDER
+        pt = _CURVE_GEN * d
+
+    result = {
+        "xonly_pubkey": _int_to_32(pt.x()).hex(),
+        "parity": parity,
+        "secret_key": _int_to_32(d).hex(),
+    }
+    return json.dumps(result)
+
+
+def xonly_pubkey(val: str) -> str:
+    """
+    Derive x-only public key (uses the input key as-is; no parity adjustment).
+    """
+    priv_bytes = _bytes_from_even_hex(val, name="private key")
+    if len(priv_bytes) != 32:
+        raise ValueError("Private key must be exactly 32 bytes (64 hex characters)")
+    d = int.from_bytes(priv_bytes, "big")
+    if not 1 <= d < _CURVE_ORDER:
+        raise ValueError("Private key integer must be in the range [1, n-1]")
+    pt = _CURVE_GEN * d
+    return _int_to_32(pt.x()).hex()
+
+
+def even_y_private_key(val: str) -> str:
+    """
+    Return parity-adjusted secret key (n - d if original Y is odd).
+    """
+    priv_bytes = _bytes_from_even_hex(val, name="private key")
+    if len(priv_bytes) != 32:
+        raise ValueError("Private key must be exactly 32 bytes (64 hex characters)")
+    d = int.from_bytes(priv_bytes, "big")
+    if not 1 <= d < _CURVE_ORDER:
+        raise ValueError("Private key integer must be in the range [1, n-1]")
+    pt = _CURVE_GEN * d
+    if pt.y() & 1:
+        d = (_CURVE_ORDER - d) % _CURVE_ORDER
+    return _int_to_32(d).hex()
+
+
+def p2tr_address_from_xonly(val: str, selectedNetwork: str = "regtest") -> str:
+    """
+    Build Taproot bech32m address from 32-byte x-only pubkey.
+    """
+    xonly = _bytes_from_even_hex(val, name="x-only pubkey")
+    if len(xonly) != 32:
+        raise ValueError("x-only pubkey must be exactly 32 bytes")
+    hrp = _hrp_for_network(selectedNetwork)
+    return _bech32_encode(hrp, 1, xonly)
+
+
+def taproot_tweak_xonly_pubkey(vals: list[str]) -> str:
+    """
+    TapTweak: output key Q = P + H(P||merkle_root)G (public/verifier side, JSON bundle).
+
+    vals[0]: internal x-only pubkey (32 bytes)
+    vals[1]: optional merkle root (32 bytes) or empty for key-path only
+    """
+    if len(vals) < 1:
+        raise ValueError("Need at least [internalXOnlyPubKeyHex]")
+    xonly = _bytes_from_even_hex(vals[0], name="x-only pubkey")
+    if len(xonly) != 32:
+        raise ValueError("x-only pubkey must be 32 bytes")
+    merkle_root = b""
+    if len(vals) > 1 and str(vals[1]).strip():
+        merkle_root = _bytes_from_even_hex(vals[1], name="merkle root")
+        if len(merkle_root) != 32:
+            raise ValueError("Merkle root must be 32 bytes when provided")
+
+    internal_pt = _lift_x_from_bytes(xonly)
+    tweak_bytes = _tagged_hash_bytes("TapTweak", xonly + merkle_root)
+    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    output_pt = internal_pt + (_CURVE_GEN * tweak_int)
+    if output_pt == ellipticcurve.INFINITY:
+        raise ValueError("Invalid tweak: resulting point at infinity")
+
+    output_parity = output_pt.y() & 1
+    return json.dumps(
+        {
+            "internal_xonly_pubkey": xonly.hex(),
+            "tweak": tweak_bytes.hex(),
+            "output_xonly_pubkey": _int_to_32(output_pt.x()).hex(),
+            "output_parity": output_parity,
+        }
+    )
+
+
+def taproot_tweaked_privkey(vals: list[str]) -> str:
+    """
+    Return tweaked (even-Y) secret key for Taproot key-path signing.
+    """
+    if len(vals) < 1:
+        raise ValueError("Need at least [internalSecretKeyHex]")
+    sk_bytes = _bytes_from_even_hex(vals[0], name="internal secret key")
+    if len(sk_bytes) != 32:
+        raise ValueError("Internal secret key must be 32 bytes")
+    merkle_root = b""
+    if len(vals) > 1 and str(vals[1]).strip():
+        merkle_root = _bytes_from_even_hex(vals[1], name="merkle root")
+        if len(merkle_root) != 32:
+            raise ValueError("Merkle root must be 32 bytes when provided")
+
+    d = int.from_bytes(sk_bytes, "big")
+    if not 1 <= d < _CURVE_ORDER:
+        raise ValueError("Secret key integer must be in the range [1, n-1]")
+
+    internal_pt, d_even = _derive_even_pub(d)
+    tweak_bytes = _tagged_hash_bytes("TapTweak", _int_to_32(internal_pt.x()) + merkle_root)
+    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    output_sk = (d_even + tweak_int) % _CURVE_ORDER
+    if output_sk == 0:
+        raise ValueError("Invalid tweak: resulting secret key is zero")
+
+    # Ensure even-Y output key by flipping secret if needed
+    output_pt = _CURVE_GEN * output_sk
+    if output_pt.y() & 1:
+        output_sk = (_CURVE_ORDER - output_sk) % _CURVE_ORDER
+
+    return _int_to_32(output_sk).hex()
+
+
+def taproot_output_pubkey_from_xonly(vals: list[str]) -> str:
+    """
+    Return Taproot output x-only pubkey Q from an internal x-only pubkey.
+    """
+    if len(vals) < 1:
+        raise ValueError("Need at least [internalXOnlyPubKeyHex]")
+    xonly = _bytes_from_even_hex(vals[0], name="x-only pubkey")
+    if len(xonly) != 32:
+        raise ValueError("x-only pubkey must be 32 bytes")
+    merkle_root = b""
+    if len(vals) > 1 and str(vals[1]).strip():
+        merkle_root = _bytes_from_even_hex(vals[1], name="merkle root")
+        if len(merkle_root) != 32:
+            raise ValueError("Merkle root must be 32 bytes when provided")
+
+    internal_pt = _lift_x_from_bytes(xonly)
+    tweak_bytes = _tagged_hash_bytes("TapTweak", xonly + merkle_root)
+    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    output_pt = internal_pt + (_CURVE_GEN * tweak_int)
+    if output_pt == ellipticcurve.INFINITY:
+        raise ValueError("Invalid tweak: resulting point at infinity")
+
+    return _int_to_32(output_pt.x()).hex()
+
+
+def _tapbranch_hash(left_hash: bytes, right_hash: bytes) -> bytes:
+    if len(left_hash) != 32 or len(right_hash) != 32:
+        raise ValueError("TapBranch hashes must be 32 bytes each")
+    left, right = sorted([left_hash, right_hash])
+    return _tagged_hash_bytes("TapBranch", left + right)
+
+
+def taproot_tree_builder(vals: list) -> str:
+    """
+    Build a Taproot taptree from TapLeaf hashes.
+
+    vals[0+]: leaf hashes (hex, 32 bytes each, TapLeaf already applied).
+
+    Merkle root construction:
+    - Pair left-to-right at each level.
+    - For each pair, compute TapBranch(tagged_hash("TapBranch", min||max)).
+    - If a level has an odd node, carry it up unchanged.
+    - Repeat until one hash remains (the merkle root).
+
+    Returns JSON with:
+        {
+          "root": "<merkle root hex>",
+          "leafCount": <int>,
+          "leafHashes": ["<hex>", ...],
+          "leafLabels": ["A", "B", ...],
+          "paths": [["<hex>", ...], ...],  # merkle path for each leaf (bottom-up)
+          "pathLabels": [["B", "C"], ...],
+          "structure": "((A,B),C)",
+          "display": "<ascii tree + paths>"
+        }
+    """
+    if not vals:
+        raise ValueError("Provide at least one leaf hash")
+
+    leaf_hash_inputs = [str(v).strip() for v in vals]
+    if any(h == "" for h in leaf_hash_inputs):
+        raise ValueError("Leaf hashes cannot be empty")
+
+    leaf_hashes = []
+    for idx, leaf_hex in enumerate(leaf_hash_inputs):
+        leaf_bytes = _bytes_from_even_hex(leaf_hex, name=f"leaf hash {idx}")
+        if len(leaf_bytes) != 32:
+            raise ValueError("Leaf hashes must be 32 bytes (64 hex characters)")
+        leaf_hashes.append(leaf_bytes)
+    leaf_count = len(leaf_hashes)
+    paths: list[list[bytes]] = [[] for _ in range(leaf_count)]
+    path_labels: list[list[str]] = [[] for _ in range(leaf_count)]
+
+    def label_for_index(index: int) -> str:
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        label = ""
+        n = index
+        while True:
+            n, rem = divmod(n, 26)
+            label = alphabet[rem] + label
+            if n == 0:
+                break
+            n -= 1
+        return label
+
+    leaf_labels = [label_for_index(i) for i in range(leaf_count)]
+    nodes = [
+        {"hash": leaf_hashes[i], "leaves": [i], "label": leaf_labels[i]}
+        for i in range(leaf_count)
+    ]
+    levels: list[list[str]] = [leaf_labels[:]]
+
+    while len(nodes) > 1:
+        next_nodes = []
+        next_level_labels: list[str] = []
+        for idx in range(0, len(nodes), 2):
+            if idx + 1 >= len(nodes):
+                next_nodes.append(nodes[idx])
+                next_level_labels.append(nodes[idx]["label"])
+                continue
+
+            left = nodes[idx]
+            right = nodes[idx + 1]
+            for leaf_idx in left["leaves"]:
+                paths[leaf_idx].append(right["hash"])
+                path_labels[leaf_idx].append(right["label"])
+            for leaf_idx in right["leaves"]:
+                paths[leaf_idx].append(left["hash"])
+                path_labels[leaf_idx].append(left["label"])
+
+            branch_hash = _tapbranch_hash(left["hash"], right["hash"])
+            branch_label = f"({left['label']},{right['label']})"
+            next_nodes.append(
+                {
+                    "hash": branch_hash,
+                    "leaves": left["leaves"] + right["leaves"],
+                    "label": branch_label,
+                }
+            )
+            next_level_labels.append(branch_label)
+
+        nodes = next_nodes
+        levels.append(next_level_labels)
+
+    root_hash = nodes[0]["hash"]
+    structure = nodes[0]["label"]
+
+    leaf_hashes_hex = [h.hex() for h in leaf_hashes]
+    paths_hex = [[h.hex() for h in path] for path in paths]
+    path_labels_serialized = [labels[:] for labels in path_labels]
+
+    display_lines = [
+        "Tree:",
+        structure,
+        "",
+        "Levels:",
+    ]
+    for idx, level in enumerate(levels):
+        display_lines.append(f"L{idx}: {'  '.join(level)}")
+    display_lines.extend(
+        [
+            "",
+            "Leaves:",
+        ]
+    )
+    for idx, h in enumerate(leaf_hashes_hex):
+        display_lines.append(f"{leaf_labels[idx]} = {h}")
+    display_lines.append("")
+    display_lines.append("Paths (labels):")
+    for idx, labels in enumerate(path_labels_serialized):
+        display_lines.append(
+            f"{leaf_labels[idx]}: {', '.join(labels) if labels else '(none)'}"
+        )
+    display_lines.append("")
+    display_lines.append("Paths (hashes):")
+    for idx, path in enumerate(paths_hex):
+        display_lines.append(
+            f"{leaf_labels[idx]}: {', '.join(path) if path else '(none)'}"
+        )
+
+    return json.dumps(
+        {
+            "root": root_hash.hex(),
+            "leafCount": leaf_count,
+            "leafHashes": leaf_hashes_hex,
+            "leafLabels": leaf_labels,
+            "paths": paths_hex,
+            "pathLabels": path_labels_serialized,
+            "structure": structure,
+            "display": "\n".join(display_lines),
+        }
+    )
+
+
+def _bip340_sign(seckey: bytes, msg: bytes, aux: bytes) -> bytes:
+    if len(seckey) != 32 or len(msg) != 32 or len(aux) != 32:
+        raise ValueError("seckey, msg, and aux must be 32 bytes each")
+    d = int.from_bytes(seckey, "big")
+    if not 1 <= d < _CURVE_ORDER:
+        raise ValueError("Secret key integer must be in the range [1, n-1]")
+
+    pub_pt, d_even = _derive_even_pub(d)
+    d_bytes = _int_to_32(d_even)
+    t = bytes(a ^ b for a, b in zip(d_bytes, _tagged_hash_bytes("BIP0340/aux", aux)))
+
+    k = int.from_bytes(
+        _tagged_hash_bytes("BIP0340/nonce", t + _int_to_32(pub_pt.x()) + msg),
+        "big",
+    ) % _CURVE_ORDER
+    if k == 0:
+        raise ValueError("Nonce generation failed (k == 0)")
+
+    R = _CURVE_GEN * k
+    if R.y() & 1:
+        k = (_CURVE_ORDER - k) % _CURVE_ORDER
+        R = _CURVE_GEN * k
+
+    r_bytes = _int_to_32(R.x())
+    e = _bip340_challenge(r_bytes, _int_to_32(pub_pt.x()), msg)
+    s = (k + e * d_even) % _CURVE_ORDER
+    return r_bytes + _int_to_32(s)
+
+
+def schnorr_sign_bip340(vals: list[str]) -> str:
+    """
+    Create a 64-byte BIP340 Schnorr signature.
+
+    vals[0]: private key hex (32 bytes)
+    vals[1]: message hash hex (32 bytes)
+    vals[2]: optional aux_rand hex (32 bytes). Defaults to 0x00..00 for determinism.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [privateKeyHex, msg32Hex, auxRandHex?]")
+    seckey = _bytes_from_even_hex(vals[0], name="private key")
+    msg = _bytes_from_even_hex(vals[1], name="message hash")
+    if len(seckey) != 32:
+        raise ValueError("Private key must be 32 bytes")
+    if len(msg) != 32:
+        raise ValueError("Message hash must be 32 bytes")
+    aux = b"\x00" * 32
+    if len(vals) > 2 and str(vals[2]).strip():
+        aux = _bytes_from_even_hex(vals[2], name="aux_rand")
+        if len(aux) != 32:
+            raise ValueError("aux_rand must be 32 bytes when provided")
+    sig = _bip340_sign(seckey, msg, aux)
+    return sig.hex()
+
+
+def _lift_x_from_bytes(xonly: bytes) -> ellipticcurve.Point:
+    if len(xonly) != 32:
+        raise ValueError("x-only pubkey must be 32 bytes")
+    return _lift_x(int.from_bytes(xonly, "big"))
+
+
+def schnorr_verify_bip340(vals: list[str]) -> str:
+    """
+    Verify a 64-byte BIP340 Schnorr signature.
+
+    vals[0]: x-only public key hex (32 bytes)
+    vals[1]: message hash hex (32 bytes)
+    vals[2]: signature hex (64 bytes)
+    """
+    if len(vals) < 3:
+        raise ValueError("Need [xonlyPubKeyHex, msg32Hex, sig64Hex]")
+    pub_bytes = _bytes_from_even_hex(vals[0], name="x-only pubkey")
+    msg = _bytes_from_even_hex(vals[1], name="message hash")
+    sig = _bytes_from_even_hex(vals[2], name="signature")
+    if len(pub_bytes) != 32 or len(msg) != 32 or len(sig) != 64:
+        raise ValueError("x-only pubkey, msg, and signature must be 32, 32, 64 bytes")
+
+    r = int.from_bytes(sig[:32], "big")
+    s = int.from_bytes(sig[32:], "big")
+    if r >= _CURVE_P or s >= _CURVE_ORDER:
+        return "false"
+
+    try:
+        P = _lift_x_from_bytes(pub_bytes)
+    except ValueError:
+        return "false"
+
+    e = _bip340_challenge(sig[:32], pub_bytes, msg)
+    sG = _CURVE_GEN * s
+    eP = P * e
+    R = sG + _negate_point(eP)
+
+    if R == ellipticcurve.INFINITY:
+        return "false"
+    if R.y() & 1:
+        return "false"
+    return "true" if R.x() == r else "false"
+
+
+def taproot_sighash_default(vals: list[str]) -> str:
+    """
+    Compute BIP341 key-path (SIGHASH_DEFAULT) digest.
+
+    vals[0]: raw transaction hex
+    vals[1]: input index (int)
+    vals[2]: input amounts (JSON array or comma-separated sats for *all* inputs)
+    vals[3]: input scriptPubKeys (JSON array or comma-separated hex for *all* inputs)
+    """
+    if len(vals) < 4:
+        raise ValueError("Need [txHex, inputIndex, amounts[], scriptPubKeys[]]")
+
+    tx_hex = (vals[0] or "").strip()
+    if not tx_hex:
+        raise ValueError("Transaction hex cannot be empty")
+    try:
+        tx = _deserialize_tx_cached(tx_hex)
+    except Exception as e:
+        raise ValueError(f"Invalid transaction hex: {e}")
+
+    input_index = int(vals[1])
+    vin = list(tx.vin)  # type: ignore[arg-type]
+    vout = list(tx.vout)  # type: ignore[arg-type]
+    if input_index < 0 or input_index >= len(vin):
+        raise ValueError(f"Input index {input_index} out of range (have {len(vin)})")
+
+    def _parse_list(raw_val, expected_len: int, name: str):
+        if raw_val is None:
+            raise ValueError(f"{name} cannot be empty")
+        raw_str = str(raw_val).strip()
+        if not raw_str:
+            raise ValueError(f"{name} cannot be empty")
+        parsed = None
+        try:
+            parsed = json.loads(raw_str)
+            if not isinstance(parsed, list):
+                parsed = None
+        except Exception:
+            parsed = None
+        if parsed is None:
+            parsed = [item.strip() for item in raw_str.split(",") if item.strip()]
+        if len(parsed) != expected_len:
+            raise ValueError(f"{name} must have {expected_len} entries, got {len(parsed)}")
+        return parsed
+
+    amounts_raw = _parse_list(vals[2], len(vin), "amounts")
+    scriptpubkeys_raw = _parse_list(vals[3], len(vin), "scriptPubKeys")
+
+    try:
+        amounts = [int(a) for a in amounts_raw]
+    except Exception:
+        raise ValueError("All amounts must be integers (satoshis)")
+
+    scriptpubkeys = []
+    for idx, spk in enumerate(scriptpubkeys_raw):
+        spk_bytes = _bytes_from_even_hex(str(spk), name=f"scriptPubKey[{idx}]")
+        scriptpubkeys.append(spk_bytes)
+
+    def _ser_varint(n: int) -> bytes:
+        return bytes.fromhex(encode_varint(n))
+
+    # === Sub-hashes ===
+    prevouts_ser = b"".join(
+        txin.prevout.serialize()  # type: ignore[attr-defined]
+        if hasattr(txin.prevout, "serialize")
+        else bytes(txin.prevout.hash) + struct.pack("<I", txin.prevout.n)
+        for txin in vin
+    )
+    sha_prevouts = hashlib.sha256(prevouts_ser).digest()
+
+    sha_amounts = hashlib.sha256(
+        b"".join(struct.pack("<Q", amt) for amt in amounts)
+    ).digest()
+
+    sha_scriptpubkeys = hashlib.sha256(
+        b"".join(_ser_varint(len(spk)) + spk for spk in scriptpubkeys)
+    ).digest()
+
+    sha_sequences = hashlib.sha256(
+        b"".join(struct.pack("<I", txin.nSequence) for txin in vin)
+    ).digest()
+
+    outputs_ser = b"".join(
+        struct.pack("<Q", txout.nValue)
+        + _ser_varint(len(bytes(txout.scriptPubKey)))
+        + bytes(txout.scriptPubKey)
+        for txout in vout
+    )
+    sha_outputs = hashlib.sha256(outputs_ser).digest()
+
+    # === SigMsg (SIGHASH_DEFAULT, ext_flag=0, no annex, no ACP) ===
+    hash_type = 0x00
+    spend_type = 0x00  # ext_flag*2 + annex_present
+    sigmsg = (
+        bytes([hash_type])
+        + struct.pack("<I", tx.nVersion)
+        + struct.pack("<I", tx.nLockTime)
+        + sha_prevouts
+        + sha_amounts
+        + sha_scriptpubkeys
+        + sha_sequences
+        + sha_outputs
+        + bytes([spend_type])
+        + struct.pack("<I", input_index)
+    )
+
+    preimage = b"\x00" + sigmsg  # epoch = 0x00
+    sighash = _tagged_hash_bytes("TapSighash", preimage).hex()
+
+    return json.dumps(
+        {
+            "sighash": sighash,
+            "hash_type": hash_type,
+            "sha_prevouts": sha_prevouts.hex(),
+            "sha_amounts": sha_amounts.hex(),
+            "sha_scriptpubkeys": sha_scriptpubkeys.hex(),
+            "sha_sequences": sha_sequences.hex(),
+            "sha_outputs": sha_outputs.hex(),
+            "spend_type": spend_type,
+            "input_index": input_index,
+            "preimage": preimage.hex(),
+        }
+    )
+
+
+def musig2_aggregate_pubkeys(vals: list[str]) -> str:
+    """
+    Lightweight MuSig2-style key aggregation (coefficients + x-only result).
+
+    vals: list of x-only pubkeys (hex). Requires at least two.
+    """
+    pubkeys = [str(v).strip() for v in vals if str(v).strip()]
+    if len(pubkeys) < 2:
+        raise ValueError("Provide at least two x-only pubkeys")
+
+    pk_bytes = []
+    for i, pk in enumerate(pubkeys):
+        b = _bytes_from_even_hex(pk, name=f"pubkey[{i}]")
+        if len(b) != 32:
+            raise ValueError(f"pubkey[{i}] must be 32 bytes")
+        pk_bytes.append(b)
+
+    L = _tagged_hash_bytes("KeyAgg list", b"".join(pk_bytes))
+
+    coeffs = []
+    agg_pt: ellipticcurve.Point | None = None
+    for b in pk_bytes:
+        a = int.from_bytes(_tagged_hash_bytes("KeyAgg coefficient", L + b), "big") % _CURVE_ORDER
+        if a == 0:
+            a = 1
+        pt = _lift_x(int.from_bytes(b, "big"))
+        term = pt * a
+        agg_pt = term if agg_pt is None else agg_pt + term
+        coeffs.append({"pubkey": b.hex(), "coefficient": hex(a)})
+
+    if agg_pt is None:
+        raise ValueError("Aggregation failed")
+
+    agg_parity = agg_pt.y() & 1
+    agg_xonly = _int_to_32(agg_pt.x()).hex()
+    return json.dumps(
+        {
+            "aggregated_pubkey": agg_xonly,
+            "parity": agg_parity,
+            "coefficients": coeffs,
+        }
+    )
+
+
+def schnorr_batch_verify_demo(vals: list[str]) -> str:
+    """
+    Demonstrate batch verify combination for BIP340 signatures.
+
+    vals: flattened list [pk1, msg1, sig1, pk2, msg2, sig2, ...]
+    Returns combined scalar (left side) and combined point (right side).
+    """
+    if len(vals) % 3 != 0 or len(vals) == 0:
+        raise ValueError("Provide triples of [xonlyPubKeyHex, msg32Hex, sig64Hex]")
+
+    triples = []
+    for i in range(0, len(vals), 3):
+        pk = _bytes_from_even_hex(vals[i], name=f"pubkey[{i//3}]")
+        msg = _bytes_from_even_hex(vals[i + 1], name=f"message[{i//3}]")
+        sig = _bytes_from_even_hex(vals[i + 2], name=f"signature[{i//3}]")
+        if len(pk) != 32 or len(msg) != 32 or len(sig) != 64:
+            raise ValueError("Each triple must be 32-byte pk, 32-byte msg, 64-byte sig")
+        triples.append((pk, msg, sig))
+
+    left_scalar = 0
+    right_pt: ellipticcurve.Point | None = None
+    weights = []
+
+    for idx, (pk, msg, sig) in enumerate(triples):
+        r = int.from_bytes(sig[:32], "big")
+        s = int.from_bytes(sig[32:], "big")
+        if r >= _CURVE_P or s >= _CURVE_ORDER:
+            raise ValueError(f"Signature[{idx}] is out of range")
+
+        P = _lift_x_from_bytes(pk)
+        e = _bip340_challenge(sig[:32], pk, msg)
+        # Deterministic weight per entry
+        weight = int.from_bytes(
+            _tagged_hash_bytes("BatchSchnorr", pk + sig + msg + struct.pack("<I", idx)),
+            "big",
+        ) % _CURVE_ORDER
+        if weight == 0:
+            weight = 1
+        weights.append(weight)
+
+        left_scalar = (left_scalar + weight * s) % _CURVE_ORDER
+
+        R = _lift_x(r)
+        term = (R + (P * e)) * weight
+        right_pt = term if right_pt is None else right_pt + term
+
+    if right_pt is None:
+        raise ValueError("Batch combination failed")
+
+    combined = {
+        "left_scalar": hex(left_scalar),
+        "right_xonly": _int_to_32(right_pt.x()).hex(),
+        "right_parity": right_pt.y() & 1,
+        "weights": weights,
+    }
+    return json.dumps(combined)
+
 
 
 def identity(val: Any) -> Any:
@@ -509,6 +1223,42 @@ def varint_encoded_byte_length(val: str) -> str:
     return "ff" + struct.pack("<Q", length).hex()
 
 
+def _build_taproot_prevouts(extra_vals: Sequence[Any], expected_inputs: int) -> List[CTxOut]:
+    """
+    Build vin-ordered prevouts for Taproot verification from paired extra inputs:
+    [amount_0, spk_0, amount_1, spk_1, ...]. Empty pairs are ignored.
+    """
+    outputs: List[CTxOut] = []
+    for idx in range(0, len(extra_vals), 2):
+        amt_raw = extra_vals[idx]
+        spk_raw = extra_vals[idx + 1] if idx + 1 < len(extra_vals) else ""
+
+        amt_str = str(amt_raw).strip() if amt_raw is not None else ""
+        spk_str = str(spk_raw).strip() if spk_raw is not None else ""
+
+        if not amt_str and not spk_str:
+            continue  # skip empty slots
+        if not amt_str or not spk_str:
+            raise ValueError(f"taproot prevout[{idx//2}] needs both amount and scriptPubKey")
+
+        try:
+            amount_int = int(amt_str)
+        except ValueError:
+            raise ValueError(f"taproot prevout[{idx//2}].amount must be an integer")
+        if amount_int < 0:
+            raise ValueError(f"taproot prevout[{idx//2}].amount must be non-negative")
+
+        spk_bytes = _bytes_from_even_hex(spk_str, name=f"taproot prevout[{idx//2}] scriptPubKey")
+        outputs.append(CTxOut(amount_int, CScript(spk_bytes)))
+
+    if outputs and expected_inputs and len(outputs) != expected_inputs:
+        raise ValueError(
+            f"Taproot prevouts must cover all inputs: expected {expected_inputs}, got {len(outputs)}"
+        )
+
+    return outputs
+
+
 def script_verification(vals: list) -> str:
     """
     vals[0] – scriptSig hex
@@ -517,6 +1267,7 @@ def script_verification(vals: list) -> str:
     vals[3] – (optional) input index to verify; default = 0
     vals[4] – (optional) comma-separated flags to EXCLUDE from validation
     vals[5] – (optional) spent amount in satoshis (REQUIRED for SegWit/Taproot verification)
+    vals[6+] – (optional, Taproot) per-vin prevouts: amount_0, scriptPubKey_0, amount_1, scriptPubKey_1, ...
     
     Available flags to exclude:
     - P2SH: Pay-to-Script-Hash validation (BIP16, activated 2012)
@@ -544,7 +1295,8 @@ def script_verification(vals: list) -> str:
     - "WITNESS" - Pre-SegWit behavior (auto-excludes dependent flags)
     
     IMPORTANT: For SegWit/Taproot verification, you MUST provide the spent amount (vals[5])
-    or verification will fail
+    or verification will fail. Taproot spends with multiple inputs additionally
+    require the full vin-ordered prevouts (vals[6]).
      ⚠️  Tip: If witness validation fails with the generic message
     “signature check failed, and signature is not empty”, **one possible
     cause** is that the amount you supplied here is off by even a single
@@ -566,7 +1318,33 @@ def script_verification(vals: list) -> str:
         }
     """
     # Import at runtime to avoid type checking issues
-    from typing import Any, cast
+    from typing import Any, Callable, cast
+    import importlib
+
+    # Ensure Taproot tagged hashers exist (needed for script-path verification)
+    try:
+        core_mod = importlib.import_module("bitcointx.core")
+
+        def _make_tagged_hasher(tag: str) -> Callable[[bytes], bytes]:
+            taghash = hashlib.sha256(tag.encode()).digest()
+
+            def _hasher(msg: bytes) -> bytes:
+                return hashlib.sha256(taghash + taghash + msg).digest()
+
+            return staticmethod(_hasher)
+
+        if not hasattr(core_mod.CoreCoinParams, "tap_sighash_hasher"):
+            core_mod.CoreCoinParams.tap_sighash_hasher = _make_tagged_hasher(
+                "TapSighash"
+            )
+        if not hasattr(core_mod.CoreCoinParams, "tapleaf_hasher"):
+            core_mod.CoreCoinParams.tapleaf_hasher = _make_tagged_hasher("TapLeaf")
+        if not hasattr(core_mod.CoreCoinParams, "tapbranch_hasher"):
+            core_mod.CoreCoinParams.tapbranch_hasher = _make_tagged_hasher("TapBranch")
+        if not hasattr(core_mod.CoreCoinParams, "taptweak_hasher"):
+            core_mod.CoreCoinParams.taptweak_hasher = _make_tagged_hasher("TapTweak")
+    except Exception:
+        pass
     
     # Create explicit flag map for educational clarity
     FLAG_BY_NAME = {
@@ -604,15 +1382,18 @@ def script_verification(vals: list) -> str:
     tx_hex           = (vals[2] or "").strip() if len(vals) > 2 else ""
     in_idx           = int(vals[3]) if len(vals) > 3 and str(vals[3]).strip() else 0
     exclude_flags    = (vals[4] or "").strip() if len(vals) > 4 else ""
+    taproot_prevout_vals = vals[6:] if len(vals) > 6 else []
 
     if in_idx < 0:
         raise ValueError("Input index must be non-negative")
     
     # Parse actual amount for SegWit
     amount_param = 0
-    if len(vals) > 5 and str(vals[5]).strip():
+    amount_raw = str(vals[5]).strip() if len(vals) > 5 and vals[5] is not None else ""
+    amount_supplied = bool(amount_raw)
+    if amount_supplied:
         try:
-            amount_param = int(vals[5])
+            amount_param = int(amount_raw)
             # Validate amount is non-negative
             if amount_param < 0:
                 raise ValueError("Amount must be non-negative")
@@ -636,6 +1417,10 @@ def script_verification(vals: list) -> str:
         tx = _deserialize_tx_cached(tx_hex)
     except Exception as e:
         raise ValueError(f"Invalid transaction hex: {str(e)}")
+
+    # Normalize scripts up front for reuse
+    script_sig_obj = CScript(_bytes_from_even_hex(scriptSig_hex, name="scriptSig"))
+    script_pubkey_obj = CScript(_bytes_from_even_hex(scriptPubKey_hex, name="scriptPubKey"))
 
     # ------------------------------------------------------------------
     # 3.  Flags - Build as integer bitmask with STRICT validation
@@ -683,7 +1468,6 @@ def script_verification(vals: list) -> str:
     
     # Build list of active flags
     active_flags = sorted([name for name, value in FLAG_BY_NAME.items() if value in flags])
-
     # ------------------------------------------------------------------
     # 3.5  Extract witness AFTER flags are defined
     # ------------------------------------------------------------------
@@ -706,19 +1490,46 @@ def script_verification(vals: list) -> str:
             # Continue with witness_obj = None
             pass
 
+    is_witness_program = script_pubkey_obj.is_witness_scriptpubkey()
+    wit_version = script_pubkey_obj.witness_version() if is_witness_program else None
+    wit_program = script_pubkey_obj.witness_program() if is_witness_program else b""
+    needs_taproot_prevouts = (
+        uses_witness
+        and SCRIPT_VERIFY_TAPROOT in flags
+        and is_witness_program
+        and wit_version == 1
+        and len(wit_program) == 32
+    )
+
+    spent_outputs = _build_taproot_prevouts(taproot_prevout_vals, len(tx.vin))
+    if needs_taproot_prevouts:
+        if len(tx.vin) > 1 and not spent_outputs:
+            raise ValueError(
+                "Taproot verification for multi-input transactions requires vin-ordered prevouts "
+                "(amount + scriptPubKey for each input). Add them in the Taproot prevouts section."
+            )
+        if not spent_outputs:
+            spent_outputs = [CTxOut(amount_param, script_pubkey_obj)]
+
     # ------------------------------------------------------------------
     # 4.  Execute with tracing - include amount if witness active
     # ------------------------------------------------------------------
     amount = amount_param if uses_witness else 0
-    
+    if uses_witness and amount == 0 and spent_outputs is not None:
+        try:
+            amount = spent_outputs[in_idx].nValue
+        except IndexError:
+            pass
+
     is_valid, steps, err_msg = VerifyScriptWithTrace(
-        CScript(bytes.fromhex(scriptSig_hex or "")),
-        CScript(bytes.fromhex(scriptPubKey_hex or "")),
+        script_sig_obj,
+        script_pubkey_obj,
         tx,
         inIdx=in_idx,
         flags=flags,
         witness=witness_obj,
-        amount=amount
+        amount=amount,
+        spent_outputs=spent_outputs
     )
 
     # ------------------------------------------------------------------
@@ -737,19 +1548,31 @@ def script_verification(vals: list) -> str:
     # Add amount info if witness is active
     if uses_witness:
         result["amountUsed"] = amount
+
+    # Surface the raw witness stack (useful for Taproot key-path flows)
+    if uses_witness and witness_obj is not None:
+        try:
+            stack_items = getattr(witness_obj, "stack", [])
+            if stack_items:
+                result["witnessStack"] = [b2x(bytes(it)) for it in stack_items]
+        except Exception:
+            pass
     
     # harvest optional inner scripts (added by the tracer)
     for st in steps:
         ph = st.get("phase")
-        if ph in ("redeemScript", "witnessScript") and st.get("script_hex"):
-            result[ph] = st["script_hex"]
+        script_hex = st.get("script_hex")
+        if ph in ("redeemScript", "witnessScript", "taproot") and script_hex:
+            key = "redeemScript" if ph == "redeemScript" else "witnessScript"
+            if key not in result:
+                result[key] = script_hex
 
     # Handle errors
     if not is_valid:
         result["error"] = err_msg or "Unknown script verification error"
         
         # Add helpful hint if witness is active but no amount provided
-        if uses_witness and amount_param == 0 and len(vals) <= 5:
+        if uses_witness and not amount_supplied and not spent_outputs:
             result["error"] += " (Note: SegWit/Taproot verification requires the spent amount in satoshis)"
 
     return json.dumps(result)

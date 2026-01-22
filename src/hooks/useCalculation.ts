@@ -13,7 +13,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 import { useEffect, useRef } from "react";
-import { Edge, useReactFlow } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 
 import {
   recalculateGraph,
@@ -23,76 +23,12 @@ import {
 } from "@/lib/graphUtils";
 import { isCalculableNode } from "@/lib/flow/nonCalculableNodes";
 import { log } from "@/lib/logConfig";
-import { forEachFieldInstance } from "@/lib/nodes/fieldUtils";
-import { getVal } from "@/lib/utils";
-import { removeScriptSteps } from "@/lib/share/scriptStepsCache";
 import type {
   UseNodeCalculationLogicProps,
   UseGlobalCalculationLogicProps,
   FlowNode,
   CalcError,
-  NodeData,
 } from "@/types";
-
-type HandleMap = Map<string, Set<string>>;
-
-function buildTargetHandleMap(edges: Edge[]): HandleMap {
-  const map = new Map<string, Set<string>>();
-  edges.forEach(({ target, targetHandle }) => {
-    if (!target || !targetHandle) return;
-    const handles = map.get(target) ?? new Set<string>();
-    handles.add(targetHandle);
-    map.set(target, handles);
-  });
-  return map;
-}
-
-function hasStoredValue(
-  data: FlowNode["data"],
-  index: number,
-  fieldOptions?: string[]
-): boolean {
-  const raw = getVal(data?.inputs?.vals, index);
-  if (raw !== "") return true;
-  if (fieldOptions && fieldOptions.length > 0) return true;
-  return false;
-}
-
-function isNodeReadyForCalculation(
-  node: FlowNode,
-  targetHandles: HandleMap
-): boolean {
-  const data = node.data;
-  if (!data) return false;
-
-  if ((data.paramExtraction ?? "single_val") !== "multi_val") {
-    return true;
-  }
-
-  if ((data.functionName ?? "").toLowerCase() === "concat_all") {
-    return true;
-  }
-
-  const handles = targetHandles.get(node.id) ?? new Set<string>();
-  let missing = 0;
-
-  forEachFieldInstance(data, (absoluteIndex, field) => {
-    if (field.unconnectable) {
-      return;
-    }
-
-    const handleId = `input-${absoluteIndex}`;
-    if (handles.has(handleId)) {
-      return;
-    }
-
-    if (!hasStoredValue(data, absoluteIndex, field.options)) {
-      missing += 1;
-    }
-  });
-
-  return missing === 0;
-}
 
 /* ────────────────────────────────────────────────────────────
    1.  GLOBAL CALCULATION HOOK
@@ -145,72 +81,7 @@ export function useGlobalCalculationLogic({
       return;
     }
 
-    const handleMap = buildTargetHandleMap(edges);
-    const readyDirtyNodes = dirtyNodes.filter((node) =>
-      isNodeReadyForCalculation(node, handleMap)
-    );
-    const eligibleIds = new Set(readyDirtyNodes.map((node) => node.id));
-    const unreadyDirtyNodes = dirtyNodes.filter(
-      (node) => !eligibleIds.has(node.id)
-    );
-
-    if (unreadyDirtyNodes.length > 0) {
-      const unreadyIds = new Set(unreadyDirtyNodes.map((node) => node.id));
-      setNodes((nds) => {
-        let mutated = false;
-        const next = nds.map((node) => {
-          if (!unreadyIds.has(node.id)) return node;
-          const data = node.data as NodeData | undefined;
-          if (!data) return node;
-
-          const nextData: NodeData & Record<string, unknown> = { ...data };
-          let changed = false;
-
-          if (nextData.dirty) {
-            nextData.dirty = false;
-            changed = true;
-          }
-          if (nextData.error) {
-            nextData.error = false;
-            changed = true;
-          }
-          if (nextData.extendedError !== undefined) {
-            delete nextData.extendedError;
-            changed = true;
-          }
-          if (
-            Object.prototype.hasOwnProperty.call(nextData, "result") &&
-            nextData.result !== undefined
-          ) {
-            nextData.result = undefined;
-            changed = true;
-          }
-          if (nextData.scriptDebugSteps !== undefined) {
-            delete nextData.scriptDebugSteps;
-            changed = true;
-          }
-
-          if (!changed) return node;
-          mutated = true;
-          return { ...node, data: nextData };
-        });
-        return mutated ? next : nds;
-      });
-      unreadyDirtyNodes.forEach((node) => removeScriptSteps(node.id));
-    }
-
-    if (readyDirtyNodes.length === 0) {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-      if (prevDirtyRef.current) {
-        const mergedErrors = buildErrorArray([], nodes);
-        onStatusChangeRef.current?.(
-          mergedErrors.length ? "ERROR" : "OK",
-          mergedErrors
-        );
-      }
-      prevDirtyRef.current = false;
-      return;
-    }
+    const eligibleIds = new Set(dirtyNodes.map((node) => node.id));
 
     if (!prevDirtyRef.current) onStatusChangeRef.current?.("CALC");
     prevDirtyRef.current = true;

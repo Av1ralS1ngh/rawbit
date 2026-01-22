@@ -319,6 +319,33 @@ export function useFlowInteractions({
     };
   }, [exitLargeDragMode]);
 
+  // Safari can leave the page in a stuck pointer/drag state after sleep.
+  // When the tab regains focus/visibility, force-reset any throttled state.
+  useEffect(() => {
+    const resetInteractions = () => {
+      exitLargeDragMode(true);
+      cancelNonPosRef.current?.();
+      cancelNonPosRef.current = null;
+      coalescedPosRef.current = new Map();
+      pendingNonPosRef.current = null;
+      dragStartPositionsRef.current.clear();
+      isFlushingRef.current = false;
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        resetInteractions();
+      }
+    };
+
+    window.addEventListener("focus", resetInteractions);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("focus", resetInteractions);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [exitLargeDragMode]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange<FlowNode>[]) => {
       if (isFlushingRef.current) return;
@@ -569,13 +596,11 @@ export function useFlowInteractions({
           )
         );
         markPendingAfterDirtyChange();
-        scheduleSnapshot("Edge reconnected", { refresh: true });
       }
     },
     [
       loadingUndoRef,
       markPendingAfterDirtyChange,
-      scheduleSnapshot,
       setEdges,
       setNodes,
     ]

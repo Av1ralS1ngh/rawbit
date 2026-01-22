@@ -20,6 +20,7 @@ export interface TerminalFieldProps {
   onLabelChange?: (val: string) => void;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  emptyLabel?: string;
   comment?: string;
   is00?: boolean;
   isBlank?: boolean;
@@ -42,6 +43,7 @@ function terminalFieldPropsAreEqual(
     prev.rows === next.rows &&
     prev.allowEmpty00 === next.allowEmpty00 &&
     prev.allowEmptyBlank === next.allowEmptyBlank &&
+    prev.emptyLabel === next.emptyLabel &&
     prev.comment === next.comment &&
     prev.is00 === next.is00 &&
     prev.isBlank === next.isBlank &&
@@ -66,6 +68,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
   onLabelChange,
   allowEmpty00,
   allowEmptyBlank,
+  emptyLabel,
   comment,
   is00,
   isBlank,
@@ -135,7 +138,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                         }
                         className="h-4 w-4 rounded-sm border border-primary data-[state=checked]:bg-background data-[state=checked]:text-black dark:data-[state=checked]:text-white"
                       />
-                      Ø
+                      {emptyLabel ?? "Ø"}
                     </div>
                   )}
                 </div>
@@ -147,7 +150,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                   "nodrag w-full resize-none rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
                   "text-sm p-2 font-mono transition-colors",
                   small ? "w-32" : "w-full",
-                  (value === "empty" || value === "00") &&
+                  (isBlank || is00) &&
                     "text-muted-foreground",
                   readOnly ? "border-input" : "border-dashed border-input"
                 )}
@@ -214,7 +217,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                 onCheckedChange={(checked) => onToggleBlank?.(!!checked)}
                 className="h-4 w-4 rounded-sm border border-primary data-[state=checked]:bg-background data-[state=checked]:text-black dark:data-[state=checked]:text-white"
               />
-              Ø
+              {emptyLabel ?? "Ø"}
             </div>
           )}
         </div>
@@ -226,8 +229,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
           "nodrag w-full resize-none rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
           "text-sm p-2 font-mono transition-colors",
           small ? "w-32" : "w-full",
-          value === "00" && "text-muted-foreground",
-          value === "empty" && "text-muted-foreground",
+          (is00 || isBlank) && "text-muted-foreground",
           readOnly ? "border-input" : "border-dashed border-input"
         )}
         placeholder={placeholder}

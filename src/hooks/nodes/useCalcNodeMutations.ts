@@ -15,6 +15,7 @@ export interface UseCalcNodeMutationsResult {
     isConnected: boolean,
     allowEmpty: boolean
   ) => void;
+  setTaprootLeafIndex: (index: number) => void;
   updateFieldLabel: (fieldIndex: number, label: string) => void;
   updateGroupTitle: (group: string, title: string) => void;
   handleNetworkChange: (network: string) => void;
@@ -84,6 +85,27 @@ export function useCalcNodeMutations(
                     ...(node.data.customFieldLabels ?? {}),
                     [fieldIndex]: label,
                   },
+                },
+              }
+            : node
+        )
+      ),
+    [id, setNodes]
+  );
+
+  const setTaprootLeafIndex = useCallback(
+    (index: number) =>
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...(node.data as NodeData),
+                  taprootLeafIndex: index,
+                  dirty: true,
+                  error: false,
+                  extendedError: undefined,
                 },
               }
             : node
@@ -221,6 +243,7 @@ export function useCalcNodeMutations(
 
   return {
     setFieldValue,
+    setTaprootLeafIndex,
     updateFieldLabel,
     updateGroupTitle,
     handleNetworkChange,
