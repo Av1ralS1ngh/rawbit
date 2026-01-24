@@ -1,13 +1,13 @@
 {
-  "name": "flow-1769089242093",
+  "name": "flow-1769270975610",
   "schemaVersion": 1,
   "nodes": [
     {
       "id": "node_YsYWyH8B",
       "type": "calculation",
       "position": {
-        "x": -1025.517232636393,
-        "y": 556.1600638806167
+        "x": -1010.5172326363929,
+        "y": 526.1600638806167
       },
       "data": {
         "functionName": "random_256",
@@ -25,8 +25,8 @@
       "id": "node_k5UzZVbd",
       "type": "calculation",
       "position": {
-        "x": -618.6030354483594,
-        "y": 495.42416568275166
+        "x": -603.6030354483594,
+        "y": 465.42416568275166
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -58,8 +58,8 @@
       "id": "node_GfyLlA4A",
       "type": "calculation",
       "position": {
-        "x": -233.59292608909465,
-        "y": 405.4865793708969
+        "x": -218.59292608909465,
+        "y": 375.4865793708969
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -89,8 +89,8 @@
       "id": "node_bSP4vL1y",
       "type": "calculation",
       "position": {
-        "x": 7586.131816690993,
-        "y": 856.0051020843139
+        "x": 7601.131816690993,
+        "y": 826.0051020843139
       },
       "data": {
         "functionName": "identity",
@@ -122,8 +122,8 @@
       "id": "node_1OtxPX2S",
       "type": "calculation",
       "position": {
-        "x": 8068.262137304979,
-        "y": 871.5884289123833
+        "x": 8083.262137304979,
+        "y": 841.5884289123833
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -145,8 +145,8 @@
       "id": "node_aUe4qGIT",
       "type": "calculation",
       "position": {
-        "x": 706.9775950557616,
-        "y": 5935.158209448476
+        "x": 721.9775950557616,
+        "y": 5905.158209448476
       },
       "data": {
         "functionName": "identity",
@@ -180,8 +180,8 @@
       "id": "node_sZBExk76",
       "type": "calculation",
       "position": {
-        "x": 1202.5541064437205,
-        "y": 5985.254845181268
+        "x": 1217.5541064437205,
+        "y": 5955.254845181268
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -213,8 +213,8 @@
       "id": "node_9JbyuUUT",
       "type": "calculation",
       "position": {
-        "x": 1159.2545429469562,
-        "y": 2519.80045093802
+        "x": 1174.2545429469562,
+        "y": 2489.80045093802
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -236,8 +236,8 @@
       "id": "node_jueQA2SJ",
       "type": "calculation",
       "position": {
-        "x": 373.36691773116604,
-        "y": 3340.150273973202
+        "x": 388.36691773116604,
+        "y": 3310.150273973202
       },
       "data": {
         "functionName": "identity",
@@ -271,8 +271,8 @@
       "id": "node_4E8Q9rkD",
       "type": "calculation",
       "position": {
-        "x": 692.6359294215129,
-        "y": 3497.749519441473
+        "x": 707.6359294215129,
+        "y": 3467.749519441473
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -294,8 +294,8 @@
       "id": "node_0zMUvfGS",
       "type": "calculation",
       "position": {
-        "x": -5343.551456526654,
-        "y": 5585.590237673505
+        "x": -5328.551456526654,
+        "y": 5555.590237673505
       },
       "data": {
         "functionName": "concat_all",
@@ -353,8 +353,8 @@
       "id": "node_E6AVYtua",
       "type": "calculation",
       "position": {
-        "x": -5794.445311455181,
-        "y": 5731.7811685492225
+        "x": -5779.445311455181,
+        "y": 5701.7811685492225
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -386,8 +386,8 @@
       "id": "node_98t1j46M",
       "type": "calculation",
       "position": {
-        "x": 806.8387370151515,
-        "y": 6491.0646620778225
+        "x": 821.8387370151515,
+        "y": 6461.0646620778225
       },
       "data": {
         "functionName": "identity",
@@ -421,8 +421,8 @@
       "id": "node_9rM8jhcM",
       "type": "calculation",
       "position": {
-        "x": 6286.327851520744,
-        "y": 2225.521679582228
+        "x": 6301.327851520744,
+        "y": 2195.521679582228
       },
       "data": {
         "functionName": "identity",
@@ -454,8 +454,8 @@
       "id": "node_vbJ3jFk9",
       "type": "calculation",
       "position": {
-        "x": 6323.740995046572,
-        "y": 2569.8100484720935
+        "x": 6338.740995046572,
+        "y": 2539.8100484720935
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -465,7 +465,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+          "val": "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
         },
         "result": "40",
         "borderColor": "#eab308",
@@ -476,8 +476,8 @@
       "id": "node_ylihcQmx",
       "type": "calculation",
       "position": {
-        "x": 8036.524060171099,
-        "y": 1219.4643683605473
+        "x": 8051.524060171099,
+        "y": 1189.4643683605473
       },
       "data": {
         "functionName": "identity",
@@ -509,8 +509,8 @@
       "id": "node_Soqxx1FL",
       "type": "calculation",
       "position": {
-        "x": 8111.981677679329,
-        "y": 1261.122287919462
+        "x": 8126.981677679329,
+        "y": 1231.122287919462
       },
       "data": {
         "functionName": "identity",
@@ -542,8 +542,8 @@
       "id": "node_ntb0cI3r",
       "type": "calculation",
       "position": {
-        "x": 7725.2636356554885,
-        "y": 1521.0459239598576
+        "x": 7740.2636356554885,
+        "y": 1491.0459239598576
       },
       "data": {
         "functionName": "identity",
@@ -578,8 +578,8 @@
       "id": "node_iM3m5eEN",
       "type": "calculation",
       "position": {
-        "x": 8087.4161990784,
-        "y": 1573.542736889177
+        "x": 8102.4161990784,
+        "y": 1543.542736889177
       },
       "data": {
         "functionName": "encode_varint",
@@ -600,8 +600,8 @@
       "id": "node_BaX34sCQ",
       "type": "calculation",
       "position": {
-        "x": 7768.916770226513,
-        "y": 2704.2323075728864
+        "x": 7783.916770226513,
+        "y": 2674.2323075728864
       },
       "data": {
         "functionName": "identity",
@@ -633,8 +633,8 @@
       "id": "node_SLgUFird",
       "type": "calculation",
       "position": {
-        "x": 8158.971937644123,
-        "y": 2787.7258287500235
+        "x": 8173.971937644123,
+        "y": 2757.7258287500235
       },
       "data": {
         "functionName": "encode_varint",
@@ -655,8 +655,8 @@
       "id": "node_w6uAbEwy",
       "type": "calculation",
       "position": {
-        "x": 10223.247823513939,
-        "y": 3655.3996040089905
+        "x": 10238.247823513939,
+        "y": 3625.3996040089905
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -666,9 +666,9 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b000000000"
+          "val": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d00000000"
         },
-        "result": "3d85db8674d1d627d4b24b3d98a75c850b6636b53cff7abee3c28925c91dee7a",
+        "result": "e368414bcb3a227d5b0a5bb7d83e2355699108f00519f8269d028181d0292341",
         "inputStructure": {
           "ungrouped": [
             {
@@ -687,8 +687,8 @@
       "id": "node_NC4Jnf5P",
       "type": "calculation",
       "position": {
-        "x": 10717.47381419866,
-        "y": 3684.7040540796106
+        "x": 10732.47381419866,
+        "y": 3654.7040540796106
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -697,9 +697,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "7aee1dc92589c2e3be7aff3cb536660b855ca7983d4bb2d427d6d17486db853d",
+        "result": "412329d08181029d26f81905f008916955233ed8b75b0a5b7d223acb4b4168e3",
         "inputs": {
-          "val": "3d85db8674d1d627d4b24b3d98a75c850b6636b53cff7abee3c28925c91dee7a"
+          "val": "e368414bcb3a227d5b0a5bb7d83e2355699108f00519f8269d028181d0292341"
         },
         "borderColor": "#a855f7",
         "error": false
@@ -709,8 +709,8 @@
       "id": "node_WpRFcPFx",
       "type": "calculation",
       "position": {
-        "x": 1988.2265911179538,
-        "y": 1192.4552362169788
+        "x": 2003.2265911179538,
+        "y": 1162.4552362169788
       },
       "data": {
         "functionName": "concat_all",
@@ -773,8 +773,8 @@
       "id": "node_jYUlVkGO",
       "type": "calculation",
       "position": {
-        "x": 1985.8792584537996,
-        "y": 2721.489592705756
+        "x": 2000.8792584537996,
+        "y": 2691.489592705756
       },
       "data": {
         "functionName": "concat_all",
@@ -829,8 +829,8 @@
       "id": "node_JiTvbWxX",
       "type": "calculation",
       "position": {
-        "x": 1978.7709030925625,
-        "y": 3163.648351217701
+        "x": 1993.7709030925625,
+        "y": 3133.648351217701
       },
       "data": {
         "functionName": "concat_all",
@@ -902,8 +902,8 @@
       "id": "node_EKvm65fW",
       "type": "calculation",
       "position": {
-        "x": 9176.593063465327,
-        "y": 1600.0221734854213
+        "x": 9191.593063465327,
+        "y": 1570.0221734854213
       },
       "data": {
         "functionName": "concat_all",
@@ -925,13 +925,13 @@
             "3000": "2894020000000000",
             "3010": "22",
             "3020": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
-            "5000": "0140f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0",
+            "5000": "0140085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d",
             "6000": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b000000000",
+        "result": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d00000000",
         "inputStructure": {
           "afterGroups": [
             {
@@ -1103,8 +1103,8 @@
       "id": "node_kF7Eg0L5",
       "type": "calculation",
       "position": {
-        "x": 645.9321915657817,
-        "y": 5329.633684181222
+        "x": 660.9321915657817,
+        "y": 5299.633684181222
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -1125,8 +1125,8 @@
       "id": "node_vqonXTxF",
       "type": "calculation",
       "position": {
-        "x": -1068.9313162555502,
-        "y": 1131.0035322919339
+        "x": -1053.9313162555502,
+        "y": 1101.0035322919339
       },
       "data": {
         "functionName": "identity",
@@ -1160,8 +1160,8 @@
       "id": "node_BsmrVNAJ",
       "type": "calculation",
       "position": {
-        "x": -1086.1725401730685,
-        "y": 1675.238036249605
+        "x": -1071.1725401730685,
+        "y": 1645.238036249605
       },
       "data": {
         "functionName": "identity",
@@ -1193,8 +1193,8 @@
       "id": "node_Kn06BZeG",
       "type": "calculation",
       "position": {
-        "x": -1089.8625338323902,
-        "y": 2077.5420153344903
+        "x": -1074.8625338323902,
+        "y": 2047.5420153344903
       },
       "data": {
         "functionName": "identity",
@@ -1228,8 +1228,8 @@
       "id": "node_0KEb3UPe",
       "type": "calculation",
       "position": {
-        "x": -6915.316301919939,
-        "y": 5734.832925570476
+        "x": -6900.316301919939,
+        "y": 5704.832925570476
       },
       "data": {
         "functionName": "random_256",
@@ -1247,8 +1247,8 @@
       "id": "node_YenvdVFn",
       "type": "calculation",
       "position": {
-        "x": -6558.690624623293,
-        "y": 5730.507535209692
+        "x": -6543.690624623293,
+        "y": 5700.507535209692
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -1280,8 +1280,8 @@
       "id": "node_RYJPS8xr",
       "type": "calculation",
       "position": {
-        "x": -6211.4345587367925,
-        "y": 5985.94798007228
+        "x": -6196.4345587367925,
+        "y": 5955.94798007228
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -1313,8 +1313,8 @@
       "id": "node_nxPSNJIF",
       "type": "opCodeNode",
       "position": {
-        "x": -6436.059125059451,
-        "y": 7527.880300538051
+        "x": -6421.059125059451,
+        "y": 7497.880300538051
       },
       "data": {
         "functionName": "op_code_select",
@@ -1337,8 +1337,8 @@
       "id": "node_BoVcigWU",
       "type": "calculation",
       "position": {
-        "x": -5771.866873544752,
-        "y": 7410.139115874242
+        "x": -5756.866873544752,
+        "y": 7380.139115874242
       },
       "data": {
         "functionName": "concat_all",
@@ -1399,8 +1399,8 @@
       "id": "node_xmkTQNNN",
       "type": "calculation",
       "position": {
-        "x": -6521.313156188723,
-        "y": 7906.263344876402
+        "x": -6506.313156188723,
+        "y": 7876.263344876402
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -1432,8 +1432,8 @@
       "id": "node_7BGJ27IW",
       "type": "calculation",
       "position": {
-        "x": -7564.058580191237,
-        "y": 7679.911754534673
+        "x": -7549.058580191237,
+        "y": 7649.911754534673
       },
       "data": {
         "functionName": "random_256",
@@ -1451,8 +1451,8 @@
       "id": "node_ZLbOWIu2",
       "type": "calculation",
       "position": {
-        "x": -7207.43290289459,
-        "y": 7675.586364173896
+        "x": -7192.43290289459,
+        "y": 7645.586364173896
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -1484,8 +1484,8 @@
       "id": "node_RAFPUSGa",
       "type": "calculation",
       "position": {
-        "x": -6880.8493428410875,
-        "y": 7537.7376304546815
+        "x": -6865.8493428410875,
+        "y": 7507.7376304546815
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -1517,8 +1517,8 @@
       "id": "node_jHcVfqoL",
       "type": "calculation",
       "position": {
-        "x": -639.6605380122721,
-        "y": 1313.7934683709145
+        "x": -624.6605380122721,
+        "y": 1283.7934683709145
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -1539,8 +1539,8 @@
       "id": "node_7VQlDWcJ",
       "type": "calculation",
       "position": {
-        "x": -1059.6605380122721,
-        "y": 2693.793468370911
+        "x": -1044.6605380122721,
+        "y": 2663.793468370911
       },
       "data": {
         "functionName": "identity",
@@ -1574,8 +1574,8 @@
       "id": "node_6nn8xX90",
       "type": "calculation",
       "position": {
-        "x": -577.1292286822566,
-        "y": 2698.6665685880516
+        "x": -562.1292286822566,
+        "y": 2668.6665685880516
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -1597,8 +1597,8 @@
       "id": "node_YGukhabt",
       "type": "calculation",
       "position": {
-        "x": 2675.3421102086054,
-        "y": 908.4841079078842
+        "x": 2690.3421102086054,
+        "y": 878.4841079078842
       },
       "data": {
         "functionName": "identity",
@@ -1630,8 +1630,8 @@
       "id": "node_1BKMY839",
       "type": "calculation",
       "position": {
-        "x": 2738.8322036161812,
-        "y": 1004.8831051614588
+        "x": 2753.8322036161812,
+        "y": 974.8831051614588
       },
       "data": {
         "functionName": "identity",
@@ -1663,8 +1663,8 @@
       "id": "node_NRaXmAcL",
       "type": "calculation",
       "position": {
-        "x": 2800.7115832368695,
-        "y": 1083.1662247555369
+        "x": 2815.7115832368695,
+        "y": 1053.1662247555369
       },
       "data": {
         "functionName": "identity",
@@ -1696,8 +1696,8 @@
       "id": "node_6thJ0Zed",
       "type": "calculation",
       "position": {
-        "x": 2491.445367694711,
-        "y": 1379.7142850547107
+        "x": 2506.445367694711,
+        "y": 1349.7142850547107
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1727,8 +1727,8 @@
       "id": "node_kgU5n2dF",
       "type": "calculation",
       "position": {
-        "x": 1996.2351114528983,
-        "y": 1700.720516337723
+        "x": 2011.2351114528983,
+        "y": 1670.720516337723
       },
       "data": {
         "functionName": "concat_all",
@@ -1782,8 +1782,8 @@
       "id": "node_ube6iLf5",
       "type": "calculation",
       "position": {
-        "x": 2505.6025865061224,
-        "y": 1732.6548004182778
+        "x": 2520.6025865061224,
+        "y": 1702.6548004182778
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1813,8 +1813,8 @@
       "id": "node_mSc2XCQA",
       "type": "calculation",
       "position": {
-        "x": 2513.1688134574983,
-        "y": 2157.123909898176
+        "x": 2528.1688134574983,
+        "y": 2127.123909898176
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1844,8 +1844,8 @@
       "id": "node_aRUipUwR",
       "type": "calculation",
       "position": {
-        "x": 2516.1875491210853,
-        "y": 2717.5708937295794
+        "x": 2531.1875491210853,
+        "y": 2687.5708937295794
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1875,8 +1875,8 @@
       "id": "node_S2PgOEHj",
       "type": "calculation",
       "position": {
-        "x": 2589.735730372226,
-        "y": 3381.0447593989384
+        "x": 2604.735730372226,
+        "y": 3351.0447593989384
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1906,8 +1906,8 @@
       "id": "node_EKS5e0JX",
       "type": "calculation",
       "position": {
-        "x": 2853.775922160156,
-        "y": 3848.144591761068
+        "x": 2868.775922160156,
+        "y": 3818.144591761068
       },
       "data": {
         "functionName": "identity",
@@ -1941,8 +1941,8 @@
       "id": "node_5tY1huIj",
       "type": "calculation",
       "position": {
-        "x": 4113.459621514757,
-        "y": 1130.5474867985731
+        "x": 4128.459621514757,
+        "y": 1100.5474867985731
       },
       "data": {
         "functionName": "identity",
@@ -1974,8 +1974,8 @@
       "id": "node_VAaMluTK",
       "type": "calculation",
       "position": {
-        "x": 4699.536836230875,
-        "y": 1142.6863799651446
+        "x": 4714.536836230875,
+        "y": 1112.6863799651446
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2005,8 +2005,8 @@
       "id": "node_yv2V85NI",
       "type": "calculation",
       "position": {
-        "x": 4400.221501288564,
-        "y": 1117.9398990187192
+        "x": 4415.221501288564,
+        "y": 1087.9398990187192
       },
       "data": {
         "functionName": "text_to_hex",
@@ -2037,8 +2037,8 @@
       "id": "node_z0jdAjxW",
       "type": "calculation",
       "position": {
-        "x": 5545.074639646047,
-        "y": 1598.8419570356136
+        "x": 5560.074639646047,
+        "y": 1568.8419570356136
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2068,8 +2068,8 @@
       "id": "node_G52fvUCE",
       "type": "calculation",
       "position": {
-        "x": 6038.645373535584,
-        "y": 1127.0542525771898
+        "x": 6053.645373535584,
+        "y": 1097.0542525771898
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -2078,7 +2078,7 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "323cd997887e7ce80c0d16625dc6361f6c1ac7722ab27026d796b046fc3060cd",
+            "0": "c7a20084d81c47dc843636803adfe522c344f893556635ecc27b420f21b30ac3",
             "1": "85ca825bed72843955d358a04d480166310ca1cacf3975f9fc61ea8e36949aa3",
             "2": "__EMPTY__"
           }
@@ -2108,7 +2108,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0",
+        "result": "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d",
         "totalInputs": 3,
         "unwiredCount": 0,
         "dirty": false,
@@ -2123,8 +2123,8 @@
       "id": "node_ww2VgYQG",
       "type": "calculation",
       "position": {
-        "x": 6952.703512602553,
-        "y": 2394.801923952212
+        "x": 6967.703512602553,
+        "y": 2364.801923952212
       },
       "data": {
         "functionName": "concat_all",
@@ -2135,7 +2135,7 @@
           "vals": {
             "0": "01",
             "1": "40",
-            "2": "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+            "2": "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
           }
         },
         "inputStructure": {
@@ -2163,7 +2163,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "0140f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0",
+        "result": "0140085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d",
         "baseHeight": 100,
         "totalInputs": 3,
         "unwiredCount": 0,
@@ -2176,8 +2176,8 @@
       "id": "node_d4aijWsZ",
       "type": "calculation",
       "position": {
-        "x": 9817.014620940081,
-        "y": 2127.046421111788
+        "x": 9832.014620940081,
+        "y": 2097.046421111788
       },
       "data": {
         "functionName": "script_verification",
@@ -2188,7 +2188,7 @@
           "vals": {
             "0": "__EMPTY__",
             "1": "5120cd0854b23ebf96fb8cf650ed744fbd250d21c2fc685970048c5871c4e1ce01d9",
-            "2": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b000000000",
+            "2": "02000000000101d89aa1fbcc4857a2f9af58902aa90d7ed808abb9e9d63d4189219e349893297e0000000000fdffffff0128940200000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e03132928870140085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d00000000",
             "5": "170158"
           }
         },
@@ -2271,9 +2271,9 @@
         "unwiredCount": 0,
         "dirty": false,
         "borderColor": "#a855f7",
-        "result": "false",
+        "result": "true",
         "scriptDebugSteps": {
-          "isValid": false,
+          "isValid": true,
           "steps": [
             {
               "pc": 0,
@@ -2300,10 +2300,10 @@
               "phase": "taproot",
               "step": "witness_stack",
               "stack_before": [
-                "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+                "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
               ],
               "stack_after": [
-                "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+                "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
               ]
             },
             {
@@ -2316,10 +2316,10 @@
               "hashtype_name": "DEFAULT",
               "sighash": "85ca825bed72843955d358a04d480166310ca1cacf3975f9fc61ea8e36949aa3",
               "stack_before": [
-                "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+                "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
               ],
               "stack_after": [
-                "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+                "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
               ]
             },
             {
@@ -2328,14 +2328,14 @@
               "phase": "taproot",
               "step": "schnorr_verify",
               "pubkey": "cd0854b23ebf96fb8cf650ed744fbd250d21c2fc685970048c5871c4e1ce01d9",
-              "signature": "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0",
+              "signature": "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d",
               "hashtype": 0,
               "hashtype_name": "DEFAULT",
-              "result": false,
+              "result": true,
               "stack_before": [
-                "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
+                "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
               ],
-              "stack_after": [""]
+              "stack_after": ["01"]
             }
           ],
           "scriptSig": "",
@@ -2362,9 +2362,8 @@
           "usesWitness": true,
           "amountUsed": 170158,
           "witnessStack": [
-            "f4b1a12b111b888922d344b8dd0708c0337a703befd1ccfc2014ab17e1cb6881a6a1dadff929681599ca04bf1ce79e3e8c2b0fabb072e3d28fc631a8c32c44b0"
-          ],
-          "error": "schnorr signature check failed"
+            "085865c48483f1c6a69938e3dd4443b1c20dfbe2c181649d08ccc02ffae167a33ce965d1a5855b1d6f1e227fe1ff10acb57a05030494c15900bd4250da811a7d"
+          ]
         }
       }
     },
@@ -2372,8 +2371,8 @@
       "id": "node_o3lvU20c",
       "type": "calculation",
       "position": {
-        "x": 779.8685430343292,
-        "y": 237.29121984786713
+        "x": 794.8685430343292,
+        "y": 207.29121984786713
       },
       "data": {
         "functionName": "p2tr_address_from_xonly",
@@ -2408,8 +2407,8 @@
       "id": "node_vmLd4div",
       "type": "calculation",
       "position": {
-        "x": 5019.605503264672,
-        "y": 1356.0626988969498
+        "x": 5034.605503264672,
+        "y": 1326.0626988969498
       },
       "data": {
         "functionName": "concat_all",
@@ -2465,8 +2464,8 @@
       "id": "node_SIwr38lf",
       "type": "calculation",
       "position": {
-        "x": 2827.542230593361,
-        "y": 2928.441932234605
+        "x": 2842.542230593361,
+        "y": 2898.441932234605
       },
       "data": {
         "functionName": "identity",
@@ -2500,8 +2499,8 @@
       "id": "node_yx0uFtap",
       "type": "calculation",
       "position": {
-        "x": 3184.6656717685423,
-        "y": 2876.2856410428367
+        "x": 3199.6656717685423,
+        "y": 2846.2856410428367
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2522,8 +2521,8 @@
       "id": "node_iJCNg7TM",
       "type": "calculation",
       "position": {
-        "x": 3433.356700305931,
-        "y": 1165.0083574542123
+        "x": 3448.356700305931,
+        "y": 1135.0083574542123
       },
       "data": {
         "functionName": "concat_all",
@@ -2643,8 +2642,8 @@
       "id": "node_RVQBcN8R",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -3128.3178316726257,
-        "y": 536.8482047621762
+        "x": -3113.3178316726257,
+        "y": 506.84820476217624
       },
       "data": {
         "content": "# Lesson 12: Taproot Script-Path & MAST\n\nIn Lesson 11, we spent P2TR outputs using the **key-path** — just a Schnorr signature, no scripts revealed.\n\nBut remember the tweak formula?\n\n`Q = P + H(P || merkle_root) · G`\n\nIn L11, we left `merkle_root` empty (BIP86). Now we'll put something there.\n\n---\n\n## Two Ways to Spend P2TR\n\n| Path | When to Use | Witness | Privacy |\n|------|-------------|---------|---------|\n| **Key-path** | Everyone agrees | `[signature]` | Perfect — looks like single-sig |\n| **Script-path** | Fallback / disputes | `[script_args] [script] [control_block]` | Reveals one script, hides others |\n\n---\n\n## What is MAST?\n\n**MAST = Merkleized Alternative Script Tree**\n\nInstead of one big script with all conditions (like P2WSH), you:\n\n1. Put each condition in a separate **leaf**\n2. Combine leaves into a **Merkle tree**\n3. Commit the **root** into the output key Q\n\nWhen spending via script-path:\n- Reveal only the leaf you're using\n- Provide sibling hashes to prove it's in the tree\n- Other leaves stay hidden forever\n\n---\n\n## What We'll Build\n\nA 3-leaf inheritance tree:\n```\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n| Leaf | Script | Use Case |\n|------|--------|----------|\n| A | `<owner> OP_CHECKSIG` | Owner spends anytime |\n| B | `<144> OP_CSV OP_DROP <heir> OP_CHECKSIG` | Heir after ~1 day |\n| C | `<owner> OP_CHECKSIG <heir> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Both agree |\n\nWe'll build this tree, fund it, and spend via leaf_A.",
@@ -2659,8 +2658,8 @@
       "id": "node_pvci31m",
       "type": "calculation",
       "position": {
-        "x": 1547.7293169462926,
-        "y": 2322.6471826276947
+        "x": 1562.7293169462926,
+        "y": 2292.6471826276947
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2680,8 +2679,8 @@
       "id": "node_kqeu42x",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -8853.524262425632,
-        "y": 5835.611035781647
+        "x": -8838.524262425632,
+        "y": 5805.611035781647
       },
       "data": {
         "content": "# Our 3-Leaf Inheritance Tree\n```\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n## The Three Spending Paths\n\n| Leaf | Script | Use Case |\n|------|--------|----------|\n| **A** | `<owner> OP_CHECKSIG` | Owner spends anytime — normal path |\n| **B** | `<144> OP_CSV OP_DROP <heir> OP_CHECKSIG` | Heir spends after ~1 day — recovery path |\n| **C** | `<owner> OP_CHECKSIG <heir> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Both sign — joint decision |\n\n## Privacy Benefit\n\nIf owner spends via **key-path** (just a signature), nobody knows these scripts exist.\n\nIf owner spends via **leaf A**, observers see leaf A but learn nothing about B or C — they only see two 32-byte hashes in the merkle path.\n",
@@ -2696,8 +2695,8 @@
       "id": "node_327GxrWb",
       "type": "opCodeNode",
       "position": {
-        "x": -5792.996268157163,
-        "y": 6155.646903551715
+        "x": -5777.996268157163,
+        "y": 6125.646903551715
       },
       "data": {
         "functionName": "op_code_select",
@@ -2720,8 +2719,8 @@
       "id": "node_w5kuva3",
       "type": "calculation",
       "position": {
-        "x": -7198.044443998277,
-        "y": 7099.39320671167
+        "x": -7183.044443998277,
+        "y": 7069.39320671167
       },
       "data": {
         "functionName": "identity",
@@ -2753,8 +2752,8 @@
       "id": "node_e3BOI1Yt",
       "type": "calculation",
       "position": {
-        "x": -6406.081573368668,
-        "y": 7184.173999572643
+        "x": -6391.081573368668,
+        "y": 7154.173999572643
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2786,8 +2785,8 @@
       "id": "node_5IYO47KQ",
       "type": "opCodeNode",
       "position": {
-        "x": -6393.913660485862,
-        "y": 8266.270779984836
+        "x": -6378.913660485862,
+        "y": 8236.270779984836
       },
       "data": {
         "functionName": "op_code_select",
@@ -2810,8 +2809,8 @@
       "id": "node_8TPcYr89",
       "type": "calculation",
       "position": {
-        "x": -5824.930225117877,
-        "y": 9443.226767175256
+        "x": -5809.930225117877,
+        "y": 9413.226767175256
       },
       "data": {
         "functionName": "concat_all",
@@ -2872,8 +2871,8 @@
       "id": "node_ZNl4dw4l",
       "type": "opCodeNode",
       "position": {
-        "x": -6289.657701672059,
-        "y": 9674.794059605822
+        "x": -6274.657701672059,
+        "y": 9644.794059605822
       },
       "data": {
         "functionName": "op_code_select",
@@ -2896,8 +2895,8 @@
       "id": "node_tFEF5p5R",
       "type": "opCodeNode",
       "position": {
-        "x": -6388.273191114197,
-        "y": 10049.800190938437
+        "x": -6373.273191114197,
+        "y": 10019.800190938437
       },
       "data": {
         "functionName": "op_code_select",
@@ -2920,8 +2919,8 @@
       "id": "node_ofy68ew",
       "type": "calculation",
       "position": {
-        "x": -6815.305231563002,
-        "y": 7156.270779984835
+        "x": -6800.305231563002,
+        "y": 7126.270779984835
       },
       "data": {
         "functionName": "int_to_script_bytes",
@@ -2952,8 +2951,8 @@
       "id": "node_2i151er",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -6775.849927330483,
-        "y": 2935.1871218369783
+        "x": -6760.849927330483,
+        "y": 2905.1871218369783
       },
       "data": {
         "content": "# Minimal Number Encoding in Script\n\nWhen pushing numbers onto the stack in Bitcoin Script, there are two rules:\n\n## Rule 1: Use OP_N for -1 to 16\n\n| Value | Opcode | Hex |\n|-------|--------|-----|\n| 0 | OP_0 | `00` |\n| 1-16 | OP_1 - OP_16 | `51` - `60` |\n| -1 | OP_1NEGATE | `4f` |\n\n## Rule 2: Minimal Bytes for Larger Numbers\n\nNumbers > 16 must use the **fewest bytes possible**:\n\n- Little-endian encoding\n- If high bit is set, add `0x00` to keep positive\n\n| Number | Encoding | Push |\n|--------|----------|------|\n| 17 | `11` | `0111` |\n| 144 | `9000` | `029000` |\n| 255 | `ff00` | `02ff00` |\n| 256 | `0001` | `020001` |\n\n**Why 144 = `9000`?**  \n144 = `0x90`, but bit 7 is set (would be negative). Add `0x00` suffix → `9000`.\n\n## Enforcement\n\n| Rule | Status |\n|------|--------|\n| MINIMALDATA | Policy (standardness) — non-minimal rejected from mempool |\n| MINIMALIF (Tapscript) | **Consensus** — `OP_IF`/`OP_NOTIF` must use empty or `0x01` |\n\nAlways use minimal encoding — even if policy-only, non-minimal transactions won't propagate.",
@@ -2968,8 +2967,8 @@
       "id": "node_3pjua9z",
       "type": "calculation",
       "position": {
-        "x": -3903.7583641311116,
-        "y": 5158.122789610163
+        "x": -3888.7583641311116,
+        "y": 5128.122789610163
       },
       "data": {
         "functionName": "tagged_hash",
@@ -3011,8 +3010,8 @@
       "id": "node_f3kirve",
       "type": "calculation",
       "position": {
-        "x": -4432.030550463979,
-        "y": 5219.731060371815
+        "x": -4417.030550463979,
+        "y": 5189.731060371815
       },
       "data": {
         "functionName": "concat_all",
@@ -3068,8 +3067,8 @@
       "id": "node_1twzg5i",
       "type": "calculation",
       "position": {
-        "x": -4765.79355306167,
-        "y": 5142.9676345353955
+        "x": -4750.79355306167,
+        "y": 5112.9676345353955
       },
       "data": {
         "functionName": "identity",
@@ -3101,8 +3100,8 @@
       "id": "node_9hyrbe8",
       "type": "calculation",
       "position": {
-        "x": -4812.288226291971,
-        "y": 5577.147534524969
+        "x": -4797.288226291971,
+        "y": 5547.147534524969
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3122,8 +3121,8 @@
       "id": "node_uxbUl9MG",
       "type": "calculation",
       "position": {
-        "x": -4330.1503921086505,
-        "y": 4874.403724551365
+        "x": -4315.1503921086505,
+        "y": 4844.403724551365
       },
       "data": {
         "functionName": "identity",
@@ -3155,8 +3154,8 @@
       "id": "node_AxoenOj6",
       "type": "calculation",
       "position": {
-        "x": -4081.6073571571974,
-        "y": 7753.122789610163
+        "x": -4066.6073571571974,
+        "y": 7723.122789610163
       },
       "data": {
         "functionName": "tagged_hash",
@@ -3198,8 +3197,8 @@
       "id": "node_f2cLlwua",
       "type": "calculation",
       "position": {
-        "x": -4609.879543490065,
-        "y": 7814.731060371814
+        "x": -4594.879543490065,
+        "y": 7784.731060371814
       },
       "data": {
         "functionName": "concat_all",
@@ -3255,8 +3254,8 @@
       "id": "node_ndyPq5aJ",
       "type": "calculation",
       "position": {
-        "x": -4990.1503921086505,
-        "y": 7786.264243864786
+        "x": -4975.1503921086505,
+        "y": 7756.264243864786
       },
       "data": {
         "functionName": "identity",
@@ -3288,8 +3287,8 @@
       "id": "node_yos4Kuhx",
       "type": "calculation",
       "position": {
-        "x": -4990.137219318056,
-        "y": 8172.147534524967
+        "x": -4975.137219318056,
+        "y": 8142.147534524967
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3309,8 +3308,8 @@
       "id": "node_7zL9iBJE",
       "type": "calculation",
       "position": {
-        "x": -4507.999385134735,
-        "y": 7469.403724551365
+        "x": -4492.999385134735,
+        "y": 7439.403724551365
       },
       "data": {
         "functionName": "identity",
@@ -3342,8 +3341,8 @@
       "id": "node_0AGnBGsh",
       "type": "calculation",
       "position": {
-        "x": -4336.607357157197,
-        "y": 9748.122789610163
+        "x": -4321.607357157197,
+        "y": 9718.122789610163
       },
       "data": {
         "functionName": "tagged_hash",
@@ -3385,8 +3384,8 @@
       "id": "node_t8vhlGNP",
       "type": "calculation",
       "position": {
-        "x": -4864.879543490065,
-        "y": 9809.731060371814
+        "x": -4849.879543490065,
+        "y": 9779.731060371814
       },
       "data": {
         "functionName": "concat_all",
@@ -3442,8 +3441,8 @@
       "id": "node_XZuJhNqY",
       "type": "calculation",
       "position": {
-        "x": -5245.1503921086505,
-        "y": 9781.264243864785
+        "x": -5230.1503921086505,
+        "y": 9751.264243864785
       },
       "data": {
         "functionName": "identity",
@@ -3475,8 +3474,8 @@
       "id": "node_tRC1vOGf",
       "type": "calculation",
       "position": {
-        "x": -5245.137219318056,
-        "y": 10167.147534524971
+        "x": -5230.137219318056,
+        "y": 10137.147534524971
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3496,8 +3495,8 @@
       "id": "node_OVx0i7Fk",
       "type": "calculation",
       "position": {
-        "x": -4762.999385134735,
-        "y": 9464.403724551365
+        "x": -4747.999385134735,
+        "y": 9434.403724551365
       },
       "data": {
         "functionName": "identity",
@@ -3529,8 +3528,8 @@
       "id": "node_r2qfz4r",
       "type": "calculation",
       "position": {
-        "x": -2775.123127878058,
-        "y": 7459.7339373427285
+        "x": -2760.123127878058,
+        "y": 7429.7339373427285
       },
       "data": {
         "functionName": "taproot_tree_builder",
@@ -3630,8 +3629,8 @@
       "id": "node_R8F0IYnt",
       "type": "opCodeNode",
       "position": {
-        "x": -939.532820318763,
-        "y": 5175.194792003661
+        "x": -924.532820318763,
+        "y": 5145.194792003661
       },
       "data": {
         "functionName": "op_code_select",
@@ -3654,8 +3653,8 @@
       "id": "node_7yQ7Irpj",
       "type": "calculation",
       "position": {
-        "x": -377.8535550951654,
-        "y": 5252.0100350627645
+        "x": -362.8535550951654,
+        "y": 5222.0100350627645
       },
       "data": {
         "functionName": "concat_all",
@@ -3713,8 +3712,8 @@
       "id": "node_4lgDFRoG",
       "type": "calculation",
       "position": {
-        "x": -814.671952890081,
-        "y": 5628.234843520934
+        "x": -799.671952890081,
+        "y": 5598.234843520934
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3746,8 +3745,8 @@
       "id": "node_E140Wp35",
       "type": "calculation",
       "position": {
-        "x": -2509.4357946702376,
-        "y": 4970.446744721076
+        "x": -2494.4357946702376,
+        "y": 4940.446744721076
       },
       "data": {
         "functionName": "random_256",
@@ -3765,8 +3764,8 @@
       "id": "node_mD9xIqhD",
       "type": "calculation",
       "position": {
-        "x": -2213.153547504186,
-        "y": 4963.239843423783
+        "x": -2198.153547504186,
+        "y": 4933.239843423783
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -3798,8 +3797,8 @@
       "id": "node_oyTjsZHs",
       "type": "calculation",
       "position": {
-        "x": -1797.7835915227577,
-        "y": 5070.037829918386
+        "x": -1782.7835915227577,
+        "y": 5040.037829918386
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -3829,8 +3828,8 @@
       "id": "node_8ASFox6I",
       "type": "calculation",
       "position": {
-        "x": 1603.5662730837491,
-        "y": 18358.189477882654
+        "x": 1618.5662730837491,
+        "y": 18328.189477882654
       },
       "data": {
         "functionName": "identity",
@@ -3864,8 +3863,8 @@
       "id": "node_cn6tBb9d",
       "type": "calculation",
       "position": {
-        "x": 2356.9878798443046,
-        "y": 18549.874777870245
+        "x": 2371.9878798443046,
+        "y": 18519.874777870245
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -3897,8 +3896,8 @@
       "id": "node_6nHvg1NV",
       "type": "calculation",
       "position": {
-        "x": 870.1051815399067,
-        "y": 13924.5774389005
+        "x": 885.1051815399067,
+        "y": 13894.5774389005
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3920,8 +3919,8 @@
       "id": "node_v8suuZwM",
       "type": "calculation",
       "position": {
-        "x": 302.55845768096214,
-        "y": 18031.33521508525
+        "x": 317.55845768096214,
+        "y": 18001.33521508525
       },
       "data": {
         "functionName": "identity",
@@ -3955,8 +3954,8 @@
       "id": "node_kH6xv5X8",
       "type": "calculation",
       "position": {
-        "x": 621.827469371309,
-        "y": 18188.934460553523
+        "x": 636.827469371309,
+        "y": 18158.934460553523
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -3978,8 +3977,8 @@
       "id": "node_2YehErfL",
       "type": "opCodeNode",
       "position": {
-        "x": -956.9065589085208,
-        "y": 17375.708428885027
+        "x": -941.9065589085208,
+        "y": 17345.708428885027
       },
       "data": {
         "functionName": "op_code_select",
@@ -4002,8 +4001,8 @@
       "id": "node_zlkjloup",
       "type": "calculation",
       "position": {
-        "x": -395.2272936849234,
-        "y": 17452.52367194413
+        "x": -380.2272936849234,
+        "y": 17422.52367194413
       },
       "data": {
         "functionName": "concat_all",
@@ -4061,8 +4060,8 @@
       "id": "node_a2zv4PhL",
       "type": "calculation",
       "position": {
-        "x": -832.045691479839,
-        "y": 17828.7484804023
+        "x": -817.045691479839,
+        "y": 17798.7484804023
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -4094,8 +4093,8 @@
       "id": "node_UngrMRVZ",
       "type": "calculation",
       "position": {
-        "x": 1925.1510920575192,
-        "y": 19039.912163691697
+        "x": 1940.1510920575192,
+        "y": 19009.912163691697
       },
       "data": {
         "functionName": "identity",
@@ -4129,8 +4128,8 @@
       "id": "node_H4zivRL0",
       "type": "calculation",
       "position": {
-        "x": 1413.543673602452,
-        "y": 13709.793047643641
+        "x": 1428.543673602452,
+        "y": 13679.793047643641
       },
       "data": {
         "functionName": "concat_all",
@@ -4193,8 +4192,8 @@
       "id": "node_SLn2yjoG",
       "type": "calculation",
       "position": {
-        "x": 1819.465742292891,
-        "y": 15712.895007907127
+        "x": 1834.465742292891,
+        "y": 15682.895007907127
       },
       "data": {
         "functionName": "concat_all",
@@ -4249,8 +4248,8 @@
       "id": "node_Hc33hsaK",
       "type": "calculation",
       "position": {
-        "x": 1808.1716375962612,
-        "y": 16257.752504247781
+        "x": 1823.1716375962612,
+        "y": 16227.752504247781
       },
       "data": {
         "functionName": "concat_all",
@@ -4322,8 +4321,8 @@
       "id": "node_BI9S0zjY",
       "type": "calculation",
       "position": {
-        "x": 349.77069113828907,
-        "y": 17430.23455829482
+        "x": 364.77069113828907,
+        "y": 17400.23455829482
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4344,8 +4343,8 @@
       "id": "node_m7l86MTE",
       "type": "calculation",
       "position": {
-        "x": 559.2951819556176,
-        "y": 13571.847224787705
+        "x": 574.2951819556176,
+        "y": 13541.847224787705
       },
       "data": {
         "functionName": "identity",
@@ -4377,8 +4376,8 @@
       "id": "node_4BHFrvgM",
       "type": "calculation",
       "position": {
-        "x": -2525.7248159808805,
-        "y": 17173.129816160672
+        "x": -2510.7248159808805,
+        "y": 17143.129816160672
       },
       "data": {
         "functionName": "random_256",
@@ -4396,8 +4395,8 @@
       "id": "node_uuEAQKDU",
       "type": "calculation",
       "position": {
-        "x": -2230.5272860939435,
-        "y": 17163.75348030515
+        "x": -2215.5272860939435,
+        "y": 17133.75348030515
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -4429,8 +4428,8 @@
       "id": "node_7m77wriE",
       "type": "calculation",
       "position": {
-        "x": -1815.1573301125156,
-        "y": 17270.551466799752
+        "x": -1800.1573301125156,
+        "y": 17240.551466799752
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -4460,8 +4459,8 @@
       "id": "node_l3e6OMWd",
       "type": "calculation",
       "position": {
-        "x": 1348.3293872092952,
-        "y": 14698.505210011239
+        "x": 1363.3293872092952,
+        "y": 14668.505210011239
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -4483,8 +4482,8 @@
       "id": "node_WArxwHGv",
       "type": "calculation",
       "position": {
-        "x": 2512.534878860651,
-        "y": 14021.094342040287
+        "x": 2527.534878860651,
+        "y": 13991.094342040287
       },
       "data": {
         "functionName": "identity",
@@ -4516,8 +4515,8 @@
       "id": "node_T3OKyPs9",
       "type": "calculation",
       "position": {
-        "x": 2580.8949936109416,
-        "y": 14102.88327526571
+        "x": 2595.8949936109416,
+        "y": 14072.88327526571
       },
       "data": {
         "functionName": "identity",
@@ -4549,8 +4548,8 @@
       "id": "node_BTmvlgYa",
       "type": "calculation",
       "position": {
-        "x": 2662.9736632478266,
-        "y": 14175.583915565117
+        "x": 2677.9736632478266,
+        "y": 14145.583915565117
       },
       "data": {
         "functionName": "identity",
@@ -4582,8 +4581,8 @@
       "id": "node_yzicxkj3",
       "type": "calculation",
       "position": {
-        "x": 2320.84610219841,
-        "y": 14473.81843808479
+        "x": 2335.84610219841,
+        "y": 14443.81843808479
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4613,8 +4612,8 @@
       "id": "node_l8o7Nyc9",
       "type": "calculation",
       "position": {
-        "x": 1723.3601075826198,
-        "y": 14683.424496851365
+        "x": 1738.3601075826198,
+        "y": 14653.424496851365
       },
       "data": {
         "functionName": "concat_all",
@@ -4668,8 +4667,8 @@
       "id": "node_7HbdnECV",
       "type": "calculation",
       "position": {
-        "x": 2335.0033210098213,
-        "y": 14826.758953448358
+        "x": 2350.0033210098213,
+        "y": 14796.758953448358
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4699,8 +4698,8 @@
       "id": "node_nDKBzYbF",
       "type": "calculation",
       "position": {
-        "x": 2342.5695479611973,
-        "y": 15251.228062928256
+        "x": 2357.5695479611973,
+        "y": 15221.228062928256
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4730,8 +4729,8 @@
       "id": "node_DbzJHkVm",
       "type": "calculation",
       "position": {
-        "x": 2345.5882836247843,
-        "y": 15811.67504675966
+        "x": 2360.5882836247843,
+        "y": 15781.67504675966
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4761,8 +4760,8 @@
       "id": "node_GU9YPccM",
       "type": "calculation",
       "position": {
-        "x": 2419.136464875925,
-        "y": 16475.148912429016
+        "x": 2434.136464875925,
+        "y": 16445.148912429016
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4792,8 +4791,8 @@
       "id": "node_BlfZDt4t",
       "type": "calculation",
       "position": {
-        "x": 2016.5710720410016,
-        "y": 17559.950001129208
+        "x": 2031.5710720410016,
+        "y": 17529.950001129208
       },
       "data": {
         "functionName": "identity",
@@ -4827,8 +4826,8 @@
       "id": "node_TEiAmjNS",
       "type": "calculation",
       "position": {
-        "x": 2656.94296509706,
-        "y": 16022.546085264685
+        "x": 2671.94296509706,
+        "y": 15992.546085264685
       },
       "data": {
         "functionName": "identity",
@@ -4862,8 +4861,8 @@
       "id": "node_06sRsgDo",
       "type": "calculation",
       "position": {
-        "x": 3014.0664062722412,
-        "y": 15970.389794072917
+        "x": 3029.0664062722412,
+        "y": 15940.389794072917
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4884,8 +4883,8 @@
       "id": "node_pcRWyVg2",
       "type": "calculation",
       "position": {
-        "x": 3339.791871822725,
-        "y": 14297.624868055009
+        "x": 3354.791871822725,
+        "y": 14267.624868055009
       },
       "data": {
         "functionName": "concat_all",
@@ -5005,8 +5004,8 @@
       "id": "node_xwJcGv5B",
       "type": "calculation",
       "position": {
-        "x": 787.2779699468299,
-        "y": 15376.560522447207
+        "x": 802.2779699468299,
+        "y": 15346.560522447207
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5026,8 +5025,8 @@
       "id": "node_uN3cYOdn",
       "type": "calculation",
       "position": {
-        "x": -1732.0957812115187,
-        "y": 18115.831891781687
+        "x": -1717.0957812115187,
+        "y": 18085.831891781687
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -5070,8 +5069,8 @@
       "id": "node_37uGzB9s",
       "type": "calculation",
       "position": {
-        "x": 7652.691982843653,
-        "y": 15056.919333963868
+        "x": 7667.691982843653,
+        "y": 15026.919333963868
       },
       "data": {
         "functionName": "identity",
@@ -5103,8 +5102,8 @@
       "id": "node_gg8d7HZP",
       "type": "calculation",
       "position": {
-        "x": 7769.240655867401,
-        "y": 15452.751231490096
+        "x": 7784.240655867401,
+        "y": 15422.751231490096
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5125,8 +5124,8 @@
       "id": "node_AT7ve1ru",
       "type": "calculation",
       "position": {
-        "x": 4068.1649576074815,
-        "y": 14245.881189616748
+        "x": 4083.1649576074815,
+        "y": 14215.881189616748
       },
       "data": {
         "functionName": "identity",
@@ -5158,8 +5157,8 @@
       "id": "node_s8VBjsIp",
       "type": "calculation",
       "position": {
-        "x": 4654.2421723236,
-        "y": 14258.02008278332
+        "x": 4669.2421723236,
+        "y": 14228.02008278332
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5189,8 +5188,8 @@
       "id": "node_oKXGlVZY",
       "type": "calculation",
       "position": {
-        "x": 4354.926837381288,
-        "y": 14233.273601836894
+        "x": 4369.926837381288,
+        "y": 14203.273601836894
       },
       "data": {
         "functionName": "text_to_hex",
@@ -5221,8 +5220,8 @@
       "id": "node_DYjYkH1A",
       "type": "calculation",
       "position": {
-        "x": 5499.779975738771,
-        "y": 14714.175659853789
+        "x": 5514.779975738771,
+        "y": 14684.175659853789
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5252,8 +5251,8 @@
       "id": "node_PEB9oGki",
       "type": "calculation",
       "position": {
-        "x": 5993.350709628308,
-        "y": 14242.387955395365
+        "x": 6008.350709628308,
+        "y": 14212.387955395365
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -5307,8 +5306,8 @@
       "id": "node_VTKUMVTX",
       "type": "calculation",
       "position": {
-        "x": 4974.310839357397,
-        "y": 14471.396401715125
+        "x": 4989.310839357397,
+        "y": 14441.396401715125
       },
       "data": {
         "functionName": "concat_all",
@@ -5364,8 +5363,8 @@
       "id": "node_c9UHoF2s",
       "type": "calculation",
       "position": {
-        "x": 9783.164957607481,
-        "y": 14788.273601836894
+        "x": 9798.164957607481,
+        "y": 14758.273601836894
       },
       "data": {
         "functionName": "identity",
@@ -5397,8 +5396,8 @@
       "id": "node_Ixalmqg2",
       "type": "calculation",
       "position": {
-        "x": 10265.295278221467,
-        "y": 14803.856928664964
+        "x": 10280.295278221467,
+        "y": 14773.856928664964
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5420,8 +5419,8 @@
       "id": "node_MgrLvjA2",
       "type": "calculation",
       "position": {
-        "x": 10233.557201087588,
-        "y": 15151.732868113128
+        "x": 10248.557201087588,
+        "y": 15121.732868113128
       },
       "data": {
         "functionName": "identity",
@@ -5453,8 +5452,8 @@
       "id": "node_ifS3vFDs",
       "type": "calculation",
       "position": {
-        "x": 10309.014818595817,
-        "y": 15193.390787672042
+        "x": 10324.014818595817,
+        "y": 15163.390787672042
       },
       "data": {
         "functionName": "identity",
@@ -5486,8 +5485,8 @@
       "id": "node_L8RNmTqs",
       "type": "calculation",
       "position": {
-        "x": 9922.296776571977,
-        "y": 15453.314423712438
+        "x": 9937.296776571977,
+        "y": 15423.314423712438
       },
       "data": {
         "functionName": "identity",
@@ -5522,8 +5521,8 @@
       "id": "node_74GL1Qgh",
       "type": "calculation",
       "position": {
-        "x": 10284.449339994888,
-        "y": 15505.811236641757
+        "x": 10299.449339994888,
+        "y": 15475.811236641757
       },
       "data": {
         "functionName": "encode_varint",
@@ -5544,8 +5543,8 @@
       "id": "node_29m9R5l8",
       "type": "calculation",
       "position": {
-        "x": 9965.949911143001,
-        "y": 16636.500807325465
+        "x": 9980.949911143001,
+        "y": 16606.500807325465
       },
       "data": {
         "functionName": "identity",
@@ -5577,8 +5576,8 @@
       "id": "node_ohReHCBx",
       "type": "calculation",
       "position": {
-        "x": 10369.296138465532,
-        "y": 16694.784112302732
+        "x": 10384.296138465532,
+        "y": 16664.784112302732
       },
       "data": {
         "functionName": "encode_varint",
@@ -5599,8 +5598,8 @@
       "id": "node_36JRVycU",
       "type": "calculation",
       "position": {
-        "x": 12519.52376864362,
-        "y": 17203.929260803896
+        "x": 12534.52376864362,
+        "y": 17173.929260803896
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -5631,8 +5630,8 @@
       "id": "node_JeyrsNNW",
       "type": "calculation",
       "position": {
-        "x": 13013.74975932834,
-        "y": 17233.233710874516
+        "x": 13028.74975932834,
+        "y": 17203.233710874516
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -5653,8 +5652,8 @@
       "id": "node_HBY7tELR",
       "type": "calculation",
       "position": {
-        "x": 11375.40401141924,
-        "y": 15532.290673238002
+        "x": 11390.40401141924,
+        "y": 15502.290673238002
       },
       "data": {
         "functionName": "concat_all",
@@ -5854,8 +5853,8 @@
       "id": "node_xlsj74j",
       "type": "calculation",
       "position": {
-        "x": 12328.773050183034,
-        "y": 15617.74587898294
+        "x": 12343.773050183034,
+        "y": 15587.74587898294
       },
       "data": {
         "functionName": "script_verification",
@@ -6082,8 +6081,8 @@
       "id": "node_Xp2QSQ7v",
       "type": "calculation",
       "position": {
-        "x": 13985.000736152757,
-        "y": 18245.008594092702
+        "x": 14000.000736152757,
+        "y": 18215.008594092702
       },
       "data": {
         "functionName": "concat_all",
@@ -6283,8 +6282,8 @@
       "id": "node_Ap3GArXf",
       "type": "calculation",
       "position": {
-        "x": 14658.222929115334,
-        "y": 19490.008594092702
+        "x": 14673.222929115334,
+        "y": 19460.008594092702
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -6315,8 +6314,8 @@
       "id": "node_XMEEqBNt",
       "type": "calculation",
       "position": {
-        "x": 14991.871102795008,
-        "y": 19573.281056874235
+        "x": 15006.871102795008,
+        "y": 19543.281056874235
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -6337,8 +6336,8 @@
       "id": "node_mb1n9vf",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 9716.550154444223,
-        "y": 20790.10497606884
+        "x": 9731.550154444223,
+        "y": 20760.10497606884
       },
       "data": {
         "content": "# Exercises\n\n## Exercise 1 — Build a 5-Path Family Vault\n\n**Goal:** Create a Taproot address with 5 spending conditions and fund it.\n\n**Story:** Alice wants to secure her Bitcoin with backup options in case something happens to her. She sets up a vault where she can spend normally, but if she's unavailable, her spouse Bob can recover after 1 day, or they can spend together. For inheritance, her child Charlie gets access after 30 days, and the family lawyer Diana can settle the estate after 60 days.\n\n**Participants:** Alice (owner), Bob (spouse), Charlie (child), Diana (lawyer)\n\n**The 5 Leaves** (ordered rarest → most common):\n\n| Leaf | Script | Purpose |\n|------|--------|---------|\n| A | `<8640> OP_CSV OP_DROP <diana> OP_CHECKSIG` | Estate (~60 days) |\n| B | `<4320> OP_CSV OP_DROP <charlie> OP_CHECKSIG` | Inheritance (~30 days) |\n| C | `<144> OP_CSV OP_DROP <bob> OP_CHECKSIG` | Spouse recovery (~1 day) |\n| D | `<alice> OP_CHECKSIG <bob> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Joint decision |\n| E | `<alice> OP_CHECKSIG` | Daily spending |\n\nFund the generated address from faucet.\n\n---\n\n## Exercise 2 — Spend via Leaf E\n\n**Goal:** Spend from your vault using Alice's daily path (script-path spend).\n\nVerify, then broadcast to testnet.\n\n---\n\n**Bonus:** Before broadcasting, also build a spend via Leaf C (Bob's CSV path). Set sequence to satisfy the timelock and verify locally. ",
@@ -6353,8 +6352,8 @@
       "id": "node_8ob2oi6",
       "type": "calculation",
       "position": {
-        "x": 11172.484773027358,
-        "y": 2052.81045826189
+        "x": 11187.484773027358,
+        "y": 2022.8104582618898
       },
       "data": {
         "functionName": "concat_all",
@@ -6554,8 +6553,8 @@
       "id": "node_CLheMw8x",
       "type": "calculation",
       "position": {
-        "x": 11749.180534621057,
-        "y": 3108.839029813772
+        "x": 11764.180534621057,
+        "y": 3078.839029813772
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -6586,8 +6585,8 @@
       "id": "node_mBDZiB7s",
       "type": "calculation",
       "position": {
-        "x": 12120.879542821716,
-        "y": 2997.291219847867
+        "x": 12135.879542821716,
+        "y": 2967.291219847867
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -6608,8 +6607,8 @@
       "id": "node_lotxvoy",
       "type": "calculation",
       "position": {
-        "x": 4209.521881939528,
-        "y": 14986.984891214393
+        "x": 4224.521881939528,
+        "y": 14956.984891214393
       },
       "data": {
         "functionName": "concat_all",
@@ -6666,8 +6665,8 @@
       "id": "node_cny0vpb",
       "type": "calculation",
       "position": {
-        "x": 7970.644614767483,
-        "y": 15234.843442864007
+        "x": 7985.644614767483,
+        "y": 15204.843442864007
       },
       "data": {
         "functionName": "encode_varint",
@@ -6686,8 +6685,8 @@
       "id": "node_SsCZ9FnC",
       "type": "calculation",
       "position": {
-        "x": 7906.059891102168,
-        "y": 15724.607772448308
+        "x": 7921.059891102168,
+        "y": 15694.607772448308
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6708,8 +6707,8 @@
       "id": "node_1HdwUZ4g",
       "type": "calculation",
       "position": {
-        "x": 8178.218654356075,
-        "y": 16285.786709597365
+        "x": 8193.218654356075,
+        "y": 16255.786709597365
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6730,8 +6729,8 @@
       "id": "node_cttgxhy",
       "type": "calculation",
       "position": {
-        "x": 8606.770198367529,
-        "y": 15611.990472007665
+        "x": 8621.770198367529,
+        "y": 15581.990472007665
       },
       "data": {
         "functionName": "concat_all",
@@ -6829,8 +6828,8 @@
       "id": "node_jjr69iw",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -4573.806092928097,
-        "y": 513.865930681709
+        "x": -4558.806092928097,
+        "y": 483.86593068170896
       },
       "data": {
         "content": "# Script-Path Witness Structure\n\nWhen spending via script-path, the witness has 3 items instead of 1:\n\n| Item | Content |\n|------|---------|\n| 1 | Script arguments (signatures, etc.) |\n| 2 | The revealed script |\n| 3 | Control block |\n\n## Control Block\n\n```\n[leaf_version | parity] [internal_key_P] [merkle_path...]\n```\n\n- **First byte:** `c0` (even Y) or `c1` (odd Y) — tells verifier which Q to reconstruct\n- **Internal key P:** 32 bytes\n- **Merkle path:** 32 bytes per tree level (siblings needed to recompute root)\n\n## Sighash Change\n\n- Key-path: `SPEND_TYPE = 00`\n- Script-path: `SPEND_TYPE = 02`, plus append `tapleaf_hash || 00 || ffffffff`\n\n",
@@ -6845,8 +6844,8 @@
       "id": "node_iib2io9",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -6053.623562535618,
-        "y": 479.12974977014704
+        "x": -6038.623562535618,
+        "y": 449.12974977014704
       },
       "data": {
         "content": "# Lesson 12: Taproot Script-Path Spends\n\nLesson 11 used key-path — just a signature. Now we add scripts.\n\nThis lesson builds a 3-leaf inheritance tree and spends via script-path:\n\n1. Create tapleaves (tagged hash of version + script)\n2. Build Merkle tree (sort siblings, hash branches)  \n3. Tweak internal key with merkle root → output key Q\n4. Spend: reveal one script + control block + merkle proof\n5. Other leaves stay hidden forever\n\nCovers: OP_CHECKSIGADD, control block parity, script-path sighash (SPEND_TYPE = 02).",
@@ -6861,8 +6860,8 @@
       "id": "node_08vkzvs",
       "type": "calculation",
       "position": {
-        "x": -1470.1489900872932,
-        "y": 5322.868652466829
+        "x": -1455.1489900872932,
+        "y": 5292.868652466829
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -6918,8 +6917,8 @@
       "id": "node_09by8go",
       "type": "calculation",
       "position": {
-        "x": 7426.590520466392,
-        "y": 16462.624932728424
+        "x": 7441.590520466392,
+        "y": 16432.624932728424
       },
       "data": {
         "functionName": "concat_all",
@@ -6971,8 +6970,8 @@
       "id": "node_aq9pcci",
       "type": "calculation",
       "position": {
-        "x": 1957.7742462858455,
-        "y": 2156.0258088930204
+        "x": 1972.7742462858455,
+        "y": 2126.0258088930204
       },
       "data": {
         "functionName": "concat_all",
@@ -7034,8 +7033,8 @@
       "id": "node_093kds8",
       "type": "calculation",
       "position": {
-        "x": 1382.151963114942,
-        "y": 15260.71407830516
+        "x": 1397.151963114942,
+        "y": 15230.71407830516
       },
       "data": {
         "functionName": "concat_all",
@@ -7093,68 +7092,11 @@
       }
     },
     {
-      "id": "node_6zdfi45",
-      "type": "calculation",
-      "position": {
-        "x": -91.78321507924062,
-        "y": 827.4435480753061
-      },
-      "data": {
-        "functionName": "taproot_tweak_xonly_pubkey",
-        "title": "Taproot Tweak (X-only → Q)",
-        "paramExtraction": "multi_val",
-        "numInputs": 2,
-        "inputs": {
-          "vals": {
-            "0": "4ab5fa4705103ad2288e840a318222d3373979db00c62e7616b29f39f9833fe1",
-            "1": "__EMPTY__"
-          }
-        },
-        "outputPorts": [
-          {
-            "label": "Q (x-only)",
-            "handleId": ""
-          },
-          {
-            "label": "parity (c0/c1)",
-            "handleId": "output-1"
-          }
-        ],
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Internal X-only PubKey (32B hex):",
-              "rows": 2,
-              "placeholder": "<x-only pubkey>"
-            },
-            {
-              "index": 1,
-              "label": "Merkle Root (32B hex, optional):",
-              "rows": 2,
-              "placeholder": "leave empty for key-path only",
-              "allowEmptyBlank": true
-            }
-          ]
-        },
-        "groupInstances": {},
-        "result": "323cd997887e7ce80c0d16625dc6361f6c1ac7722ab27026d796b046fc3060cd",
-        "totalInputs": 2,
-        "unwiredCount": 0,
-        "dirty": false,
-        "outputValues": {
-          "output-1": "c0"
-        },
-        "error": false,
-        "borderColor": "#22c55e"
-      }
-    },
-    {
       "id": "node_unwrrma",
       "type": "calculation",
       "position": {
-        "x": 225,
-        "y": 195
+        "x": 240,
+        "y": 165
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -7210,8 +7152,8 @@
       "id": "node_a9ilzsu",
       "type": "calculation",
       "position": {
-        "x": -1450.508556202312,
-        "y": 17539.99656335932
+        "x": -1435.508556202312,
+        "y": 17509.99656335932
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -7260,6 +7202,50 @@
         "outputValues": {
           "output-1": "c0"
         },
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_stym5vj",
+      "type": "calculation",
+      "position": {
+        "x": 67.58198567011354,
+        "y": 851.2870753097023
+      },
+      "data": {
+        "functionName": "taproot_tweaked_privkey",
+        "title": "Taproot Tweak (PrivKey → q')",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "4ab5fa4705103ad2288e840a318222d3373979db00c62e7616b29f39f9833fe1",
+            "1": "__EMPTY__"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Internal Secret Key (32B hex):",
+              "rows": 2,
+              "placeholder": "<privkey hex>"
+            },
+            {
+              "index": 1,
+              "label": "Merkle Root (32B hex, optional):",
+              "rows": 2,
+              "placeholder": "leave empty for key-path only",
+              "allowEmptyBlank": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "result": "c7a20084d81c47dc843636803adfe522c344f893556635ecc27b420f21b30ac3",
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "error": false,
         "borderColor": "#22c55e"
       }
     }
@@ -8892,20 +8878,6 @@
       "selected": false
     },
     {
-      "source": "node_k5UzZVbd",
-      "target": "node_6zdfi45",
-      "targetHandle": "input-0",
-      "selected": false,
-      "id": "xy-edge__node_k5UzZVbd-node_6zdfi45input-0"
-    },
-    {
-      "source": "node_6zdfi45",
-      "target": "node_G52fvUCE",
-      "targetHandle": "input-0",
-      "selected": false,
-      "id": "xy-edge__node_6zdfi45-node_G52fvUCEinput-0"
-    },
-    {
       "source": "node_GfyLlA4A",
       "target": "node_unwrrma",
       "targetHandle": "input-0",
@@ -8939,6 +8911,22 @@
       "targetHandle": "input-0",
       "selected": false,
       "id": "xy-edge__node_7m77wriE-node_a9ilzsuinput-0"
+    },
+    {
+      "id": "edge_0qiyyul",
+      "source": "node_k5UzZVbd",
+      "target": "node_stym5vj",
+      "sourceHandle": null,
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "source": "node_stym5vj",
+      "target": "node_G52fvUCE",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_stym5vj-node_G52fvUCEinput-0",
+      "sourceHandle": null
     }
   ]
 }

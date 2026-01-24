@@ -37,3 +37,9 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 
 - Calculation UX improvements (removed input-completeness gating, stabilized script step UI, and connected-input display fixes).
 - ResizeObserver drag warnings in the canvas/text node.
+
+## [0.3.1] - 2026-01-24
+
+### Fixed
+
+- Lesson 12: fix Taproot tweak node wiring (wrong node).
