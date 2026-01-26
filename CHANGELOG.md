@@ -43,3 +43,9 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 ### Fixed
 
 - Lesson 12: fix Taproot tweak node wiring (wrong node).
+
+## [0.3.2] - 2026-01-26
+
+### Fixed
+
+- Lesson 12: update Taproot flow input transactions and amounts.
