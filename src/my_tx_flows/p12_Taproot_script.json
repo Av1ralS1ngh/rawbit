@@ -1,5 +1,5 @@
 {
-  "name": "flow-1769413218484",
+  "name": "flow-1769525880306",
   "schemaVersion": 1,
   "nodes": [
     {
@@ -16,7 +16,7 @@
         "dirty": false,
         "numInputs": 0,
         "groupInstances": {},
-        "result": "b76a9fed9a6989835b89d9258c59c09a483bedea747073ed5607e9bee2e5e23e",
+        "result": "357851e7c2ad52f276c94a06e7a778ac04421fc6e20dfc382b9367c95e08d644",
         "error": false,
         "borderColor": "#22c55e"
       }
@@ -33,7 +33,7 @@
         "title": "PrivKey → Even-Y PrivKey",
         "numInputs": 1,
         "inputs": {
-          "val": "b76a9fed9a6989835b89d9258c59c09a483bedea747073ed5607e9bee2e5e23e"
+          "val": "357851e7c2ad52f276c94a06e7a778ac04421fc6e20dfc382b9367c95e08d644"
         },
         "inputStructure": {
           "ungrouped": [
@@ -46,7 +46,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "489560126596767ca47626da73a63f647272eefc3ad82c4e69ca74cded505f03",
+        "result": "ca87ae183d52ad0d8936b5f918588752b66cbd1fcd3aa403943ef6c3722d6afd",
         "dirty": false,
         "error": false,
         "showComment": true,
@@ -66,7 +66,7 @@
         "title": "Even-Y PrivKey → X-only PubKey",
         "numInputs": 1,
         "inputs": {
-          "val": "489560126596767ca47626da73a63f647272eefc3ad82c4e69ca74cded505f03"
+          "val": "ca87ae183d52ad0d8936b5f918588752b66cbd1fcd3aa403943ef6c3722d6afd"
         },
         "inputStructure": {
           "ungrouped": [
@@ -79,7 +79,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "d861eacb571b3e95c278d1e48bef34527e16742b8aca424e8e9643abdd356bb8",
+        "result": "0782885a9f79ee25fac18d21a90fbd4d0aebf9ee7e962f505d3e143fb566d1c9",
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
@@ -243,13 +243,13 @@
         "functionName": "identity",
         "showField": true,
         "numInputs": 0,
-        "value": "100000",
+        "value": "130000",
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "100000"
+          "val": "130000"
         },
-        "result": "100000",
+        "result": "130000",
         "inputStructure": {
           "ungrouped": [
             {
@@ -283,69 +283,10 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": 100000
+          "val": 130000
         },
-        "result": "a086010000000000",
+        "result": "d0fb010000000000",
         "borderColor": "#22c55e",
-        "error": false
-      }
-    },
-    {
-      "id": "node_0zMUvfGS",
-      "type": "calculation",
-      "position": {
-        "x": -5358.551456526654,
-        "y": 5555.590237673505
-      },
-      "data": {
-        "functionName": "concat_all",
-        "paramExtraction": "multi_val",
-        "numInputs": 2,
-        "inputs": {
-          "vals": {
-            "0": "20",
-            "100": "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230",
-            "200": "ac"
-          }
-        },
-        "dirty": false,
-        "version": 0,
-        "result": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
-        "inputStructure": {
-          "afterGroups": [],
-          "groups": [
-            {
-              "baseIndex": 0,
-              "expandable": true,
-              "fieldCountToAdd": 1,
-              "fields": [
-                {
-                  "index": 0,
-                  "label": "Value:",
-                  "placeholder": "<multi‑line input>",
-                  "rows": 3
-                }
-              ],
-              "maxInstances": 25,
-              "minInstances": 1,
-              "title": "INPUTS[]"
-            }
-          ],
-          "ungrouped": []
-        },
-        "groupInstances": {
-          "INPUTS[]": 3
-        },
-        "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200]
-        },
-        "baseHeight": 80,
-        "title": "leaf A",
-        "borderColor": "#22c55e",
-        "totalInputs": 3,
-        "unwiredCount": 0,
-        "showComment": true,
-        "comment": "<owner> OP_CHECKSIG \nOwner spends anytime — normal path ",
         "error": false
       }
     },
@@ -353,8 +294,8 @@
       "id": "node_E6AVYtua",
       "type": "calculation",
       "position": {
-        "x": -5809.445311455181,
-        "y": 5701.7811685492225
+        "x": -5903.88248885896,
+        "y": 5863.673472669987
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -364,7 +305,7 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230"
+          "val": "c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750"
         },
         "result": "20",
         "inputStructure": {
@@ -465,7 +406,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+          "val": "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
         },
         "result": "40",
         "borderColor": "#eab308",
@@ -666,9 +607,9 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "02000000000101293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce5980100000000fdffffff01a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e031329288701401bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d900000000"
+          "val": "02000000000101d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a1002500100000000fdffffff01d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b0140b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e00000000"
         },
-        "result": "608f2c5f00f7115187b26264b09c6c7c284e41e1f5a4e1879cde771b4ae6991e",
+        "result": "fdec63f632c427fd1dcb20bbc4dc19efbbb6a996043170415728202b11f86d9f",
         "inputStructure": {
           "ungrouped": [
             {
@@ -697,9 +638,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "1e99e64a1b77de9c87e1a4f5e1414e287c6c9cb06462b2875111f7005f2c8f60",
+        "result": "9f6df8112b2028574170310496a9b6bbef19dcc4bb20cb1dfd27c432f663ecfd",
         "inputs": {
-          "val": "608f2c5f00f7115187b26264b09c6c7c284e41e1f5a4e1879cde771b4ae6991e"
+          "val": "fdec63f632c427fd1dcb20bbc4dc19efbbb6a996043170415728202b11f86d9f"
         },
         "borderColor": "#a855f7",
         "error": false
@@ -719,13 +660,13 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce598",
+            "0": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a100250",
             "10": "01000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce59801000000",
+        "result": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a10025001000000",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -839,14 +780,14 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "a086010000000000",
+            "0": "d0fb010000000000",
             "10": "22",
-            "20": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+            "20": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+        "result": "d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -916,22 +857,22 @@
             "10": "00",
             "20": "01",
             "30": "01",
-            "1000": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce598",
+            "1000": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a100250",
             "1010": "01000000",
             "1020": "__FORCE00__",
             "1030": "__EMPTY__",
             "1040": "fdffffff",
             "2000": "01",
-            "3000": "a086010000000000",
+            "3000": "d0fb010000000000",
             "3010": "22",
-            "3020": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
-            "5000": "01401bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9",
+            "3020": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
+            "5000": "0140b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e",
             "6000": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "02000000000101293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce5980100000000fdffffff01a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e031329288701401bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d900000000",
+        "result": "02000000000101d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a1002500100000000fdffffff01d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b0140b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e00000000",
         "inputStructure": {
           "afterGroups": [
             {
@@ -1114,7 +1055,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+          "val": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
         },
         "result": "22",
         "borderColor": "#22c55e",
@@ -1133,12 +1074,12 @@
         "title": "Previous TXID (from faucet)",
         "showField": true,
         "numInputs": 0,
-        "value": "98e5cc940aacaa11078f1ac06490581fe8372cb3738a1de2bc98b826cb123229",
+        "value": "5002103a92803ffb06c3521976705a81d47dee9aff2802be6a6a6f192fd339d9",
         "version": 0,
         "inputs": {
-          "val": "98e5cc940aacaa11078f1ac06490581fe8372cb3738a1de2bc98b826cb123229"
+          "val": "5002103a92803ffb06c3521976705a81d47dee9aff2802be6a6a6f192fd339d9"
         },
-        "result": "98e5cc940aacaa11078f1ac06490581fe8372cb3738a1de2bc98b826cb123229",
+        "result": "5002103a92803ffb06c3521976705a81d47dee9aff2802be6a6a6f192fd339d9",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1198,13 +1139,13 @@
       },
       "data": {
         "functionName": "identity",
-        "value": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+        "value": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
         "inputs": {
-          "val": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d"
+          "val": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929"
         },
         "dirty": false,
         "version": 0,
-        "result": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+        "result": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
         "groupInstances": {},
         "showField": true,
         "numInputs": 0,
@@ -1238,7 +1179,7 @@
         "dirty": false,
         "numInputs": 0,
         "groupInstances": {},
-        "result": "38dd79f13648aff04473597962e4e2597f1298214d9251513c3a5539f1e44eac",
+        "result": "7319550823d28a6167fb7d6a0cd2a9cc65e6d0430ef5fc8fdcca022cfed08658",
         "error": false,
         "borderColor": "#22c55e"
       }
@@ -1255,7 +1196,7 @@
         "title": "PrivKey → Even-Y PrivKey",
         "numInputs": 1,
         "inputs": {
-          "val": "38dd79f13648aff04473597962e4e2597f1298214d9251513c3a5539f1e44eac"
+          "val": "7319550823d28a6167fb7d6a0cd2a9cc65e6d0430ef5fc8fdcca022cfed08658"
         },
         "inputStructure": {
           "ungrouped": [
@@ -1268,7 +1209,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "38dd79f13648aff04473597962e4e2597f1298214d9251513c3a5539f1e44eac",
+        "result": "8ce6aaf7dc2d759e98048295f32d563254c80ca3a052a3abe3085c5fd165bae9",
         "dirty": false,
         "error": false,
         "showComment": false,
@@ -1288,7 +1229,7 @@
         "title": "Even-Y PrivKey → X-only PubKey",
         "numInputs": 1,
         "inputs": {
-          "val": "38dd79f13648aff04473597962e4e2597f1298214d9251513c3a5539f1e44eac"
+          "val": "8ce6aaf7dc2d759e98048295f32d563254c80ca3a052a3abe3085c5fd165bae9"
         },
         "inputStructure": {
           "ungrouped": [
@@ -1301,7 +1242,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230",
+        "result": "c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750",
         "dirty": false,
         "error": false,
         "showComment": false,
@@ -1347,16 +1288,16 @@
         "inputs": {
           "vals": {
             "0": "02",
-            "100": "9000",
+            "100": "e010",
             "200": "b275",
             "300": "20",
-            "400": "3524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05",
+            "400": "b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450",
             "500": "ac"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "029000b275203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ac",
+        "result": "02e010b27520b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450ac",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -1391,7 +1332,7 @@
         "totalInputs": 6,
         "unwiredCount": 0,
         "showComment": true,
-        "comment": " <144> OP_CSV OP_DROP <heir> OP_CHECKSIG\n Heir spends after ~1 day — recovery path ",
+        "comment": "<4320> OP_CSV OP_DROP <charlie> OP_CHECKSIG — Charlie (child) after ~30 days",
         "error": false
       }
     },
@@ -1410,7 +1351,7 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "3524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05"
+          "val": "b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450"
         },
         "result": "20",
         "inputStructure": {
@@ -1442,7 +1383,7 @@
         "dirty": false,
         "numInputs": 0,
         "groupInstances": {},
-        "result": "03e666389c29c82e8a0b3c921880f3c7a6a1f75a93cb4e14263ceb9e7f890f21",
+        "result": "542549c11723e689564e8b8cae08addc6e43f4c67e29b5d6d27791e0c34e1a22",
         "error": false,
         "borderColor": "#22c55e"
       }
@@ -1459,7 +1400,7 @@
         "title": "PrivKey → Even-Y PrivKey",
         "numInputs": 1,
         "inputs": {
-          "val": "03e666389c29c82e8a0b3c921880f3c7a6a1f75a93cb4e14263ceb9e7f890f21"
+          "val": "542549c11723e689564e8b8cae08addc6e43f4c67e29b5d6d27791e0c34e1a22"
         },
         "inputStructure": {
           "ungrouped": [
@@ -1472,7 +1413,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "03e666389c29c82e8a0b3c921880f3c7a6a1f75a93cb4e14263ceb9e7f890f21",
+        "result": "542549c11723e689564e8b8cae08addc6e43f4c67e29b5d6d27791e0c34e1a22",
         "dirty": false,
         "error": false,
         "showComment": true,
@@ -1492,7 +1433,7 @@
         "title": "Even-Y PrivKey → X-only PubKey",
         "numInputs": 1,
         "inputs": {
-          "val": "03e666389c29c82e8a0b3c921880f3c7a6a1f75a93cb4e14263ceb9e7f890f21"
+          "val": "542549c11723e689564e8b8cae08addc6e43f4c67e29b5d6d27791e0c34e1a22"
         },
         "inputStructure": {
           "ungrouped": [
@@ -1505,7 +1446,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "3524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05",
+        "result": "b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450",
         "dirty": false,
         "error": false,
         "showComment": true,
@@ -1527,9 +1468,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce598",
+        "result": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a100250",
         "inputs": {
-          "val": "98e5cc940aacaa11078f1ac06490581fe8372cb3738a1de2bc98b826cb123229"
+          "val": "5002103a92803ffb06c3521976705a81d47dee9aff2802be6a6a6f192fd339d9"
         },
         "borderColor": "#22c55e",
         "error": false
@@ -1546,13 +1487,13 @@
         "functionName": "identity",
         "showField": true,
         "numInputs": 0,
-        "value": "100386",
+        "value": "130293",
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "100386"
+          "val": "130293"
         },
-        "result": "100386",
+        "result": "130293",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1586,9 +1527,9 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": 100386
+          "val": 130293
         },
-        "result": "2288010000000000",
+        "result": "f5fc010000000000",
         "borderColor": "#22c55e",
         "error": false
       }
@@ -1705,9 +1646,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce59801000000"
+          "val": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a10025001000000"
         },
-        "result": "f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843",
+        "result": "a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5dee",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1737,11 +1678,11 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "2288010000000000"
+            "0": "f5fc010000000000"
           }
         },
         "version": 0,
-        "result": "2288010000000000",
+        "result": "f5fc010000000000",
         "inputStructure": {
           "groups": [
             {
@@ -1791,9 +1732,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "2288010000000000"
+          "val": "f5fc010000000000"
         },
-        "result": "d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc",
+        "result": "bc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1822,9 +1763,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "2251200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d"
+          "val": "225120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929"
         },
-        "result": "96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a",
+        "result": "f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1884,9 +1825,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+          "val": "d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
         },
-        "result": "999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef2",
+        "result": "991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa01",
         "inputStructure": {
           "ungrouped": [
             {
@@ -2046,9 +1987,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef20000000000"
+          "val": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5deebc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa010000000000"
         },
-        "result": "a3cec63a6280ad4baf790ad253c010ba668545b9de9d57b1f5770e64594da758",
+        "result": "a9a78a478cc2077c96bea4ad2ae9b89512f09b704dc9ea9dfab4d55757d71968",
         "inputStructure": {
           "ungrouped": [
             {
@@ -2078,8 +2019,8 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "716ff91d49293b4c420879ab307384effefd6408a68d930b9a9b17d7b4562b1d",
-            "1": "a3cec63a6280ad4baf790ad253c010ba668545b9de9d57b1f5770e64594da758",
+            "0": "c18526282b34e17eccbfa44b821d03e2c74f80c8c365e03fa10f24120a02f8d7",
+            "1": "a9a78a478cc2077c96bea4ad2ae9b89512f09b704dc9ea9dfab4d55757d71968",
             "2": "__EMPTY__"
           }
         },
@@ -2108,7 +2049,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9",
+        "result": "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e",
         "totalInputs": 3,
         "unwiredCount": 0,
         "dirty": false,
@@ -2135,7 +2076,7 @@
           "vals": {
             "0": "01",
             "1": "40",
-            "2": "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+            "2": "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
           }
         },
         "inputStructure": {
@@ -2163,7 +2104,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "01401bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9",
+        "result": "0140b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e",
         "baseHeight": 100,
         "totalInputs": 3,
         "unwiredCount": 0,
@@ -2187,9 +2128,9 @@
         "inputs": {
           "vals": {
             "0": "__EMPTY__",
-            "1": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
-            "2": "02000000000101293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce5980100000000fdffffff01a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e031329288701401bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d900000000",
-            "5": "100386"
+            "1": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
+            "2": "02000000000101d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a1002500100000000fdffffff01d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b0140b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e00000000",
+            "5": "130293"
           }
         },
         "inputStructure": {
@@ -2290,7 +2231,7 @@
               "stack_before": ["01"],
               "stack_after": [
                 "01",
-                "0a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d"
+                "c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929"
               ],
               "phase": "scriptPubKey"
             },
@@ -2300,10 +2241,10 @@
               "phase": "taproot",
               "step": "witness_stack",
               "stack_before": [
-                "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+                "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
               ],
               "stack_after": [
-                "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+                "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
               ]
             },
             {
@@ -2314,12 +2255,12 @@
               "sigversion": "tapsighash",
               "hashtype": 0,
               "hashtype_name": "DEFAULT",
-              "sighash": "a3cec63a6280ad4baf790ad253c010ba668545b9de9d57b1f5770e64594da758",
+              "sighash": "a9a78a478cc2077c96bea4ad2ae9b89512f09b704dc9ea9dfab4d55757d71968",
               "stack_before": [
-                "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+                "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
               ],
               "stack_after": [
-                "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+                "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
               ]
             },
             {
@@ -2327,19 +2268,19 @@
               "opcode_name": "taproot_schnorr_verify",
               "phase": "taproot",
               "step": "schnorr_verify",
-              "pubkey": "0a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
-              "signature": "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9",
+              "pubkey": "c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
+              "signature": "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e",
               "hashtype": 0,
               "hashtype_name": "DEFAULT",
               "result": true,
               "stack_before": [
-                "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+                "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
               ],
               "stack_after": ["01"]
             }
           ],
           "scriptSig": "",
-          "scriptPubKey": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+          "scriptPubKey": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
           "excludedFlags": [],
           "activeFlags": [
             "CHECKLOCKTIMEVERIFY",
@@ -2360,9 +2301,9 @@
             "WITNESS_PUBKEYTYPE"
           ],
           "usesWitness": true,
-          "amountUsed": 100386,
+          "amountUsed": 130293,
           "witnessStack": [
-            "1bdf29ac257da155ece4c0f5af43e7c2ba7949e80a885220783d0406087bb145e7d764abd90c52539edb4fd0775c009bad80c76f4dd4ff23d20b5e36377b71d9"
+            "b1b1a2eb6a9e356d71a12165146761b40f2f2272754f64b917cd8e4e2e7d422a695e3f929e10f319b0428814032be29a86a1c9dc2d32693ae556b48ff0b55b9e"
           ]
         }
       }
@@ -2381,7 +2322,7 @@
         "networkDependent": true,
         "selectedNetwork": "testnet",
         "inputs": {
-          "val": "0a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+          "val": "c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
           "selectedNetwork": "testnet"
         },
         "inputStructure": {
@@ -2395,7 +2336,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "tb1ppgg3zphvw5vl6m32axt440rve643qfmgagdvuvmwg5mlcfyvsdxsv6csur",
+        "result": "tb1pcczp5hsp9pujeqcf7ks5q637r4davpf6jdvnak9aj2qfcnz4ey5s5hqydu",
         "dirty": false,
         "error": false,
         "showComment": true,
@@ -2419,11 +2360,11 @@
           "vals": {
             "0": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031",
             "100": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031",
-            "200": "00000200000000000000f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef20000000000"
+            "200": "00000200000000000000a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5deebc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa010000000000"
           }
         },
         "version": 0,
-        "result": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef20000000000",
+        "result": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5deebc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa010000000000",
         "inputStructure": {
           "groups": [
             {
@@ -2535,11 +2476,11 @@
             "1": "00",
             "2": "02000000",
             "3": "00000000",
-            "4": "f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843",
-            "5": "d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc",
-            "6": "96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a",
+            "4": "a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5dee",
+            "5": "bc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0",
+            "6": "f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd",
             "7": "23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2",
-            "8": "999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef2",
+            "8": "991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa01",
             "9": "00",
             "10": "00000000"
           }
@@ -2627,7 +2568,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "00000200000000000000f56d9191824fcb02a43bc1221e7c1f6df8f0bdc2f62b2740912952d9b1a22843d80af6d01895f2ead534a466b1ad6575d6da87eb7353a1d5226e48425fdf11cc96781287ab3a7ce1f0c38810ad9ec17dfc2499c1d398a8cf0808a796cd65163a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2999df9318976f1c18e67468db47cc688341664f4c700ad326106b2b92011bef20000000000",
+        "result": "00000200000000000000a999427e762e09834039a747e71304541da7aca458075883fdf55243d96b5deebc0d9a4feb9533289d944a5da965e528b7a2268e333dfb6c0c5d3ca6c1f3e4b0f94c186777a76bd3e40c251165f8668be1256460488d219870c60e25bc4e52dd23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2991ec7e25cd3eefcfd8573ac060c425aa4cf1e390ee1c362ab92a99d79a7fa010000000000",
         "totalInputs": 11,
         "unwiredCount": 0,
         "dirty": false,
@@ -2646,10 +2587,10 @@
         "y": 506.84820476217624
       },
       "data": {
-        "content": "# Lesson 12: Taproot Script-Path & MAST\n\nIn Lesson 11, we spent P2TR outputs using the **key-path** — just a Schnorr signature, no scripts revealed.\n\nBut remember the tweak formula?\n\n`Q = P + H(P || merkle_root) · G`\n\nIn L11, we left `merkle_root` empty (BIP86). Now we'll put something there.\n\n---\n\n## Two Ways to Spend P2TR\n\n| Path | When to Use | Witness | Privacy |\n|------|-------------|---------|---------|\n| **Key-path** | Everyone agrees | `[signature]` | Perfect — looks like single-sig |\n| **Script-path** | Fallback / disputes | `[script_args] [script] [control_block]` | Reveals one script, hides others |\n\n---\n\n## What is MAST?\n\n**MAST = Merkleized Alternative Script Tree**\n\nInstead of one big script with all conditions (like P2WSH), you:\n\n1. Put each condition in a separate **leaf**\n2. Combine leaves into a **Merkle tree**\n3. Commit the **root** into the output key Q\n\nWhen spending via script-path:\n- Reveal only the leaf you're using\n- Provide sibling hashes to prove it's in the tree\n- Other leaves stay hidden forever\n\n---\n\n## What We'll Build\n\nA 3-leaf inheritance tree:\n```\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n| Leaf | Script | Use Case |\n|------|--------|----------|\n| A | `<owner> OP_CHECKSIG` | Owner spends anytime |\n| B | `<144> OP_CSV OP_DROP <heir> OP_CHECKSIG` | Heir after ~1 day |\n| C | `<owner> OP_CHECKSIG <heir> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Both agree |\n\nWe'll build this tree, fund it, and spend via leaf_A.",
+        "content": "# Lesson 12: Taproot Script-Path & MAST\n\nIn Lesson 11, we spent P2TR outputs using the **key-path** — just a Schnorr signature, no scripts revealed.\n\nNow we add a **script tree** for backup recovery options.\n\n---\n\n## Two Ways to Spend P2TR\n\n| Path | When to Use | Witness | Privacy |\n|------|-------------|---------|---------|\n| **Key-path** | Normal spend | `[signature]` | Best — looks like single-sig |\n| **Script-path** | Backup / recovery | `[args] [script] [control_block]` | Reveals one leaf, hides others |\n\n---\n\n## What is MAST?\n\n**MAST = Merkleized Alternative Script Tree**\n\nInstead of one big script with all conditions (like P2WSH), you:\n\n1. Put each condition in a separate **leaf**\n2. Combine leaves into a **Merkle tree**\n3. Commit the **root** into the output key Q\n\nWhen spending via script-path:\n- Reveal only the leaf you're using\n- Provide sibling hashes to prove it's in the tree\n- Other leaves stay hidden forever\n\n---\n\n## What We'll Build\n\nAlice's recovery vault with escalating timelocks:\n```\nInternal key P = Alice\n\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n| Path | Who | Delay | Script |\n|------|-----|-------|--------|\n| Key-path | Alice | None | — |\n| Leaf A | Bob (spouse) | ~1 day | `<144> OP_CSV <bob>` |\n| Leaf B | Charlie (child) | ~30 days | `<4320> OP_CSV <charlie>` |\n| Leaf C | Diana (lawyer) | ~60 days | `<8640> OP_CSV <diana>` |\n\nFlow 1 builds the tree and funds it.\nFlow 2 spends via Leaf A (Bob).",
         "fontSize": 28,
-        "width": 1331,
-        "height": 2124,
+        "width": 1267,
+        "height": 2076,
         "title": "Text Info Node",
         "dirty": false
       }
@@ -2667,7 +2608,7 @@
         "numInputs": 1,
         "groupInstances": {},
         "inputs": {
-          "val": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d"
+          "val": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929"
         },
         "result": "22",
         "dirty": false,
@@ -2683,10 +2624,10 @@
         "y": 5805.611035781647
       },
       "data": {
-        "content": "# Our 3-Leaf Inheritance Tree\n```\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n## The Three Spending Paths\n\n| Leaf | Script | Use Case |\n|------|--------|----------|\n| **A** | `<owner> OP_CHECKSIG` | Owner spends anytime — normal path |\n| **B** | `<144> OP_CSV OP_DROP <heir> OP_CHECKSIG` | Heir spends after ~1 day — recovery path |\n| **C** | `<owner> OP_CHECKSIG <heir> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Both sign — joint decision |\n\n## Privacy Benefit\n\nIf owner spends via **key-path** (just a signature), nobody knows these scripts exist.\n\nIf owner spends via **leaf A**, observers see leaf A but learn nothing about B or C — they only see two 32-byte hashes in the merkle path.\n",
+        "content": "# Alice's Recovery Vault\n```\nInternal key P = Alice\n\n           root\n          /    \\\n      branch    leaf_C\n      /    \\\n  leaf_A   leaf_B\n```\n\n## The 4 Spending Paths\n\n| Path | Who | Delay | Use Case |\n|------|-----|-------|----------|\n| **Key-path** | Alice | None | Daily spending (most private) |\n| **Leaf A** | Bob (spouse) | ~1 day | Spouse recovery |\n| **Leaf B** | Charlie (child) | ~30 days | Child inheritance |\n| **Leaf C** | Diana (lawyer) | ~60 days | Estate settlement |\n\n## Why Timelocks?\n\nAll backup paths have delays. If Alice is just traveling, she has time to spend before backups activate. If Alice is gone, family can eventually recover — closest family first.\n\n## Why Key-Path?\n\nAlice is the internal key. She can always spend via key-path:\n- Smallest witness (64 bytes)\n- Best privacy (no script revealed)\n- On-chain observers see only a single signature — no hint that backup options exist\n\n## Off-Chain vs On-Chain\n\nAlice shares the scripts and keys with Bob, Charlie, and Diana off-chain (e.g., in a safe, with a lawyer).\n\nOn-chain, nothing is revealed until someone spends via script-path. Even then, only the used leaf is exposed — the others stay hidden.",
         "fontSize": 28,
-        "width": 1577,
-        "height": 950,
+        "width": 1550,
+        "height": 1534,
         "title": "Text Info Node",
         "dirty": false
       }
@@ -2695,8 +2636,8 @@
       "id": "node_327GxrWb",
       "type": "opCodeNode",
       "position": {
-        "x": -5807.996268157163,
-        "y": 6125.646903551715
+        "x": -5913.018584277199,
+        "y": 6220.92459831534
       },
       "data": {
         "functionName": "op_code_select",
@@ -2727,12 +2668,12 @@
         "title": "delay in blocks",
         "showField": true,
         "numInputs": 0,
-        "value": "144",
+        "value": "4320",
         "version": 0,
         "inputs": {
-          "val": "144"
+          "val": "4320"
         },
-        "result": "144",
+        "result": "4320",
         "inputStructure": {
           "ungrouped": [
             {
@@ -2763,7 +2704,7 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "9000"
+          "val": "e010"
         },
         "result": "02",
         "inputStructure": {
@@ -2806,116 +2747,6 @@
       }
     },
     {
-      "id": "node_8TPcYr89",
-      "type": "calculation",
-      "position": {
-        "x": -5839.930225117877,
-        "y": 9413.226767175256
-      },
-      "data": {
-        "functionName": "concat_all",
-        "paramExtraction": "multi_val",
-        "numInputs": 2,
-        "inputs": {
-          "vals": {
-            "0": "20",
-            "100": "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230",
-            "200": "ac",
-            "300": "20",
-            "400": "3524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05",
-            "500": "ba529c"
-          }
-        },
-        "dirty": false,
-        "version": 0,
-        "result": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ba529c",
-        "inputStructure": {
-          "afterGroups": [],
-          "groups": [
-            {
-              "baseIndex": 0,
-              "expandable": true,
-              "fieldCountToAdd": 1,
-              "fields": [
-                {
-                  "index": 0,
-                  "label": "Value:",
-                  "placeholder": "<multi‑line input>",
-                  "rows": 3
-                }
-              ],
-              "maxInstances": 25,
-              "minInstances": 1,
-              "title": "INPUTS[]"
-            }
-          ],
-          "ungrouped": []
-        },
-        "groupInstances": {
-          "INPUTS[]": 6
-        },
-        "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300, 400, 500]
-        },
-        "baseHeight": 80,
-        "title": "leaf C",
-        "borderColor": "#22c55e",
-        "totalInputs": 6,
-        "unwiredCount": 0,
-        "showComment": true,
-        "comment": "<owner> OP_CHECKSIG <heir> OP_CHECKSIGADD 2 OP_NUMEQUAL \nBoth agree ",
-        "error": false
-      }
-    },
-    {
-      "id": "node_ZNl4dw4l",
-      "type": "opCodeNode",
-      "position": {
-        "x": -6304.657701672059,
-        "y": 9644.794059605822
-      },
-      "data": {
-        "functionName": "op_code_select",
-        "value": "ac",
-        "inputs": {
-          "val": "ac"
-        },
-        "dirty": false,
-        "version": 0,
-        "result": "ac",
-        "groupInstances": {},
-        "paramExtraction": "single_val",
-        "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_CHECKSIG"],
-        "borderColor": "#22c55e",
-        "error": false
-      }
-    },
-    {
-      "id": "node_tFEF5p5R",
-      "type": "opCodeNode",
-      "position": {
-        "x": -6403.273191114197,
-        "y": 10019.800190938437
-      },
-      "data": {
-        "functionName": "op_code_select",
-        "value": "ba529c",
-        "inputs": {
-          "val": "ba529c"
-        },
-        "dirty": false,
-        "version": 0,
-        "result": "ba529c",
-        "groupInstances": {},
-        "paramExtraction": "single_val",
-        "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_CHECKSIGADD", "OP_2", "OP_NUMEQUAL"],
-        "borderColor": "#22c55e",
-        "error": false
-      }
-    },
-    {
       "id": "node_ofy68ew",
       "type": "calculation",
       "position": {
@@ -2928,9 +2759,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": 144
+          "val": 4320
         },
-        "result": "9000",
+        "result": "e010",
         "inputStructure": {
           "ungrouped": [
             {
@@ -2978,7 +2809,7 @@
         "inputs": {
           "vals": {
             "0": "TapLeaf",
-            "1": "c0222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac"
+            "1": "c027029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac"
           }
         },
         "inputStructure": {
@@ -2997,7 +2828,7 @@
             }
           ]
         },
-        "result": "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
+        "result": "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
         "groupInstances": {},
         "totalInputs": 2,
         "unwiredCount": 0,
@@ -3021,12 +2852,12 @@
         "inputs": {
           "vals": {
             "0": "c0",
-            "100": "22",
-            "200": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac"
+            "100": "27",
+            "200": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac"
           }
         },
         "version": 0,
-        "result": "c0222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
+        "result": "c027029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
         "inputStructure": {
           "groups": [
             {
@@ -3109,9 +2940,9 @@
         "numInputs": 1,
         "groupInstances": {},
         "inputs": {
-          "val": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac"
+          "val": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac"
         },
-        "result": "22",
+        "result": "27",
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
@@ -3165,7 +2996,7 @@
         "inputs": {
           "vals": {
             "0": "TapLeaf",
-            "1": "c027029000b275203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ac"
+            "1": "c02702e010b27520b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450ac"
           }
         },
         "inputStructure": {
@@ -3184,7 +3015,7 @@
             }
           ]
         },
-        "result": "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba",
+        "result": "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6",
         "groupInstances": {},
         "totalInputs": 2,
         "unwiredCount": 0,
@@ -3209,11 +3040,11 @@
           "vals": {
             "0": "c0",
             "100": "27",
-            "200": "029000b275203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ac"
+            "200": "02e010b27520b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450ac"
           }
         },
         "version": 0,
-        "result": "c027029000b275203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ac",
+        "result": "c02702e010b27520b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450ac",
         "inputStructure": {
           "groups": [
             {
@@ -3296,7 +3127,7 @@
         "numInputs": 1,
         "groupInstances": {},
         "inputs": {
-          "val": "029000b275203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ac"
+          "val": "02e010b27520b1b48bceb9fa6e9a81d4b74c4ecaf4d87e9d8a7fffc52e3da8768f1a5d245450ac"
         },
         "result": "27",
         "dirty": false,
@@ -3352,7 +3183,7 @@
         "inputs": {
           "vals": {
             "0": "TapLeaf",
-            "1": "c0462064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ba529c"
+            "1": "c02702c021b27520488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4ac"
           }
         },
         "inputStructure": {
@@ -3371,7 +3202,7 @@
             }
           ]
         },
-        "result": "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+        "result": "887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba",
         "groupInstances": {},
         "totalInputs": 2,
         "unwiredCount": 0,
@@ -3395,12 +3226,12 @@
         "inputs": {
           "vals": {
             "0": "c0",
-            "100": "46",
-            "200": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ba529c"
+            "100": "27",
+            "200": "02c021b27520488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4ac"
           }
         },
         "version": 0,
-        "result": "c0462064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ba529c",
+        "result": "c02702c021b27520488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4ac",
         "inputStructure": {
           "groups": [
             {
@@ -3483,9 +3314,9 @@
         "numInputs": 1,
         "groupInstances": {},
         "inputs": {
-          "val": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac203524195c840bc6dee132c11e29a2d554ec5382bd4128d38be2d73cb5cf3b2e05ba529c"
+          "val": "02c021b27520488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4ac"
         },
-        "result": "46",
+        "result": "27",
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
@@ -3538,9 +3369,9 @@
         "numInputs": 1,
         "inputs": {
           "vals": {
-            "1000": "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
-            "1100": "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba",
-            "1200": "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+            "1000": "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
+            "1100": "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6",
+            "1200": "887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
           }
         },
         "taprootLeafIndex": 0,
@@ -3583,7 +3414,7 @@
         "groupInstanceKeys": {
           "LEAF_HASHES[]": [1000, 1100, 1200]
         },
-        "result": "33fae60e42155f64da2ed49f02e81cff0d913a2c526b43896a940e2acc6177ef",
+        "result": "399994123922ae7354d29ec931715af5f0ac8334e44f6bd16b8413b5a70c76d3",
         "totalInputs": 3,
         "unwiredCount": 0,
         "customFieldLabels": {
@@ -3594,32 +3425,32 @@
         },
         "dirty": false,
         "taprootTree": {
-          "root": "33fae60e42155f64da2ed49f02e81cff0d913a2c526b43896a940e2acc6177ef",
+          "root": "399994123922ae7354d29ec931715af5f0ac8334e44f6bd16b8413b5a70c76d3",
           "leafCount": 3,
           "leafHashes": [
-            "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
-            "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba",
-            "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+            "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
+            "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6",
+            "887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
           ],
           "leafLabels": ["A", "B", "C"],
           "paths": [
             [
-              "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba",
-              "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+              "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6",
+              "887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
             ],
             [
-              "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
-              "c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+              "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
+              "887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
             ],
-            ["3ffc5dd2061609fe55e7f26d800ac7e5336a32b5c276ac0e7b119584a33ddc1d"]
+            ["031665eaf4dfcbac93ea7967703fc2a9b962d7f366723545bd4f4ec0b318b91e"]
           ],
           "pathLabels": [["B", "C"], ["A", "C"], ["(A,B)"]],
           "structure": "((A,B),C)",
-          "display": "Tree:\n((A,B),C)\n\nLevels:\nL0: A  B  C\nL1: (A,B)  C\nL2: ((A,B),C)\n\nLeaves:\nA = 62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60\nB = a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba\nC = c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405\n\nPaths (labels):\nA: B, C\nB: A, C\nC: (A,B)\n\nPaths (hashes):\nA: a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332aba, c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405\nB: 62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60, c9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405\nC: 3ffc5dd2061609fe55e7f26d800ac7e5336a32b5c276ac0e7b119584a33ddc1d"
+          "display": "Tree:\n((A,B),C)\n\nLevels:\nL0: A  B  C\nL1: (A,B)  C\nL2: ((A,B),C)\n\nLeaves:\nA = 9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d\nB = 4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6\nC = 887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba\n\nPaths (labels):\nA: B, C\nB: A, C\nC: (A,B)\n\nPaths (hashes):\nA: 4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6, 887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba\nB: 9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d, 887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba\nC: 031665eaf4dfcbac93ea7967703fc2a9b962d7f366723545bd4f4ec0b318b91e"
         },
         "error": false,
         "outputValues": {
-          "output-1": "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+          "output-1": "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
         },
         "showComment": false,
         "borderColor": "#22c55e"
@@ -3664,12 +3495,12 @@
           "vals": {
             "0": "51",
             "100": "20",
-            "200": "0e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+            "200": "147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+        "result": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -3723,7 +3554,7 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "0e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+          "val": "147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
         },
         "result": "20",
         "inputStructure": {
@@ -3755,7 +3586,7 @@
         "dirty": false,
         "numInputs": 0,
         "groupInstances": {},
-        "result": "de88fb69b046b4116290f1f9b818966729a523a147f988a559e046c9d5528419",
+        "result": "144143b4aa43b23509f9e366875d76aba6a859aeebee77d925e3cef6a07dfefd",
         "error": false,
         "borderColor": "#22c55e"
       }
@@ -3772,7 +3603,7 @@
         "title": "PrivKey → Even-Y PrivKey",
         "numInputs": 1,
         "inputs": {
-          "val": "de88fb69b046b4116290f1f9b818966729a523a147f988a559e046c9d5528419"
+          "val": "144143b4aa43b23509f9e366875d76aba6a859aeebee77d925e3cef6a07dfefd"
         },
         "inputStructure": {
           "ungrouped": [
@@ -3785,7 +3616,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "de88fb69b046b4116290f1f9b818966729a523a147f988a559e046c9d5528419",
+        "result": "ebbebc4b55bc4dcaf6061c9978a2895314068337c35a286299ee8f962fb84244",
         "dirty": false,
         "error": false,
         "showComment": false,
@@ -3805,7 +3636,7 @@
         "title": "Even-Y PrivKey → X-only PubKey",
         "numInputs": 1,
         "inputs": {
-          "val": "de88fb69b046b4116290f1f9b818966729a523a147f988a559e046c9d5528419"
+          "val": "ebbebc4b55bc4dcaf6061c9978a2895314068337c35a286299ee8f962fb84244"
         },
         "inputStructure": {
           "ungrouped": [
@@ -3818,78 +3649,10 @@
           ]
         },
         "groupInstances": {},
-        "result": "3686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601f",
+        "result": "8a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a8127",
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
-      }
-    },
-    {
-      "id": "node_8ASFox6I",
-      "type": "calculation",
-      "position": {
-        "x": 1588.5662730837491,
-        "y": 18328.189477882654
-      },
-      "data": {
-        "functionName": "identity",
-        "showField": true,
-        "numInputs": 0,
-        "value": "fffffffd",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "fffffffd"
-        },
-        "result": "fffffffd",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "INPUT VALUE:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "title": "Sequence",
-        "borderColor": "#22c55e",
-        "showComment": true,
-        "comment": "RBF enabled (< 0xfffffffe)",
-        "error": false
-      }
-    },
-    {
-      "id": "node_cn6tBb9d",
-      "type": "calculation",
-      "position": {
-        "x": 2341.9878798443046,
-        "y": 18519.874777870245
-      },
-      "data": {
-        "functionName": "reverse_bytes_4",
-        "title": "4-Byte → Reversed",
-        "numInputs": 1,
-        "showField": false,
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "fffffffd"
-        },
-        "result": "fdffffff",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "4-byte hex:",
-              "placeholder": "e.g., fffffffd",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#22c55e",
-        "error": false
       }
     },
     {
@@ -3926,13 +3689,13 @@
         "functionName": "identity",
         "showField": true,
         "numInputs": 0,
-        "value": "99000",
+        "value": "129500",
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "99000"
+          "val": "129500"
         },
-        "result": "99000",
+        "result": "129500",
         "inputStructure": {
           "ungrouped": [
             {
@@ -3966,9 +3729,9 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": 99000
+          "val": 129500
         },
-        "result": "b882010000000000",
+        "result": "dcf9010000000000",
         "borderColor": "#22c55e",
         "error": false
       }
@@ -4012,12 +3775,12 @@
           "vals": {
             "0": "51",
             "100": "20",
-            "200": "fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b"
+            "200": "78b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "5120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b",
+        "result": "512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -4071,7 +3834,7 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b"
+          "val": "78b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8"
         },
         "result": "20",
         "inputStructure": {
@@ -4138,13 +3901,13 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe",
+            "0": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d403482",
             "10": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe00000000",
+        "result": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -4202,12 +3965,12 @@
         "numInputs": 1,
         "inputs": {
           "vals": {
-            "0": "fdffffff"
+            "0": "90000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "fdffffff",
+        "result": "90000000",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -4258,14 +4021,14 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "b882010000000000",
+            "0": "dcf9010000000000",
             "10": "22",
-            "20": "5120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b"
+            "20": "512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b",
+        "result": "dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8",
         "inputStructure": {
           "afterGroups": [],
           "groups": [
@@ -4332,7 +4095,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "5120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b"
+          "val": "512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8"
         },
         "result": "22",
         "borderColor": "#22c55e",
@@ -4386,7 +4149,7 @@
         "dirty": false,
         "numInputs": 0,
         "groupInstances": {},
-        "result": "cb4d9f087ed5f26d95e2babf29a6783f3906630a67a9d9f2bc1779ead5e5f6e0",
+        "result": "7a67fb8af8eb89d1354982c7c14426bc1f74fbc44be6c4fcb6c9875ca3a56c6b",
         "error": false,
         "borderColor": "#22c55e"
       }
@@ -4403,7 +4166,7 @@
         "title": "PrivKey → Even-Y PrivKey",
         "numInputs": 1,
         "inputs": {
-          "val": "cb4d9f087ed5f26d95e2babf29a6783f3906630a67a9d9f2bc1779ead5e5f6e0"
+          "val": "7a67fb8af8eb89d1354982c7c14426bc1f74fbc44be6c4fcb6c9875ca3a56c6b"
         },
         "inputStructure": {
           "ungrouped": [
@@ -4416,7 +4179,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "34b260f7812a0d926a1d4540d65987bf81a879dc479ec64903bae4a1fa504a61",
+        "result": "859804750714762ecab67d383ebbd9429b39e1226361db3f0908d7302c90d4d6",
         "dirty": false,
         "error": false,
         "showComment": true,
@@ -4436,7 +4199,7 @@
         "title": "Even-Y PrivKey → X-only PubKey",
         "numInputs": 1,
         "inputs": {
-          "val": "34b260f7812a0d926a1d4540d65987bf81a879dc479ec64903bae4a1fa504a61"
+          "val": "859804750714762ecab67d383ebbd9429b39e1226361db3f0908d7302c90d4d6"
         },
         "inputStructure": {
           "ungrouped": [
@@ -4449,7 +4212,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "e2960945170270d7accc886b05df2abe66df855f5bb9b3a1b7666931797faa36",
+        "result": "231920184de5bb6c97452538478da251651648070c23eb31a8b34ce94edd36af",
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
@@ -4471,9 +4234,9 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": 100000
+          "val": 130000
         },
-        "result": "a086010000000000",
+        "result": "d0fb010000000000",
         "borderColor": "#22c55e",
         "error": false
       }
@@ -4590,9 +4353,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe00000000"
+          "val": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000"
         },
-        "result": "011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41",
+        "result": "3139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a",
         "inputStructure": {
           "ungrouped": [
             {
@@ -4622,11 +4385,11 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "a086010000000000"
+            "0": "d0fb010000000000"
           }
         },
         "version": 0,
-        "result": "a086010000000000",
+        "result": "d0fb010000000000",
         "inputStructure": {
           "groups": [
             {
@@ -4676,9 +4439,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "a086010000000000"
+          "val": "d0fb010000000000"
         },
-        "result": "184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b0270",
+        "result": "891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a0",
         "inputStructure": {
           "ungrouped": [
             {
@@ -4707,9 +4470,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "2251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+          "val": "225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
         },
-        "result": "55e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a",
+        "result": "4e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde5889",
         "inputStructure": {
           "ungrouped": [
             {
@@ -4738,9 +4501,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "fdffffff"
+          "val": "90000000"
         },
-        "result": "23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2",
+        "result": "0e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da",
         "inputStructure": {
           "ungrouped": [
             {
@@ -4769,9 +4532,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b"
+          "val": "dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8"
         },
-        "result": "c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6",
+        "result": "6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b55",
         "inputStructure": {
           "ungrouped": [
             {
@@ -4897,11 +4660,11 @@
             "1": "00",
             "2": "02000000",
             "3": "00000000",
-            "4": "011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41",
-            "5": "184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b0270",
-            "6": "55e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a",
-            "7": "23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2",
-            "8": "c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6",
+            "4": "3139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a",
+            "5": "891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a0",
+            "6": "4e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde5889",
+            "7": "0e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da",
+            "8": "6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b55",
             "9": "02",
             "10": "00000000"
           }
@@ -4989,7 +4752,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "00000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def60200000000",
+        "result": "000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b550200000000",
         "totalInputs": 11,
         "unwiredCount": 0,
         "dirty": false,
@@ -5013,7 +4776,7 @@
         "numInputs": 1,
         "groupInstances": {},
         "inputs": {
-          "val": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+          "val": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
         },
         "result": "22",
         "dirty": false,
@@ -5035,7 +4798,7 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "34b260f7812a0d926a1d4540d65987bf81a879dc479ec64903bae4a1fa504a61",
+            "0": "859804750714762ecab67d383ebbd9429b39e1226361db3f0908d7302c90d4d6",
             "1": "__EMPTY__"
           }
         },
@@ -5057,7 +4820,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "5b298074f77e26d7ca42f1d5adb60740f0bc70f6419833c79573b4e00a2cfa4e",
+        "result": "72db6ee4c385f54e221d6bc27137f63a69f007c36adfb8b8a83bffb6d4bdb5ad",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
@@ -5113,7 +4876,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5"
+          "val": "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
         },
         "result": "40",
         "borderColor": "#eab308",
@@ -5229,9 +4992,9 @@
         "numInputs": 1,
         "version": 0,
         "inputs": {
-          "val": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6020000000062dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c6000ffffffff"
+          "val": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b5502000000009f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d00ffffffff"
         },
-        "result": "f3649d9cb403e49d38c32d83a231be30976895a1cc5bb16b4f472b6017fb653a",
+        "result": "c7cca24931ce0cdfb91206ec2687084c9f33d1e3f81a39e9855077e0cd90c687",
         "inputStructure": {
           "ungrouped": [
             {
@@ -5261,8 +5024,8 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "38dd79f13648aff04473597962e4e2597f1298214d9251513c3a5539f1e44eac",
-            "1": "f3649d9cb403e49d38c32d83a231be30976895a1cc5bb16b4f472b6017fb653a",
+            "0": "8ce6aaf7dc2d759e98048295f32d563254c80ca3a052a3abe3085c5fd165bae9",
+            "1": "c7cca24931ce0cdfb91206ec2687084c9f33d1e3f81a39e9855077e0cd90c687",
             "2": "__EMPTY__"
           }
         },
@@ -5291,7 +5054,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
+        "result": "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
         "totalInputs": 3,
         "unwiredCount": 0,
         "dirty": false,
@@ -5318,11 +5081,11 @@
           "vals": {
             "0": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031",
             "100": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031",
-            "200": "00000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6020000000062dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c6000ffffffff"
+            "200": "000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b5502000000009f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d00ffffffff"
           }
         },
         "version": 0,
-        "result": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a03100000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6020000000062dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c6000ffffffff",
+        "result": "f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031f40a48df4b2a70c8b4924bf2654661ed3d95fd66a313eb87237597c628e4a031000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b5502000000009f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d00ffffffff",
         "inputStructure": {
           "groups": [
             {
@@ -5609,9 +5372,9 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "02000000000101d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe0000000000fdffffff01b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b03406d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac61c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf7740500000000"
+          "val": "02000000000101bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000009000000001dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be80340ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a27029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac61c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba00000000"
         },
-        "result": "a3c66bcafa9a4fd0d1d98557dcf291a463fc2872f35291571ac2c30d76a1c711",
+        "result": "22eafd41bb660047b34eee71404d39257727034753866447c3da69bbb5779ec1",
         "inputStructure": {
           "ungrouped": [
             {
@@ -5640,9 +5403,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "11c7a1760dc3c21a579152f37228fc63a491f2dc5785d9d1d04f9afaca6bc6a3",
+        "result": "c19e77b5bb69dac3476486534703277725394d4071ee4eb3470066bb41fdea22",
         "inputs": {
-          "val": "a3c66bcafa9a4fd0d1d98557dcf291a463fc2872f35291571ac2c30d76a1c711"
+          "val": "22eafd41bb660047b34eee71404d39257727034753866447c3da69bbb5779ec1"
         },
         "borderColor": "#a855f7",
         "error": false
@@ -5666,22 +5429,22 @@
             "10": "00",
             "20": "01",
             "30": "01",
-            "1000": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe",
+            "1000": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d403482",
             "1010": "00000000",
             "1020": "__FORCE00__",
             "1030": "__EMPTY__",
-            "1040": "fdffffff",
+            "1040": "90000000",
             "2000": "01",
-            "3000": "b882010000000000",
+            "3000": "dcf9010000000000",
             "3010": "22",
-            "3020": "5120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b",
-            "5000": "03406d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac61c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+            "3020": "512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8",
+            "5000": "0340ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a27029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac61c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba",
             "6000": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "02000000000101d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe0000000000fdffffff01b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b03406d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac61c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf7740500000000",
+        "result": "02000000000101bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000009000000001dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be80340ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a27029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac61c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba00000000",
         "inputStructure": {
           "afterGroups": [
             {
@@ -5864,12 +5627,12 @@
         "inputs": {
           "vals": {
             "0": "__EMPTY__",
-            "1": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
-            "2": "02000000000101d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe0000000000fdffffff01b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b03406d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac61c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf7740500000000",
+            "1": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
+            "2": "02000000000101bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000009000000001dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be80340ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a27029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac61c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba00000000",
             "3": "0",
             "5": "__EMPTY__",
-            "100": "100000",
-            "101": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+            "100": "130000",
+            "101": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
           }
         },
         "inputStructure": {
@@ -5974,7 +5737,7 @@
               "stack_before": ["01"],
               "stack_after": [
                 "01",
-                "0e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+                "147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
               ],
               "phase": "scriptPubKey"
             },
@@ -5984,14 +5747,14 @@
               "phase": "taproot",
               "step": "witness_stack",
               "stack_before": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-                "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
-                "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
+                "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
               ],
               "stack_after": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-                "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
-                "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
+                "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
               ]
             },
             {
@@ -5999,12 +5762,12 @@
               "opcode_name": "witness_script",
               "phase": "witnessScript",
               "step": "witness_script",
-              "script_hex": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
+              "script_hex": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
               "stack_before": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
               ],
               "stack_after": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
               ]
             },
             {
@@ -6013,40 +5776,80 @@
               "phase": "taproot",
               "step": "control_block",
               "leaf_version": 192,
-              "tapleaf_hash": "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
-              "merkle_root": "33fae60e42155f64da2ed49f02e81cff0d913a2c526b43896a940e2acc6177ef",
-              "internal_pubkey": "3686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601f",
-              "tweaked_pubkey": "0e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+              "tapleaf_hash": "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
+              "merkle_root": "399994123922ae7354d29ec931715af5f0ac8334e44f6bd16b8413b5a70c76d3",
+              "internal_pubkey": "8a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a8127",
+              "tweaked_pubkey": "147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
               "parity": false,
               "result": true
             },
             {
               "pc": 0,
-              "opcode": 32,
+              "opcode": 2,
               "opcode_name": "unknown opcode",
               "stack_before": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
               ],
               "stack_after": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-                "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "9000"
               ],
               "phase": "witnessScript"
             },
             {
-              "pc": 33,
+              "pc": 3,
+              "opcode": 178,
+              "opcode_name": "OP_CHECKSEQUENCEVERIFY",
+              "stack_before": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "9000"
+              ],
+              "stack_after": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "9000"
+              ],
+              "phase": "witnessScript"
+            },
+            {
+              "pc": 4,
+              "opcode": 117,
+              "opcode_name": "OP_DROP",
+              "stack_before": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "9000"
+              ],
+              "stack_after": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
+              ],
+              "phase": "witnessScript"
+            },
+            {
+              "pc": 5,
+              "opcode": 32,
+              "opcode_name": "unknown opcode",
+              "stack_before": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a"
+              ],
+              "stack_after": [
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750"
+              ],
+              "phase": "witnessScript"
+            },
+            {
+              "pc": 38,
               "opcode": 172,
               "opcode_name": "OP_CHECKSIG",
               "stack_before": [
-                "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-                "64302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230"
+                "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+                "c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750"
               ],
               "stack_after": ["01"],
               "phase": "witnessScript"
             }
           ],
           "scriptSig": "",
-          "scriptPubKey": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+          "scriptPubKey": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
           "excludedFlags": [],
           "activeFlags": [
             "CHECKLOCKTIMEVERIFY",
@@ -6067,13 +5870,13 @@
             "WITNESS_PUBKEYTYPE"
           ],
           "usesWitness": true,
-          "amountUsed": 100000,
+          "amountUsed": 130000,
           "witnessStack": [
-            "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-            "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
-            "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+            "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+            "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
+            "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
           ],
-          "witnessScript": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac"
+          "witnessScript": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac"
         }
       }
     },
@@ -6095,22 +5898,22 @@
             "10": "__EMPTY__",
             "20": "__EMPTY__",
             "30": "01",
-            "1000": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe",
+            "1000": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d403482",
             "1010": "00000000",
             "1020": "__FORCE00__",
             "1030": "__EMPTY__",
-            "1040": "fdffffff",
+            "1040": "90000000",
             "2000": "01",
-            "3000": "b882010000000000",
+            "3000": "dcf9010000000000",
             "3010": "22",
-            "3020": "5120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b",
+            "3020": "512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8",
             "5000": "__EMPTY__",
             "6000": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "0200000001d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe0000000000fdffffff01b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b00000000",
+        "result": "0200000001bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000009000000001dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be800000000",
         "inputStructure": {
           "afterGroups": [
             {
@@ -6293,9 +6096,9 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "0200000001d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe0000000000fdffffff01b882010000000000225120fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b00000000"
+          "val": "0200000001bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d40348200000000009000000001dcf901000000000022512078b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be800000000"
         },
-        "result": "0b2d10f437b8e2008d4f42ce579db2a64c9ff975d51fe282b384c9a875a0d439",
+        "result": "e727d748b1c358e2fda90b645255a2e60c26ec66839672257d3e57c08ed05c25",
         "inputStructure": {
           "ungrouped": [
             {
@@ -6324,9 +6127,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "39d4a075a8c984b382e21fd575f99f4ca6b29d57ce424f8d00e2b837f4102d0b",
+        "result": "255cd08ec0573e7d2572968366ec260ce6a25552640ba9fde258c3b148d727e7",
         "inputs": {
-          "val": "0b2d10f437b8e2008d4f42ce579db2a64c9ff975d51fe282b384c9a875a0d439"
+          "val": "e727d748b1c358e2fda90b645255a2e60c26ec66839672257d3e57c08ed05c25"
         },
         "borderColor": "#a855f7",
         "error": false
@@ -6340,10 +6143,10 @@
         "y": 20760.10497606884
       },
       "data": {
-        "content": "# Exercises\n\n## Exercise 1 — Build a 5-Path Family Vault\n\n**Goal:** Create a Taproot address with 5 spending conditions and fund it.\n\n**Story:** Alice wants to secure her Bitcoin with backup options in case something happens to her. She sets up a vault where she can spend normally, but if she's unavailable, her spouse Bob can recover after 1 day, or they can spend together. For inheritance, her child Charlie gets access after 30 days, and the family lawyer Diana can settle the estate after 60 days.\n\n**Participants:** Alice (owner), Bob (spouse), Charlie (child), Diana (lawyer)\n\n**The 5 Leaves** (ordered rarest → most common):\n\n| Leaf | Script | Purpose |\n|------|--------|---------|\n| A | `<8640> OP_CSV OP_DROP <diana> OP_CHECKSIG` | Estate (~60 days) |\n| B | `<4320> OP_CSV OP_DROP <charlie> OP_CHECKSIG` | Inheritance (~30 days) |\n| C | `<144> OP_CSV OP_DROP <bob> OP_CHECKSIG` | Spouse recovery (~1 day) |\n| D | `<alice> OP_CHECKSIG <bob> OP_CHECKSIGADD 2 OP_NUMEQUAL` | Joint decision |\n| E | `<alice> OP_CHECKSIG` | Daily spending |\n\nFund the generated address from faucet.\n\n---\n\n## Exercise 2 — Spend via Leaf E\n\n**Goal:** Spend from your vault using Alice's daily path (script-path spend).\n\nVerify, then broadcast to testnet.\n\n---\n\n**Bonus:** Before broadcasting, also build a spend via Leaf C (Bob's CSV path). Set sequence to satisfy the timelock and verify locally. ",
+        "content": "# Exercises\n\n## Exercise 1 — Key-Path Spend (Alice)\n\n**Goal:** Spend the vault using Alice's key-path instead of script-path.\n\nBuild a new spending flow:\n- Sign with Alice's tweaked private key\n- SPEND_TYPE = 00\n- Witness: just `[signature]` (64 bytes)\n\nCompare witness size to Flow 2 (~200 bytes). Notice: no script revealed.\n\n---\n\n## Exercise 2 — Spend via Leaf C (Diana)\n\n**Goal:** Diana recovers after the 60-day timelock.\n\n- Set nSequence ≥ 8640\n- Sign with Diana's key\n- Observe the shorter merkle path in the control block (1 hash instead of 2)\n\nVerify locally.",
         "fontSize": 28,
-        "width": 1348,
-        "height": 1416,
+        "width": 911,
+        "height": 1011,
         "title": "Text Info Node",
         "dirty": false
       }
@@ -6366,21 +6169,21 @@
             "10": "__EMPTY__",
             "20": "__EMPTY__",
             "30": "01",
-            "1000": "293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce598",
+            "1000": "d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a100250",
             "1010": "01000000",
             "1020": "__FORCE00__",
             "1030": "__EMPTY__",
             "1040": "fdffffff",
             "2000": "01",
-            "3000": "a086010000000000",
+            "3000": "d0fb010000000000",
             "3010": "22",
-            "3020": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+            "3020": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
             "5000": "__EMPTY__",
             "6000": "00000000"
           }
         },
         "version": 0,
-        "result": "0200000001293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce5980100000000fdffffff01a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e031329288700000000",
+        "result": "0200000001d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a1002500100000000fdffffff01d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b00000000",
         "inputStructure": {
           "ungrouped": [
             {
@@ -6564,9 +6367,9 @@
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "0200000001293212cb26b898bce21d8a73b32c37e81f589064c01a8f0711aaac0a94cce5980100000000fdffffff01a0860100000000002251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e031329288700000000"
+          "val": "0200000001d939d32f196f6a6abe0228ff9aee7dd4815a70761952c306fb3f80923a1002500100000000fdffffff01d0fb010000000000225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b00000000"
         },
-        "result": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe",
+        "result": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d403482",
         "inputStructure": {
           "ungrouped": [
             {
@@ -6595,9 +6398,9 @@
         "showField": false,
         "dirty": false,
         "groupInstances": {},
-        "result": "fedf048dd184106f1713c491de01f4d8c46fe4a0d3770daf406f74d34418f5d3",
+        "result": "8234407d351b6c4f86e5e06363af8768f08de2928121ff4c39084ed1e03c41bb",
         "inputs": {
-          "val": "d3f51844d3746f40af0d77d3a0e46fc4d8f401de91c413176f1084d18d04dffe"
+          "val": "bb413ce0d14e08394cff218192e28df06887af6363e0e5864f6c1b357d403482"
         },
         "borderColor": "#a855f7",
         "error": false
@@ -6617,8 +6420,8 @@
         "numInputs": 4,
         "inputs": {
           "vals": {
-            "0": "00000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def60200000000",
-            "1": "62dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c60",
+            "0": "000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b550200000000",
+            "1": "9f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d",
             "2": "00",
             "3": "ffffffff"
           }
@@ -6654,7 +6457,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "00000200000000000000011eb27490c7bbbc6917e43d1a4c8eeb621626a26a7c3ac64e830ec5e027ef41184c0ede118ec8cd31f699524bae48a81ed01ded5f8d08f2f4ff4286b33b027055e090013b325fbd2dc9144cbad9a9c564b4ae419b1823d31573f83186944a3a23e9829bfb4e23fbd3c4848baa035af15d73bcb83e510f7f097f90a21a4280d2c4ed9b0fd1a99da9d87bea2f3557933b2a7d4d869a71fb6b8c76ddf6e8e6def6020000000062dd3a7a192e65aa45d23c1516e54de59191037294c6b20d993a63daae764c6000ffffffff",
+        "result": "000002000000000000003139814948625a3a5502dae56469a110683fd5ab37046e2470e39f7c251a327a891c9259c306502f6cf25b53a16f242a6a07605a8fdb1a599383c8d98f8db5a04e461d95d5753211bd95e5a60b92e919075065df27bd7f0cc965dbad1fde58890e6c738e4fe755a64a276418309bb5dc7e6bf36772bc0238010718e091a780da6aa65669e997f8cd1f6875ac5105b431c29f03086426164a385cc592a3955b5502000000009f8cd147fbef2ffa546188d7ab35d10bf8d0f0af5767f847e5b9d1d299ca4e2d00ffffffff",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
@@ -6696,9 +6499,9 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac"
+          "val": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac"
         },
-        "result": "22",
+        "result": "27",
         "borderColor": "#eab308",
         "error": false
       }
@@ -6718,7 +6521,7 @@
         "dirty": false,
         "groupInstances": {},
         "inputs": {
-          "val": "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+          "val": "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
         },
         "result": "61",
         "borderColor": "#eab308",
@@ -6741,11 +6544,11 @@
           "vals": {
             "0": "03",
             "100": "40",
-            "110": "6d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5",
-            "200": "22",
-            "210": "2064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac",
+            "110": "ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a",
+            "200": "27",
+            "210": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
             "220": "61",
-            "230": "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+            "230": "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
           }
         },
         "inputStructure": {
@@ -6816,7 +6619,7 @@
         "groupInstanceKeys": {
           "STACK_ITEMS[]": [100]
         },
-        "result": "03406d336a0ac406d90ac26e7ebe554993548dba92ebfc40738b26fb8ef22f975232c64cddad9b3ab5a5dc07df3d2504ce05399bebc0ccaf8614dfdb04b734f440b5222064302c6c176207181253d150b02a4d577144906d25c23d473d6b4eeb546c4230ac61c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+        "result": "0340ba31c9983e542950305dfa4ba8fcb910f54855ed3bfae308704f587d492bc293f382ee19d30c05bca8348a2709f7fc5a6b154da0018bb501bcadf7e3f2a65a3a27029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac61c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba",
         "baseHeight": 140,
         "totalInputs": 7,
         "unwiredCount": 0,
@@ -6848,7 +6651,7 @@
         "y": 449.12974977014704
       },
       "data": {
-        "content": "# Lesson 12: Taproot Script-Path Spends\n\nLesson 11 used key-path — just a signature. Now we add scripts.\n\nThis lesson builds a 3-leaf inheritance tree and spends via script-path:\n\n1. Create tapleaves (tagged hash of version + script)\n2. Build Merkle tree (sort siblings, hash branches)  \n3. Tweak internal key with merkle root → output key Q\n4. Spend: reveal one script + control block + merkle proof\n5. Other leaves stay hidden forever\n\nCovers: OP_CHECKSIGADD, control block parity, script-path sighash (SPEND_TYPE = 02).",
+        "content": "# Lesson 12: Taproot Script-Path Spends\n\nLesson 11 used key-path — just a signature. Now we add scripts.\n\nThis lesson builds a 3-leaf inheritance tree and spends via script-path:\n\n1. Create tapleaves (tagged hash of version + script)\n2. Build Merkle tree (sort siblings, hash branches)  \n3. Tweak internal key with merkle root → output key Q\n4. Spend: reveal one script + control block + merkle proof\n5. Other leaves stay hidden forever\n\nCovers: control block parity, script-path sighash (SPEND_TYPE = 02).",
         "fontSize": 28,
         "width": 932,
         "height": 624,
@@ -6870,8 +6673,8 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "3686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601f",
-            "1": "33fae60e42155f64da2ed49f02e81cff0d913a2c526b43896a940e2acc6177ef"
+            "0": "8a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a8127",
+            "1": "399994123922ae7354d29ec931715af5f0ac8334e44f6bd16b8413b5a70c76d3"
           }
         },
         "outputPorts": [
@@ -6902,7 +6705,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "0e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+        "result": "147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
@@ -6928,8 +6731,8 @@
         "inputs": {
           "vals": {
             "0": "c0",
-            "100": "3686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601f",
-            "200": "a7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405"
+            "100": "8a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a8127",
+            "200": "4d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba"
           }
         },
         "inputStructure": {
@@ -6957,7 +6760,7 @@
           ]
         },
         "groupInstances": {},
-        "result": "c03686ef2424cc76029aa7b60972d45dd3829fd4c087471ef0aca0a364f30c601fa7ff651bdc752b612bd6266420bf5a4ff1b87fec33a396ba0d5037c336332abac9e9e0619c989bbd70d5153879acc2a692d8d7f8b4c5919c6089491fbcf77405",
+        "result": "c08a75f4eda4317b47aae927012c4646e0e5d743c242b7fbc6bc213de5fe1a81274d0a608da99f45889e1196229827b70a719629ad71510805c96d7eae2c7913b6887c633b69148abe2f59211d6769a5d093e8b4a981bc10e56f5a8efb985a92ba",
         "baseHeight": 120,
         "totalInputs": 3,
         "unwiredCount": 0,
@@ -6981,11 +6784,11 @@
         "inputs": {
           "vals": {
             "0": "22",
-            "10": "51200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d"
+            "10": "5120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929"
           }
         },
         "version": 0,
-        "result": "2251200a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+        "result": "225120c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
         "inputStructure": {
           "ungrouped": [],
           "groups": [
@@ -7044,11 +6847,11 @@
         "inputs": {
           "vals": {
             "0": "22",
-            "10": "51200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887"
+            "10": "5120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b"
           }
         },
         "version": 0,
-        "result": "2251200e06d3ed5433cc7448169205023b0c9cb50a8d365baed4c4a2d41e0313292887",
+        "result": "225120147ce0078a2f86f3f193bc5ea2ff51d3c355b803ccc6bb7362926cc19d2b917b",
         "inputStructure": {
           "ungrouped": [],
           "groups": [
@@ -7105,7 +6908,7 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "d861eacb571b3e95c278d1e48bef34527e16742b8aca424e8e9643abdd356bb8",
+            "0": "0782885a9f79ee25fac18d21a90fbd4d0aebf9ee7e962f505d3e143fb566d1c9",
             "1": "__EMPTY__"
           }
         },
@@ -7137,12 +6940,12 @@
           ]
         },
         "groupInstances": {},
-        "result": "0a111106ec7519fd6e2ae9975abc6cceab102768ea1ace336e4537fc248c834d",
+        "result": "c6041a5e0128792c8309f5a1406a3e1d5bd6053a93593ed8bd92809c4c55c929",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
         "outputValues": {
-          "output-1": "c1"
+          "output-1": "c0"
         },
         "error": false,
         "borderColor": "#22c55e"
@@ -7162,7 +6965,7 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "e2960945170270d7accc886b05df2abe66df855f5bb9b3a1b7666931797faa36",
+            "0": "231920184de5bb6c97452538478da251651648070c23eb31a8b34ce94edd36af",
             "1": "__EMPTY__"
           }
         },
@@ -7194,13 +6997,13 @@
           ]
         },
         "groupInstances": {},
-        "result": "fbcd1cfbea5fd182582f78505f92dec52a5c46f740c0f823f5a5c9b94136105b",
+        "result": "78b5361ac907e47a7c4934dda469174988921a512babdf62969c105eb7832be8",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
         "error": false,
         "outputValues": {
-          "output-1": "c0"
+          "output-1": "c1"
         },
         "borderColor": "#22c55e"
       }
@@ -7219,7 +7022,7 @@
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "489560126596767ca47626da73a63f647272eefc3ad82c4e69ca74cded505f03",
+            "0": "ca87ae183d52ad0d8936b5f918588752b66cbd1fcd3aa403943ef6c3722d6afd",
             "1": "__EMPTY__"
           }
         },
@@ -7241,12 +7044,559 @@
           ]
         },
         "groupInstances": {},
-        "result": "716ff91d49293b4c420879ab307384effefd6408a68d930b9a9b17d7b4562b1d",
+        "result": "c18526282b34e17eccbfa44b821d03e2c74f80c8c365e03fa10f24120a02f8d7",
         "totalInputs": 2,
         "unwiredCount": 0,
         "dirty": false,
         "error": false,
         "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_ced5s2g",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": -1273.353970301252,
+        "y": 13507.760805059384
+      },
+      "data": {
+        "content": "# Flow 2 — Script-Path Spend (Leaf A: Bob)\n\nBob (spouse) recovers after the 1-day timelock.\n\n## The Story\n\nAlice is unavailable. Bob waits ~1 day (144 blocks), then spends via Leaf A.\n\n## What Gets Revealed\n\n- Leaf A script: `<144> OP_CSV OP_DROP <bob> OP_CHECKSIG`\n- Control block (Alice's internal key + merkle path)\n- Leaves B and C stay hidden (only their hashes visible in merkle path)\n\n## Requirements\n\n- nVersion = 2 (required for CSV)\n- nSequence ≥ 144 (satisfies the timelock)\n- Sign with Bob's key\n\n## Witness Stack\n```\n[sig_bob] [script] [control_block]\n```\n\n## Sighash Difference from Key-Path\n\n|_| Key-path | Script-path |\n|--|----------|-------------|\n| SPEND_TYPE | 00 | 02 |\n| Extension | none | tapleaf_hash ‖ 00 ‖ ffffffff |\n| Witness size | ~65 bytes | ~200 bytes |\n\n## Broadcast Note\n\nTo broadcast on testnet, the UTXO must be ≥144 blocks old. Local verification works immediately.",
+        "fontSize": 28,
+        "width": 1247,
+        "height": 1391,
+        "title": "Text Info Node",
+        "dirty": false
+      }
+    },
+    {
+      "id": "node_qF2UdTW5",
+      "type": "calculation",
+      "position": {
+        "x": -5327.408361699428,
+        "y": 5433.109848425289
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "02",
+            "100": "9000",
+            "200": "b275",
+            "300": "20",
+            "400": "c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750",
+            "500": "ac"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "029000b27520c4c1ab6a1dbde8d08515acf884a8fff2914cf8b9c29f71a58eae21e02c65b750ac",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<multi‑line input>",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 25,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 6
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [0, 100, 200, 300, 400, 500]
+        },
+        "baseHeight": 80,
+        "title": "leaf A",
+        "borderColor": "#22c55e",
+        "totalInputs": 6,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "<144> OP_CSV OP_DROP <bob> OP_CHECKSIG — Bob (spouse) after ~1 day",
+        "error": false
+      }
+    },
+    {
+      "id": "node_8MUM3Tqb",
+      "type": "calculation",
+      "position": {
+        "x": -6810,
+        "y": 5085
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "delay in blocks",
+        "showField": true,
+        "numInputs": 0,
+        "value": "144",
+        "version": 0,
+        "inputs": {
+          "val": "144"
+        },
+        "result": "144",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "dirty": false,
+        "error": false,
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_TgVLVrUn",
+      "type": "calculation",
+      "position": {
+        "x": -6018.037129370391,
+        "y": 5169.780792860973
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "9000"
+        },
+        "result": "02",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_13q8HoDF",
+      "type": "calculation",
+      "position": {
+        "x": -6427.260787564725,
+        "y": 5141.877573273165
+      },
+      "data": {
+        "functionName": "int_to_script_bytes",
+        "title": "Int → ScriptBytes",
+        "numInputs": 1,
+        "version": 0,
+        "inputs": {
+          "val": 144
+        },
+        "result": "9000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Integer value:",
+              "rows": 1,
+              "placeholder": "e.g. 4404774"
+            }
+          ]
+        },
+        "groupInstances": {},
+        "dirty": false,
+        "error": false,
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_lcTim4o6",
+      "type": "opCodeNode",
+      "position": {
+        "x": -6069.958754713489,
+        "y": 5431.967494923935
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "b275",
+        "inputs": {
+          "val": "b275"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "b275",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": ["OP_CHECKSEQUENCEVERIFY", "OP_DROP"],
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_tbkYCfa2",
+      "type": "opCodeNode",
+      "position": {
+        "x": -6162.000544868214,
+        "y": 9503.487093826381
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "b275",
+        "inputs": {
+          "val": "b275"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "b275",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": ["OP_CHECKSEQUENCEVERIFY", "OP_DROP"],
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_SRmQczL3",
+      "type": "calculation",
+      "position": {
+        "x": -5762.808560326237,
+        "y": 9369.387867991414
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "02",
+            "100": "c021",
+            "200": "b275",
+            "300": "20",
+            "400": "488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4",
+            "500": "ac"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "02c021b27520488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4ac",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<multi‑line input>",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 25,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 6
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [0, 100, 200, 300, 400, 500]
+        },
+        "baseHeight": 80,
+        "title": "leaf C",
+        "borderColor": "#22c55e",
+        "totalInputs": 6,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "<8640> OP_CSV OP_DROP <diana> OP_CHECKSIG — Diana (lawyer) after ~60 days",
+        "error": false
+      }
+    },
+    {
+      "id": "node_xbNjAhZr",
+      "type": "calculation",
+      "position": {
+        "x": -6247.254575997486,
+        "y": 9881.870138164732
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4"
+        },
+        "result": "20",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_KDfGJKPh",
+      "type": "calculation",
+      "position": {
+        "x": -7290,
+        "y": 9655.518547823001
+      },
+      "data": {
+        "functionName": "random_256",
+        "title": "Random 32 Bytes",
+        "hasRegenerate": true,
+        "dirty": false,
+        "numInputs": 0,
+        "groupInstances": {},
+        "result": "7bba8f47a2933a3541c03eb1a1a0fd99086fb8c0b1833043b027f8ba92e0d08a",
+        "error": false,
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_x0Qn9fVU",
+      "type": "calculation",
+      "position": {
+        "x": -6933.374322703354,
+        "y": 9651.193157462225
+      },
+      "data": {
+        "functionName": "even_y_private_key",
+        "title": "PrivKey → Even-Y PrivKey",
+        "numInputs": 1,
+        "inputs": {
+          "val": "7bba8f47a2933a3541c03eb1a1a0fd99086fb8c0b1833043b027f8ba92e0d08a"
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Private Key (32B hex):",
+              "rows": 2,
+              "placeholder": "<privkey hex>"
+            }
+          ]
+        },
+        "groupInstances": {},
+        "result": "844570b85d6cc5cabe3fc14e5e5f0265b23f2425fdc56ff80faa65d23d5570b7",
+        "dirty": false,
+        "error": false,
+        "showComment": true,
+        "comment": "If the pubkey from this private key has odd Y (prefix 03),\nwe replace d with d' = n − d so the corresponding pubkey has even Y.",
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_bG6Pzo39",
+      "type": "calculation",
+      "position": {
+        "x": -6606.790762649851,
+        "y": 9513.344423743012
+      },
+      "data": {
+        "functionName": "xonly_pubkey",
+        "title": "Even-Y PrivKey → X-only PubKey",
+        "numInputs": 1,
+        "inputs": {
+          "val": "844570b85d6cc5cabe3fc14e5e5f0265b23f2425fdc56ff80faa65d23d5570b7"
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Even-Y Private Key (32B hex):",
+              "rows": 2,
+              "placeholder": "<privkey hex>"
+            }
+          ]
+        },
+        "groupInstances": {},
+        "result": "488b9211a48640b34d5b9bdb30913542e0f7f1b46155cdf99cde93c249c1bdb4",
+        "dirty": false,
+        "error": false,
+        "showComment": true,
+        "comment": "Direct output key (no tweak). Valid but can't be BIP86-proven.\nFlow 2 shows the production approach with BIP86 tweak.",
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_vR12eGYL",
+      "type": "calculation",
+      "position": {
+        "x": -6923.98586380704,
+        "y": 9075
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "delay in blocks",
+        "showField": true,
+        "numInputs": 0,
+        "value": "8640",
+        "version": 0,
+        "inputs": {
+          "val": "8640"
+        },
+        "result": "8640",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "dirty": false,
+        "error": false,
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_92bK6vDA",
+      "type": "calculation",
+      "position": {
+        "x": -6132.022993177431,
+        "y": 9159.780792860973
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "c021"
+        },
+        "result": "02",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_zUtMbMS0",
+      "type": "opCodeNode",
+      "position": {
+        "x": -6119.855080294626,
+        "y": 10241.877573273166
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "ac",
+        "inputs": {
+          "val": "ac"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "ac",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": ["OP_CHECKSIG"],
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_93Kt809C",
+      "type": "calculation",
+      "position": {
+        "x": -6541.246651371765,
+        "y": 9131.877573273165
+      },
+      "data": {
+        "functionName": "int_to_script_bytes",
+        "title": "Int → ScriptBytes",
+        "numInputs": 1,
+        "version": 0,
+        "inputs": {
+          "val": 8640
+        },
+        "result": "c021",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Integer value:",
+              "rows": 1,
+              "placeholder": "e.g. 4404774"
+            }
+          ]
+        },
+        "groupInstances": {},
+        "dirty": false,
+        "error": false,
+        "borderColor": "#22c55e"
+      }
+    },
+    {
+      "id": "node_4abaxnk",
+      "type": "calculation",
+      "position": {
+        "x": 1680.3715676547529,
+        "y": 18514.24839371001
+      },
+      "data": {
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "title": "Uint32 → LE-4",
+        "numInputs": 1,
+        "value": "2",
+        "groupInstances": {},
+        "inputs": {
+          "val": 144
+        },
+        "result": "90000000",
+        "dirty": false,
+        "error": false
       }
     }
   ],
@@ -7721,27 +8071,6 @@
       "id": "xy-edge__node_Kn06BZeG-node_pvci31minput-0"
     },
     {
-      "source": "node_E6AVYtua",
-      "target": "node_0zMUvfGS",
-      "targetHandle": "input-0",
-      "selected": false,
-      "id": "xy-edge__node_E6AVYtua-node_0zMUvfGSinput-0"
-    },
-    {
-      "source": "node_RYJPS8xr",
-      "target": "node_0zMUvfGS",
-      "targetHandle": "input-100",
-      "selected": false,
-      "id": "xy-edge__node_RYJPS8xr-node_0zMUvfGSinput-100"
-    },
-    {
-      "id": "edge_uff94gz",
-      "source": "node_327GxrWb",
-      "target": "node_0zMUvfGS",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
       "id": "edge_4d6kfox",
       "source": "node_e3BOI1Yt",
       "target": "node_BoVcigWU",
@@ -7777,48 +8106,6 @@
       "selected": false
     },
     {
-      "id": "edge_ujslakl",
-      "source": "node_E6AVYtua",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "edge_eh8y4ej",
-      "source": "node_RYJPS8xr",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "edge_xdff85m",
-      "source": "node_ZNl4dw4l",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
-      "source": "node_xmkTQNNN",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-300",
-      "selected": false,
-      "id": "xy-edge__node_xmkTQNNN-node_8TPcYr89input-300"
-    },
-    {
-      "source": "node_RAFPUSGa",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-400",
-      "selected": false,
-      "id": "xy-edge__node_RAFPUSGa-node_8TPcYr89input-400"
-    },
-    {
-      "source": "node_tFEF5p5R",
-      "target": "node_8TPcYr89",
-      "targetHandle": "input-500",
-      "id": "xy-edge__node_tFEF5p5R-node_8TPcYr89input-500",
-      "selected": false
-    },
-    {
       "id": "edge_8j8r348",
       "source": "node_w5kuva3",
       "target": "node_ofy68ew",
@@ -7847,24 +8134,10 @@
       "selected": false
     },
     {
-      "id": "edge_zrdi4t3",
-      "source": "node_0zMUvfGS",
-      "target": "node_9hyrbe8",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
       "id": "edge_o2qbqrs",
       "source": "node_9hyrbe8",
       "target": "node_f3kirve",
       "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "edge_n6ffaod",
-      "source": "node_0zMUvfGS",
-      "target": "node_f3kirve",
-      "targetHandle": "input-200",
       "selected": false
     },
     {
@@ -7952,20 +8225,6 @@
       "selected": false
     },
     {
-      "id": "edge_fok9nxq",
-      "source": "node_8TPcYr89",
-      "target": "node_tRC1vOGf",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "edge_d5lwm7n",
-      "source": "node_8TPcYr89",
-      "target": "node_t8vhlGNP",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
       "id": "enode_AxoenOj6-node_r2qfz4r-input-1100",
       "source": "node_AxoenOj6",
       "target": "node_r2qfz4r",
@@ -8036,13 +8295,6 @@
       "selected": false
     },
     {
-      "id": "edge_YZJkFUJH",
-      "source": "node_8ASFox6I",
-      "target": "node_cn6tBb9d",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
       "source": "node_v8suuZwM",
       "target": "node_kH6xv5X8",
       "targetHandle": "input-0",
@@ -8069,13 +8321,6 @@
       "targetHandle": "input-20",
       "selected": false,
       "id": "edge_bLXWL9U2"
-    },
-    {
-      "id": "edge_lSRUjVgr",
-      "source": "node_cn6tBb9d",
-      "target": "node_SLn2yjoG",
-      "targetHandle": "input-0",
-      "selected": false
     },
     {
       "source": "node_zlkjloup",
@@ -8372,13 +8617,6 @@
       "selected": false
     },
     {
-      "id": "edge_0t5noh2",
-      "source": "node_cn6tBb9d",
-      "target": "node_HBY7tELR",
-      "targetHandle": "input-1040",
-      "selected": false
-    },
-    {
       "id": "edge_cqkv3zx",
       "source": "node_kH6xv5X8",
       "target": "node_HBY7tELR",
@@ -8446,13 +8684,6 @@
       "source": "node_06sRsgDo",
       "target": "node_Xp2QSQ7v",
       "targetHandle": "input-1010",
-      "selected": false
-    },
-    {
-      "id": "enode_cn6tBb9d-node_Xp2QSQ7v-input-1040",
-      "source": "node_cn6tBb9d",
-      "target": "node_Xp2QSQ7v",
-      "targetHandle": "input-1040",
       "selected": false
     },
     {
@@ -8687,13 +8918,6 @@
       "selected": false
     },
     {
-      "id": "edge_mq85mgx",
-      "source": "node_0zMUvfGS",
-      "target": "node_SsCZ9FnC",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
       "source": "node_cny0vpb",
       "target": "node_cttgxhy",
       "targetHandle": "input-0",
@@ -8720,13 +8944,6 @@
       "targetHandle": "input-200",
       "selected": false,
       "id": "xy-edge__node_SsCZ9FnC-node_cttgxhyinput-200"
-    },
-    {
-      "source": "node_0zMUvfGS",
-      "target": "node_cttgxhy",
-      "targetHandle": "input-210",
-      "selected": false,
-      "id": "xy-edge__node_0zMUvfGS-node_cttgxhyinput-210"
     },
     {
       "source": "node_1HdwUZ4g",
@@ -8925,6 +9142,224 @@
       "targetHandle": "input-0",
       "selected": false,
       "id": "xy-edge__node_stym5vj-node_G52fvUCEinput-0"
+    },
+    {
+      "source": "node_qF2UdTW5",
+      "target": "node_cttgxhy",
+      "targetHandle": "input-210",
+      "selected": false,
+      "id": "xy-edge__node_qF2UdTW5-node_cttgxhyinput-210",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_qF2UdTW5",
+      "target": "node_SsCZ9FnC",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_qF2UdTW5-node_SsCZ9FnCinput-0",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_qF2UdTW5",
+      "target": "node_f3kirve",
+      "targetHandle": "input-200",
+      "selected": false,
+      "id": "xy-edge__node_qF2UdTW5-node_f3kirveinput-200",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_qF2UdTW5",
+      "target": "node_9hyrbe8",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_qF2UdTW5-node_9hyrbe8input-0",
+      "sourceHandle": null
+    },
+    {
+      "id": "edge_tnv3CJFt",
+      "source": "node_8MUM3Tqb",
+      "target": "node_13q8HoDF",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_83aK7SXY",
+      "source": "node_13q8HoDF",
+      "target": "node_TgVLVrUn",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_vajrtj5",
+      "source": "node_TgVLVrUn",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_gpts2kc",
+      "source": "node_13q8HoDF",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "edge_23z7sg8",
+      "source": "node_lcTim4o6",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "edge_xwhdx6e",
+      "source": "node_E6AVYtua",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "edge_1rk53gq",
+      "source": "node_RYJPS8xr",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-400",
+      "selected": false
+    },
+    {
+      "id": "edge_g58g4ag",
+      "source": "node_327GxrWb",
+      "target": "node_qF2UdTW5",
+      "sourceHandle": null,
+      "targetHandle": "input-500",
+      "selected": false
+    },
+    {
+      "id": "edge_SRb1iQPN",
+      "source": "node_KDfGJKPh",
+      "target": "node_x0Qn9fVU",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_2J5lSnAI",
+      "source": "node_x0Qn9fVU",
+      "target": "node_bG6Pzo39",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_yYKG2Fx2",
+      "source": "node_bG6Pzo39",
+      "target": "node_xbNjAhZr",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_GDpu6hq5",
+      "source": "node_92bK6vDA",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_WFcCMj4s",
+      "source": "node_tbkYCfa2",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "edge_A5hK9LpP",
+      "source": "node_xbNjAhZr",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "edge_mJ8QieCT",
+      "source": "node_bG6Pzo39",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-400",
+      "selected": false
+    },
+    {
+      "id": "edge_ej7vUJp3",
+      "source": "node_zUtMbMS0",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-500",
+      "selected": false
+    },
+    {
+      "id": "edge_6bGK3pS9",
+      "source": "node_vR12eGYL",
+      "target": "node_93Kt809C",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_P5JeYTkQ",
+      "source": "node_93Kt809C",
+      "target": "node_92bK6vDA",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_oOCbtkBo",
+      "source": "node_93Kt809C",
+      "target": "node_SRmQczL3",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "edge_mt3v0ad",
+      "source": "node_SRmQczL3",
+      "target": "node_tRC1vOGf",
+      "sourceHandle": null,
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "edge_937xdwo",
+      "source": "node_SRmQczL3",
+      "target": "node_t8vhlGNP",
+      "sourceHandle": null,
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "source": "node_4abaxnk",
+      "target": "node_Xp2QSQ7v",
+      "targetHandle": "input-1040",
+      "selected": false,
+      "id": "xy-edge__node_4abaxnk-node_Xp2QSQ7vinput-1040",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_4abaxnk",
+      "target": "node_HBY7tELR",
+      "targetHandle": "input-1040",
+      "selected": false,
+      "id": "xy-edge__node_4abaxnk-node_HBY7tELRinput-1040",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_4abaxnk",
+      "target": "node_SLn2yjoG",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_4abaxnk-node_SLn2yjoGinput-0",
+      "sourceHandle": null
+    },
+    {
+      "id": "edge_t2y6v9w",
+      "source": "node_8MUM3Tqb",
+      "target": "node_4abaxnk",
+      "sourceHandle": null,
+      "targetHandle": "input-0"
     }
   ]
 }

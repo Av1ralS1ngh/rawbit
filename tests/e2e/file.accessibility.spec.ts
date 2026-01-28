@@ -181,7 +181,6 @@ test.describe('Keyboard navigation & accessibility', () => {
     await expect(searchPanel).toBeVisible();
     const searchInput = page.getByPlaceholder('Search node id, name, text');
     await searchInput.fill('hash');
-    await expect(searchPanel.getByRole('button', { name: /Highlight & Select all/ })).toBeVisible();
     await expect(searchPanel.getByRole('button', { name: 'Close search' })).toBeVisible();
 
     await page.getByTitle('Close search').click();

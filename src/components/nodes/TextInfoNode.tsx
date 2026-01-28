@@ -396,7 +396,7 @@ export default function TextInfoNode({
       />
 
       {/* Header – font controls and inline menu */}
-      <div className="flex items-center justify-between h-8 px-2 bg-primary/10 border-b">
+      <div className="flex items-center justify-between h-8 px-2 -mx-px -mt-px bg-primary/10 border-b rounded-t-lg">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"

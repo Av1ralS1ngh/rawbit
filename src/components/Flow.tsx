@@ -752,10 +752,7 @@ function FlowContent() {
     [loadExampleFlow, markWelcomeComplete, setShowWelcomeDialog]
   );
 
-  const [
-    { highlightedNodes },
-    { highlightAndFit, setIsSearchHighlight, clearHighlights },
-  ] = useHighlight({
+  const [, { setIsSearchHighlight, clearHighlights }] = useHighlight({
     setNodes,
     baseSetNodes,
     getNodes,
@@ -1623,8 +1620,6 @@ function FlowContent() {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 edges={edges}
-                highlightAndFit={highlightAndFit}
-                highlightedNodes={highlightedNodes}
                 centerOnNode={centerOnNode}
                 focusSearchHit={focusSearchHit}
                 hasMultipleTabs={tabs.length > 0}

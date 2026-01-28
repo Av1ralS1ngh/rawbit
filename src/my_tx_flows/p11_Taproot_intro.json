@@ -1,13 +1,13 @@
 {
-  "name": "flow-1769089022284",
+  "name": "flow-1769586416321",
   "schemaVersion": 1,
   "nodes": [
     {
       "id": "node_zr5pN6tp",
       "type": "calculation",
       "position": {
-        "x": -334.06131860353344,
-        "y": 224.02662230766873
+        "x": -439.06131860353344,
+        "y": 449.02662230766873
       },
       "data": {
         "functionName": "random_256",
@@ -24,8 +24,8 @@
       "id": "node_DPAHb8Ll",
       "type": "calculation",
       "position": {
-        "x": 360,
-        "y": 75
+        "x": 255,
+        "y": 300
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -45,8 +45,8 @@
       "id": "node_yV7M42bd",
       "type": "calculation",
       "position": {
-        "x": 149.33602804355905,
-        "y": 538.88963246821
+        "x": 44.336028043559054,
+        "y": 763.88963246821
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -75,8 +75,8 @@
       "id": "node_DyoZn37g",
       "type": "calculation",
       "position": {
-        "x": -315.7556456235834,
-        "y": 1066.1486323689896
+        "x": -420.7556456235834,
+        "y": 1291.1486323689896
       },
       "data": {
         "functionName": "random_256",
@@ -93,8 +93,8 @@
       "id": "node_M7J8D0Yi",
       "type": "calculation",
       "position": {
-        "x": 418.27890998221847,
-        "y": 953.7641439800645
+        "x": 313.27890998221847,
+        "y": 1178.7641439800645
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -114,8 +114,8 @@
       "id": "node_07QBbMx7",
       "type": "calculation",
       "position": {
-        "x": 100.66029494883696,
-        "y": 1294.9367047534834
+        "x": -4.339705051163037,
+        "y": 1519.9367047534834
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -146,8 +146,8 @@
       "id": "node_KkkzoYvs",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -4756.624842362806,
-        "y": 773.782081958102
+        "x": -4861.624842362806,
+        "y": 998.782081958102
       },
       "data": {
         "content": "# Where We Are: Schnorr vs Taproot vs Tapscript\n\nBy now you’ve:\n\n- Built and signed raw **legacy** (P2PKH) transactions.\n- Built and signed **SegWit v0** (P2WPKH / P2WSH) transactions. \n\nTaproot is the next step in that evolution. It’s really **three BIPs working together**:\n\n- **BIP340 – Schnorr signatures**\n  - New signature algorithm (still on secp256k1).\n  - Public keys are represented as **x-only** (32 bytes, no 02/03 prefix).\n  - Signatures are **fixed-size 64 bytes**.\n  - Nice property: the scheme is *linear*, which allows safe key aggregation (MuSig2, adaptor signatures, etc.).\n\n- **BIP341 – Taproot (P2TR)**\n  - Defines a new SegWit **v1 output type**:\n    - scriptPubKey: `OP_1 <32-byte x-only pubkey>`\n    - bech32m address starts with `bc1p…` / `tb1p…`\n  - Defines how that 32-byte pubkey is constructed:\n    - Start from an **internal key** P (x-only Schnorr pubkey).\n    - Optionally commit to a script tree (Merkle root).\n    - Compute **output key** Q with a tweak: `Q = P + H(P || merkle_root)·G`.\n\n- **BIP342 – Tapscript**\n  - Defines the scripting rules for Taproot’s **script path**.\n  - Removes `OP_CHECKMULTISIG`, adds `OP_CHECKSIGADD`, and tweaks limits.\n",
@@ -162,8 +162,8 @@
       "id": "node_48zB1IkL",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -1405.7500217782872,
-        "y": 133.1639348695171
+        "x": -1510.7500217782872,
+        "y": 358.1639348695171
       },
       "data": {
         "content": "# The \"Even-Y\" Rule & X-Only Keys (BIP340)\n\nIn Legacy/SegWit, a compressed public key is **33 bytes**:\n\n- 1-byte prefix:\n  - `02` → Y is even\n  - `03` → Y is odd\n- 32 bytes X-coordinate\n\nSo the same X can appear in two forms: `02 || x` or `03 || x`.\n\n---\n\n## What Schnorr (BIP340) changes\n\nBIP340 defines Schnorr keys differently:\n\n> A Schnorr public key is **always** the point with even Y, encoded as its\n> 32-byte X-coordinate only (x-only pubkey).\n\nThat means:\n\n- We don’t store the 02/03 prefix anymore.  \n- We treat the “even-Y” point as the standard form of the key. \n- The signing algorithm assumes this normalization.\n\n---\n\n## How we normalize a key (what this flow does)\n\n1. Generate a random 32-byte private key `d`.\n2. Compute the curve point `P = d · G`.\n3. Check the Y-coordinate of `P`:\n   - If Y is **even**: keep `d` as is.  \n   - If Y is **odd**: replace `d` with `d' = n − d`.  \n     The new point `P' = d' · G` has the **same X** but an even Y.\n",
@@ -178,8 +178,8 @@
       "id": "node_P7y42EzD",
       "type": "calculation",
       "position": {
-        "x": 2521.926204223848,
-        "y": 3146.518292796285
+        "x": 2416.926204223848,
+        "y": 3371.518292796285
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -222,8 +222,8 @@
       "id": "node_z53jeub5",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 483.8336157476224,
-        "y": 3410.8828696646833
+        "x": 378.8336157476224,
+        "y": 3635.8828696646833
       },
       "data": {
         "content": "# BIP86 Proof: No Hidden Scripts\n\n**The problem:** Looking at a Taproot output (`OP_1 <Q>`), you can't tell if there are hidden script paths — the key looks the same either way.\n\n**The solution:** The owner reveals their untweaked internal key `P`.\n\n**Verification:**\n1. Take revealed `P`\n2. Compute `Q' = P + tagged_hash(\"TapTweak\", P) × G`\n3. Compare with on-chain `Q`\n4. Match? → Proven: no scripts exist\n\n**Why it works:** If scripts existed, the tweak would include a merkle root:\n`Q = P + tagged_hash(\"TapTweak\", P || merkle_root) × G`\n\nDifferent hash input → different Q. Can't fake it.\n\n**Use cases:**\n- Custody audits: \"Prove no backdoor scripts\"\n- Collateral contracts: \"Prove counterparty can't use a hidden escape path\"\n- Exchange proof-of-reserves: \"Prove these are simple single-key holdings\"",
@@ -238,8 +238,8 @@
       "id": "node_FGXAhkVK",
       "type": "calculation",
       "position": {
-        "x": 3134.383166035441,
-        "y": 3806.616443402054
+        "x": 3029.383166035441,
+        "y": 4031.616443402054
       },
       "data": {
         "functionName": "p2tr_address_from_xonly",
@@ -271,8 +271,8 @@
       "id": "node_VFeoDjl1",
       "type": "calculation",
       "position": {
-        "x": 671.2820283715773,
-        "y": 1338.217028181978
+        "x": 566.2820283715773,
+        "y": 1563.217028181978
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -301,8 +301,8 @@
       "id": "node_S28XTHHh",
       "type": "calculation",
       "position": {
-        "x": 502.09635827148304,
-        "y": 547.2004665706554
+        "x": 397.09635827148304,
+        "y": 772.2004665706554
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -331,8 +331,8 @@
       "id": "node_RsESl1My",
       "type": "calculation",
       "position": {
-        "x": 434.19997650112055,
-        "y": 6426.746449455677
+        "x": 329.19997650112055,
+        "y": 6651.746449455677
       },
       "data": {
         "functionName": "random_256",
@@ -350,8 +350,8 @@
       "id": "node_4r9vxdJN",
       "type": "calculation",
       "position": {
-        "x": 841.1141736891586,
-        "y": 6366.010551257812
+        "x": 736.1141736891586,
+        "y": 6591.010551257812
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -383,8 +383,8 @@
       "id": "node_T7cz8xkK",
       "type": "calculation",
       "position": {
-        "x": 1226.1242830484189,
-        "y": 6276.072964945957
+        "x": 1121.1242830484189,
+        "y": 6501.072964945957
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -414,8 +414,8 @@
       "id": "node_Z8LY4dCc",
       "type": "calculation",
       "position": {
-        "x": 9045.84902582851,
-        "y": 6726.591487659374
+        "x": 8940.84902582851,
+        "y": 6951.591487659374
       },
       "data": {
         "functionName": "identity",
@@ -447,8 +447,8 @@
       "id": "node_oeEfa2qX",
       "type": "calculation",
       "position": {
-        "x": 9527.979346442495,
-        "y": 6742.174814487444
+        "x": 9422.979346442495,
+        "y": 6967.174814487444
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -470,8 +470,8 @@
       "id": "node_t0nosGpw",
       "type": "calculation",
       "position": {
-        "x": 3560.1522783916735,
-        "y": 11276.260374682435
+        "x": 3455.1522783916735,
+        "y": 11501.260374682435
       },
       "data": {
         "functionName": "identity",
@@ -505,8 +505,8 @@
       "id": "node_zQuMVv9h",
       "type": "calculation",
       "position": {
-        "x": 3987.304354478125,
-        "y": 11326.357010415228
+        "x": 3882.304354478125,
+        "y": 11551.357010415228
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -538,8 +538,8 @@
       "id": "node_yL0vtyVZ",
       "type": "calculation",
       "position": {
-        "x": 2618.9717520844715,
-        "y": 8390.38683651308
+        "x": 2513.9717520844715,
+        "y": 8615.38683651308
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -561,8 +561,8 @@
       "id": "node_BAQ8AStm",
       "type": "calculation",
       "position": {
-        "x": 1932.8749323147786,
-        "y": 10807.817447630234
+        "x": 1827.8749323147786,
+        "y": 11032.817447630234
       },
       "data": {
         "functionName": "identity",
@@ -596,8 +596,8 @@
       "id": "node_lCa0SXnw",
       "type": "calculation",
       "position": {
-        "x": 2252.1439440051254,
-        "y": 10965.416693098505
+        "x": 2147.1439440051254,
+        "y": 11190.416693098505
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -619,8 +619,8 @@
       "id": "node_KudhuVbw",
       "type": "opCodeNode",
       "position": {
-        "x": 747.9032499306777,
-        "y": 10139.625520720667
+        "x": 642.9032499306777,
+        "y": 10364.625520720667
       },
       "data": {
         "functionName": "op_code_select",
@@ -643,8 +643,8 @@
       "id": "node_RTjUChbK",
       "type": "calculation",
       "position": {
-        "x": 1235.0891809488967,
-        "y": 10229.005904489113
+        "x": 1130.0891809488967,
+        "y": 10454.005904489113
       },
       "data": {
         "functionName": "concat_all",
@@ -702,8 +702,8 @@
       "id": "node_Kb20wCRH",
       "type": "calculation",
       "position": {
-        "x": 741.7276499619402,
-        "y": 10511.889667677886
+        "x": 636.7276499619402,
+        "y": 10736.889667677886
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -735,8 +735,8 @@
       "id": "node_qbPNobuB",
       "type": "calculation",
       "position": {
-        "x": 3555.467566691339,
-        "y": 11816.39439623668
+        "x": 3450.467566691339,
+        "y": 12041.39439623668
       },
       "data": {
         "functionName": "identity",
@@ -770,8 +770,8 @@
       "id": "node_yEM4FyLP",
       "type": "calculation",
       "position": {
-        "x": 7746.04506065826,
-        "y": 8096.108065157288
+        "x": 7641.04506065826,
+        "y": 8321.108065157288
       },
       "data": {
         "functionName": "identity",
@@ -803,8 +803,8 @@
       "id": "node_Q12JjAJl",
       "type": "calculation",
       "position": {
-        "x": 7783.458204184084,
-        "y": 8440.396434047154
+        "x": 7678.458204184084,
+        "y": 8665.396434047154
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -825,8 +825,8 @@
       "id": "node_j5AOEEgP",
       "type": "calculation",
       "position": {
-        "x": 9496.241269308615,
-        "y": 7090.050753935608
+        "x": 9391.241269308615,
+        "y": 7315.050753935608
       },
       "data": {
         "functionName": "identity",
@@ -858,8 +858,8 @@
       "id": "node_pXD7lFa6",
       "type": "calculation",
       "position": {
-        "x": 9571.698886816848,
-        "y": 7131.708673494522
+        "x": 9466.698886816848,
+        "y": 7356.708673494522
       },
       "data": {
         "functionName": "identity",
@@ -891,8 +891,8 @@
       "id": "node_M2GhyYWi",
       "type": "calculation",
       "position": {
-        "x": 9184.980844793005,
-        "y": 7391.632309534918
+        "x": 9079.980844793005,
+        "y": 7616.632309534918
       },
       "data": {
         "functionName": "identity",
@@ -927,8 +927,8 @@
       "id": "node_4Ag2cwuc",
       "type": "calculation",
       "position": {
-        "x": 9547.133408215916,
-        "y": 7444.129122464237
+        "x": 9442.133408215916,
+        "y": 7669.129122464237
       },
       "data": {
         "functionName": "encode_varint",
@@ -949,8 +949,8 @@
       "id": "node_Ocx3gzEe",
       "type": "calculation",
       "position": {
-        "x": 9228.633979364029,
-        "y": 8574.818693147947
+        "x": 9123.633979364029,
+        "y": 8799.818693147947
       },
       "data": {
         "functionName": "identity",
@@ -982,8 +982,8 @@
       "id": "node_Yb365YuT",
       "type": "calculation",
       "position": {
-        "x": 9618.689146781639,
-        "y": 8658.312214325084
+        "x": 9513.689146781639,
+        "y": 8883.312214325084
       },
       "data": {
         "functionName": "encode_varint",
@@ -1004,8 +1004,8 @@
       "id": "node_1PUH6chT",
       "type": "calculation",
       "position": {
-        "x": 13849.063778319854,
-        "y": 10496.822498801022
+        "x": 13744.063778319854,
+        "y": 10721.822498801022
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -1036,8 +1036,8 @@
       "id": "node_rRosXgNT",
       "type": "calculation",
       "position": {
-        "x": 14220.762786520507,
-        "y": 10385.274688835118
+        "x": 14115.762786520507,
+        "y": 10610.274688835118
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -1058,8 +1058,8 @@
       "id": "node_iRwkidi9",
       "type": "calculation",
       "position": {
-        "x": 11682.96503265146,
-        "y": 9525.985989584051
+        "x": 11577.96503265146,
+        "y": 9750.985989584051
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -1090,8 +1090,8 @@
       "id": "node_P0i3Y06s",
       "type": "calculation",
       "position": {
-        "x": 12177.191023336178,
-        "y": 9555.290439654671
+        "x": 12072.191023336178,
+        "y": 9780.290439654671
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -1112,8 +1112,8 @@
       "id": "node_42akaw37",
       "type": "calculation",
       "position": {
-        "x": 3447.9438002554743,
-        "y": 7063.041621792039
+        "x": 3342.9438002554743,
+        "y": 7288.041621792039
       },
       "data": {
         "functionName": "concat_all",
@@ -1176,8 +1176,8 @@
       "id": "node_rigFzccJ",
       "type": "calculation",
       "position": {
-        "x": 3445.59646759132,
-        "y": 8592.075978280816
+        "x": 3340.59646759132,
+        "y": 8817.075978280816
       },
       "data": {
         "functionName": "concat_all",
@@ -1232,8 +1232,8 @@
       "id": "node_3nHPcyQq",
       "type": "calculation",
       "position": {
-        "x": 3438.4881122300794,
-        "y": 9034.234736792761
+        "x": 3333.4881122300794,
+        "y": 9259.234736792761
       },
       "data": {
         "functionName": "concat_all",
@@ -1308,8 +1308,8 @@
       "id": "node_R9h9O91B",
       "type": "calculation",
       "position": {
-        "x": 10636.310272602845,
-        "y": 7470.608559060482
+        "x": 10531.310272602845,
+        "y": 7695.608559060482
       },
       "data": {
         "functionName": "concat_all",
@@ -1512,8 +1512,8 @@
       "id": "node_0RmhRn8a",
       "type": "calculation",
       "position": {
-        "x": 13208.967950012302,
-        "y": 9296.572350505583
+        "x": 13103.967950012302,
+        "y": 9521.572350505583
       },
       "data": {
         "functionName": "concat_all",
@@ -1716,8 +1716,8 @@
       "id": "node_unpEo3dB",
       "type": "calculation",
       "position": {
-        "x": 1980.0871657721073,
-        "y": 10206.7167908398
+        "x": 1875.0871657721073,
+        "y": 10431.7167908398
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -1738,8 +1738,8 @@
       "id": "node_ersNePJb",
       "type": "calculation",
       "position": {
-        "x": 391.5199681999875,
-        "y": 7002.323993185011
+        "x": 286.5199681999875,
+        "y": 7227.323993185011
       },
       "data": {
         "functionName": "identity",
@@ -1773,8 +1773,8 @@
       "id": "node_6XEjDFHF",
       "type": "calculation",
       "position": {
-        "x": 373.5446689644523,
-        "y": 7545.8244218246655
+        "x": 268.5446689644523,
+        "y": 7770.8244218246655
       },
       "data": {
         "functionName": "identity",
@@ -1806,8 +1806,8 @@
       "id": "node_ymWMwqXU",
       "type": "calculation",
       "position": {
-        "x": 369.8546753051269,
-        "y": 7948.128400909551
+        "x": 264.8546753051269,
+        "y": 8173.128400909551
       },
       "data": {
         "functionName": "identity",
@@ -1841,8 +1841,8 @@
       "id": "node_5ysyGjuU",
       "type": "calculation",
       "position": {
-        "x": -336.67566444438853,
-        "y": 10378.248592386084
+        "x": -441.67566444438853,
+        "y": 10603.248592386084
       },
       "data": {
         "functionName": "random_256",
@@ -1860,8 +1860,8 @@
       "id": "node_Qm8Ur78A",
       "type": "calculation",
       "position": {
-        "x": 19.950012852255895,
-        "y": 10373.9232020253
+        "x": -85.0499871477441,
+        "y": 10598.9232020253
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -1893,8 +1893,8 @@
       "id": "node_1X014Z9C",
       "type": "calculation",
       "position": {
-        "x": 367.2060787387527,
-        "y": 10629.363646887889
+        "x": 262.2060787387527,
+        "y": 10854.363646887889
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -1926,8 +1926,8 @@
       "id": "node_Mu0y2UYe",
       "type": "calculation",
       "position": {
-        "x": 2031.405506020783,
-        "y": 12076.788342815202
+        "x": 1926.405506020783,
+        "y": 12301.788342815202
       },
       "data": {
         "functionName": "identity",
@@ -1961,8 +1961,8 @@
       "id": "node_vH54RmVY",
       "type": "calculation",
       "position": {
-        "x": 2350.674517711137,
-        "y": 12234.387588283473
+        "x": 2245.674517711137,
+        "y": 12459.387588283473
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -1984,8 +1984,8 @@
       "id": "node_M97X2alf",
       "type": "opCodeNode",
       "position": {
-        "x": 846.4338236366821,
-        "y": 11408.596415905635
+        "x": 741.4338236366821,
+        "y": 11633.596415905635
       },
       "data": {
         "functionName": "op_code_select",
@@ -2008,8 +2008,8 @@
       "id": "node_IwjckYRa",
       "type": "calculation",
       "position": {
-        "x": 1347.3751728362986,
-        "y": 11491.01769441973
+        "x": 1242.3751728362986,
+        "y": 11716.01769441973
       },
       "data": {
         "functionName": "concat_all",
@@ -2067,8 +2067,8 @@
       "id": "node_n2QrEuLW",
       "type": "calculation",
       "position": {
-        "x": 840.2582236679518,
-        "y": 11780.860562862854
+        "x": 735.2582236679518,
+        "y": 12005.860562862854
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2100,8 +2100,8 @@
       "id": "node_1s54wlQC",
       "type": "calculation",
       "position": {
-        "x": 2119.8839940223043,
-        "y": 11483.940936933606
+        "x": 2014.8839940223043,
+        "y": 11708.940936933606
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2122,8 +2122,8 @@
       "id": "node_B3eyknfR",
       "type": "calculation",
       "position": {
-        "x": -238.14509073838417,
-        "y": 11647.219487571052
+        "x": -343.14509073838417,
+        "y": 11872.219487571052
       },
       "data": {
         "functionName": "random_256",
@@ -2141,8 +2141,8 @@
       "id": "node_2bvTuRO4",
       "type": "calculation",
       "position": {
-        "x": 118.48058655826026,
-        "y": 11642.894097210276
+        "x": 13.480586558260256,
+        "y": 11867.894097210276
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -2174,8 +2174,8 @@
       "id": "node_dBvlrWdY",
       "type": "calculation",
       "position": {
-        "x": 445.0641466117668,
-        "y": 11505.045363491061
+        "x": 340.0641466117668,
+        "y": 11730.045363491061
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -2207,8 +2207,8 @@
       "id": "node_d6AoR7Ce",
       "type": "calculation",
       "position": {
-        "x": 820.0566711252468,
-        "y": 7184.379853945975
+        "x": 715.0566711252468,
+        "y": 7409.379853945975
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -2229,8 +2229,8 @@
       "id": "node_rMQMqEQv",
       "type": "calculation",
       "position": {
-        "x": 400.0566711252468,
-        "y": 8564.379853945971
+        "x": 295.0566711252468,
+        "y": 8789.379853945971
       },
       "data": {
         "functionName": "identity",
@@ -2264,8 +2264,8 @@
       "id": "node_222ITwfT",
       "type": "calculation",
       "position": {
-        "x": 882.5879804552605,
-        "y": 8569.252954163112
+        "x": 777.5879804552605,
+        "y": 8794.252954163112
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -2287,8 +2287,8 @@
       "id": "node_rTKg0zQN",
       "type": "calculation",
       "position": {
-        "x": 4135.0593193461245,
-        "y": 6779.070493482945
+        "x": 4030.0593193461245,
+        "y": 7004.070493482945
       },
       "data": {
         "functionName": "identity",
@@ -2320,8 +2320,8 @@
       "id": "node_5iSO83jo",
       "type": "calculation",
       "position": {
-        "x": 4198.549412753702,
-        "y": 6875.469490736519
+        "x": 4093.549412753702,
+        "y": 7100.469490736519
       },
       "data": {
         "functionName": "identity",
@@ -2353,8 +2353,8 @@
       "id": "node_d50HvOWr",
       "type": "calculation",
       "position": {
-        "x": 4260.4287923743905,
-        "y": 6953.752610330597
+        "x": 4155.4287923743905,
+        "y": 7178.752610330597
       },
       "data": {
         "functionName": "identity",
@@ -2386,8 +2386,8 @@
       "id": "node_7IgAw1yh",
       "type": "calculation",
       "position": {
-        "x": 3951.1625768322265,
-        "y": 7250.300670629771
+        "x": 3846.1625768322265,
+        "y": 7475.300670629771
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2417,8 +2417,8 @@
       "id": "node_mzeBh15o",
       "type": "calculation",
       "position": {
-        "x": 3455.952320590419,
-        "y": 7571.306901912783
+        "x": 3350.952320590419,
+        "y": 7796.306901912783
       },
       "data": {
         "functionName": "concat_all",
@@ -2472,8 +2472,8 @@
       "id": "node_1XyIKP1B",
       "type": "calculation",
       "position": {
-        "x": 3965.3197956436416,
-        "y": 7603.241185993338
+        "x": 3860.3197956436416,
+        "y": 7828.241185993338
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2503,8 +2503,8 @@
       "id": "node_BGMOOfoc",
       "type": "calculation",
       "position": {
-        "x": 3972.886022595012,
-        "y": 8027.710295473236
+        "x": 3867.886022595012,
+        "y": 8252.710295473236
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2534,8 +2534,8 @@
       "id": "node_zI03KMpf",
       "type": "calculation",
       "position": {
-        "x": 3975.904758258599,
-        "y": 8588.15727930464
+        "x": 3870.904758258599,
+        "y": 8813.15727930464
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2565,8 +2565,8 @@
       "id": "node_ETrdNAfB",
       "type": "calculation",
       "position": {
-        "x": 4049.4529395097416,
-        "y": 9251.631144973999
+        "x": 3944.4529395097416,
+        "y": 9476.631144973999
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2596,8 +2596,8 @@
       "id": "node_dEp1vnm1",
       "type": "calculation",
       "position": {
-        "x": 3577.0571011720313,
-        "y": 9993.788378226138
+        "x": 3472.0571011720313,
+        "y": 10218.788378226138
       },
       "data": {
         "functionName": "identity",
@@ -2631,8 +2631,8 @@
       "id": "node_f4qfwYD7",
       "type": "calculation",
       "position": {
-        "x": 5573.176830652272,
-        "y": 7001.1338723736335
+        "x": 5468.176830652272,
+        "y": 7226.1338723736335
       },
       "data": {
         "functionName": "identity",
@@ -2664,8 +2664,8 @@
       "id": "node_qbaNa4B5",
       "type": "calculation",
       "position": {
-        "x": 6159.2540453683905,
-        "y": 7013.272765540205
+        "x": 6054.2540453683905,
+        "y": 7238.272765540205
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2695,8 +2695,8 @@
       "id": "node_DPq9ih6F",
       "type": "calculation",
       "position": {
-        "x": 5859.938710426082,
-        "y": 6988.52628459378
+        "x": 5754.938710426082,
+        "y": 7213.52628459378
       },
       "data": {
         "functionName": "text_to_hex",
@@ -2727,8 +2727,8 @@
       "id": "node_GV4QNHAE",
       "type": "calculation",
       "position": {
-        "x": 7004.791848783563,
-        "y": 7469.428342610674
+        "x": 6899.791848783563,
+        "y": 7694.428342610674
       },
       "data": {
         "functionName": "sha256_hex",
@@ -2758,8 +2758,8 @@
       "id": "node_Y897pl8P",
       "type": "calculation",
       "position": {
-        "x": 7498.3625826731,
-        "y": 6997.64063815225
+        "x": 7393.3625826731,
+        "y": 7222.64063815225
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -2813,8 +2813,8 @@
       "id": "node_LsCAKuuy",
       "type": "calculation",
       "position": {
-        "x": 8412.420721740069,
-        "y": 8265.388309527272
+        "x": 8307.420721740069,
+        "y": 8490.388309527272
       },
       "data": {
         "functionName": "concat_all",
@@ -2866,8 +2866,8 @@
       "id": "node_PF5j6PIX",
       "type": "calculation",
       "position": {
-        "x": 11276.731830077602,
-        "y": 7997.632806686848
+        "x": 11171.731830077602,
+        "y": 8222.632806686848
       },
       "data": {
         "functionName": "script_verification",
@@ -3061,8 +3061,8 @@
       "id": "node_ya8uMhO1",
       "type": "calculation",
       "position": {
-        "x": 1381.3396428651831,
-        "y": 6744.667291258844
+        "x": 1276.3396428651831,
+        "y": 6969.667291258844
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -3105,8 +3105,8 @@
       "id": "node_YfdM6z0I",
       "type": "calculation",
       "position": {
-        "x": 2239.58575217185,
-        "y": 6107.877605422927
+        "x": 2134.58575217185,
+        "y": 6332.877605422927
       },
       "data": {
         "functionName": "p2tr_address_from_xonly",
@@ -3141,8 +3141,8 @@
       "id": "node_C1vJHhmg",
       "type": "calculation",
       "position": {
-        "x": 6479.322712402187,
-        "y": 7226.64908447201
+        "x": 6374.322712402187,
+        "y": 7451.64908447201
       },
       "data": {
         "functionName": "concat_all",
@@ -3198,8 +3198,8 @@
       "id": "node_qu8gAOhh",
       "type": "calculation",
       "position": {
-        "x": 4287.2594397308785,
-        "y": 8799.028317809665
+        "x": 4182.2594397308785,
+        "y": 9024.028317809665
       },
       "data": {
         "functionName": "identity",
@@ -3233,8 +3233,8 @@
       "id": "node_HLnfeC73",
       "type": "calculation",
       "position": {
-        "x": 4644.382880906058,
-        "y": 8746.872026617897
+        "x": 4539.382880906058,
+        "y": 8971.872026617897
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3255,8 +3255,8 @@
       "id": "node_e0de6Gt0",
       "type": "calculation",
       "position": {
-        "x": 4893.073909443447,
-        "y": 7035.594743029273
+        "x": 4788.073909443447,
+        "y": 7260.594743029273
       },
       "data": {
         "functionName": "concat_all",
@@ -3376,8 +3376,8 @@
       "id": "node_TiCb7CVb",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -1251.1022562414219,
-        "y": 6260.0092235195725
+        "x": -1356.1022562414219,
+        "y": 6485.0092235195725
       },
       "data": {
         "content": "# Build & Sign a P2TR Key-Path Spend \n\nThis guide walks through building a Taproot (SegWit v1) transaction from scratch, signing with Schnorr, and broadcasting to testnet.\n\n## 1) Keys → Tweaked Output Key\n\n* **Private key**: 256 bits of random hex\n* **Even-Y normalization**: if the pubkey has odd Y, negate the privkey\n* **X-only pubkey**: 32 bytes (no 02/03 prefix)\n* **Apply tweak** (BIP86 key-only)\n* **Address**: bech32m encode Q → `tb1p...`\n\n## 2) Fund the address\n\nGet testnet coins from a faucet to your `tb1p...` address. Note the TXID, vout, and **amount in sats** (you'll need it for signing).\n\n## 3) Build the sighash preimage (BIP341)\n\nTaproot sighash is different from legacy/SegWit v0:\n\n* **Epoch** (0x00)\n* **Sighash type** (0x00 = default)\n* **Version** (4 bytes LE)\n* **Locktime** (4 bytes LE)\n* **sha256(prevouts)** — all inputs' outpoints\n* **sha256(amounts)** — all inputs' values (from UTXOs being spent)\n* **sha256(scriptPubKeys)** — all inputs' locking scripts (from UTXOs being spent)\n* **sha256(sequences)** — all inputs' sequences\n* **sha256(outputs)** — all outputs serialized\n* **Spend type** (0x00 for key-path, no annex)\n* **Input index** (4 bytes LE)\n\nFinal hash: `tagged_hash(\"TapSighash\", preimage)`\n\n## 4) Sign (Schnorr BIP340)\n\n* Sign the sighash with your **tweaked** private key `q` (not raw `d`)\n* Result: 64-byte signature (no suffix for default sighash)\n* Non-default sighash: append 1-byte type → 65 bytes\n\n## 5) Build witness & broadcast\n\n* Witness: just `[signature]` (single element)\n* Serialize: version + marker/flag + inputs + outputs + witness + locktime\n* Push to testnet and verify on explorer\n\n",
@@ -3392,8 +3392,8 @@
       "id": "node_yFoXklWi",
       "type": "calculation",
       "position": {
-        "x": 3007.4465260838115,
-        "y": 8193.233568202755
+        "x": 2902.4465260838115,
+        "y": 8418.233568202755
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3413,8 +3413,8 @@
       "id": "node_nA4vI6Pb",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -3314.53261352516,
-        "y": 1240.047361292532
+        "x": -3419.53261352516,
+        "y": 1465.047361292532
       },
       "data": {
         "content": "# Why Taproot Changed the Sighash Preimage\n\nBIP341 redesigned the sighash structure from BIP143 (SegWit v0). Here's what changed and why.\n\n## Key Differences\n\n| Field | BIP143 (SegWit v0) | BIP341 (Taproot) |\n|-------|-------------------|------------------|\n| Sighash type | 4 bytes | 1 byte |\n| Amounts | Only current input | **All inputs** |\n| ScriptPubKeys | Not included | **All inputs** |\n| Input index | Implicit | Explicit |\n| Epoch byte | None | 0x00 (future-proofing) |\n| Hash function | Double SHA256 | Tagged hash |\n\n---\n\n## Why Commit to All Amounts?\n\n**The problem (BIP143):** Hardware wallets only saw the current input's amount. To verify total fees, they had to fetch and validate *every* input's previous transaction — slow and complex.\n\n**The fix (BIP341):** All input amounts are committed in `sha256(amounts)`. Hardware wallet sees the full picture in one signature request. No more \"lie about other inputs to steal fees\" attack.\n\n---\n\n## Why Commit to All ScriptPubKeys?\n\nHelps offline signers verify they're signing for the expected script types. Prevents attacks where a malicious coordinator lies about what kind of output is being spent.\n\n---\n\n## Why a Spend Type Byte?\n\nTaproot supports two spending paths under one output:\n\n| Path | Witness | Revealed |\n|------|---------|----------|\n| Key-path | Just signature | Nothing |\n| Script-path | Signature + script + control block | One Merkle leaf |\n\nThe `spend_type` byte commits to which path is used and whether an annex is present (reserved for future upgrades).\n\n---\n\n## Why Tagged Hashes?\n\nBIP340/341 uses `tagged_hash(tag, data) = SHA256(SHA256(tag) || SHA256(tag) || data)`\n\n**Benefits:**\n- Domain separation: \"TapSighash\" can't collide with \"TapTweak\" or \"TapLeaf\"\n- Prevents cross-protocol attacks\n\n---\n\n## Why an Epoch Byte?\n\nThe leading `0x00` allows future signature algorithm upgrades (e.g., post-quantum) without changing the message structure. New algorithms can use `0x01`, `0x02`, etc.\n\n---\n\n## Default Signatures\n\n| Sighash | Signature |\n|---------|-----------|\n| DEFAULT (0x00) | 64 bytes (no suffix) |\n| Non-default | 65 bytes (append type) |\n\nThe common case is a clean 64-byte Schnorr signature.\n",
@@ -3429,8 +3429,8 @@
       "id": "node_DFwzlrYg",
       "type": "calculation",
       "position": {
-        "x": 4885.401315476272,
-        "y": 20324.91587604576
+        "x": 4780.401315476272,
+        "y": 20549.91587604576
       },
       "data": {
         "functionName": "identity",
@@ -3464,8 +3464,8 @@
       "id": "node_lKKUav0h",
       "type": "calculation",
       "position": {
-        "x": 5638.8229222368245,
-        "y": 20516.601176033353
+        "x": 5533.8229222368245,
+        "y": 20741.601176033353
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -3497,8 +3497,8 @@
       "id": "node_cznIWJIh",
       "type": "calculation",
       "position": {
-        "x": 4116.811266589502,
-        "y": 15762.746801681002
+        "x": 4011.8112665895023,
+        "y": 15987.746801681002
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3520,8 +3520,8 @@
       "id": "node_FZtgpJ8n",
       "type": "calculation",
       "position": {
-        "x": 3584.3935000734855,
-        "y": 19998.06161324836
+        "x": 3479.3935000734855,
+        "y": 20223.06161324836
       },
       "data": {
         "functionName": "identity",
@@ -3555,8 +3555,8 @@
       "id": "node_eE46yJ5i",
       "type": "calculation",
       "position": {
-        "x": 3903.662511763825,
-        "y": 20155.66085871663
+        "x": 3798.662511763825,
+        "y": 20380.66085871663
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -3578,8 +3578,8 @@
       "id": "node_KPo75D9L",
       "type": "opCodeNode",
       "position": {
-        "x": 2324.928483484,
-        "y": 19342.434827048135
+        "x": 2219.928483484,
+        "y": 19567.434827048135
       },
       "data": {
         "functionName": "op_code_select",
@@ -3602,8 +3602,8 @@
       "id": "node_7HIQdWsw",
       "type": "calculation",
       "position": {
-        "x": 2886.6077487075963,
-        "y": 19419.25007010724
+        "x": 2781.6077487075963,
+        "y": 19644.25007010724
       },
       "data": {
         "functionName": "concat_all",
@@ -3661,8 +3661,8 @@
       "id": "node_McPi4jTC",
       "type": "calculation",
       "position": {
-        "x": 2449.7893509126807,
-        "y": 19795.47487856541
+        "x": 2344.7893509126807,
+        "y": 20020.47487856541
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3694,8 +3694,8 @@
       "id": "node_eKMbr7yG",
       "type": "calculation",
       "position": {
-        "x": 5206.986134450039,
-        "y": 21006.638561854805
+        "x": 5101.986134450039,
+        "y": 21231.638561854805
       },
       "data": {
         "functionName": "identity",
@@ -3729,8 +3729,8 @@
       "id": "node_ubOjS2yC",
       "type": "calculation",
       "position": {
-        "x": 4695.378715994972,
-        "y": 15676.519445806749
+        "x": 4590.378715994972,
+        "y": 15901.519445806749
       },
       "data": {
         "functionName": "concat_all",
@@ -3795,8 +3795,8 @@
       "id": "node_BhGXAafW",
       "type": "calculation",
       "position": {
-        "x": 5101.300784685409,
-        "y": 17679.621406070233
+        "x": 4996.300784685409,
+        "y": 17904.621406070233
       },
       "data": {
         "functionName": "concat_all",
@@ -3852,8 +3852,8 @@
       "id": "node_Yd9Rz8Ce",
       "type": "calculation",
       "position": {
-        "x": 3631.605733530807,
-        "y": 19396.960956457926
+        "x": 3526.605733530807,
+        "y": 19621.960956457926
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3874,8 +3874,8 @@
       "id": "node_l7gTbjIR",
       "type": "calculation",
       "position": {
-        "x": 3809.659794013365,
-        "y": 15577.037482248867
+        "x": 3704.659794013365,
+        "y": 15802.037482248867
       },
       "data": {
         "functionName": "identity",
@@ -3907,8 +3907,8 @@
       "id": "node_B7UmKfBF",
       "type": "calculation",
       "position": {
-        "x": 755.0255091325234,
-        "y": 19137.68677976555
+        "x": 650.0255091325234,
+        "y": 19362.68677976555
       },
       "data": {
         "functionName": "random_256",
@@ -3926,8 +3926,8 @@
       "id": "node_mM35t19J",
       "type": "calculation",
       "position": {
-        "x": 1051.3077562985782,
-        "y": 19130.479878468257
+        "x": 946.3077562985782,
+        "y": 19355.479878468257
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -3959,8 +3959,8 @@
       "id": "node_SyJZmYH6",
       "type": "calculation",
       "position": {
-        "x": 1466.677712280005,
-        "y": 19237.27786496286
+        "x": 1361.677712280005,
+        "y": 19462.27786496286
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -3990,8 +3990,8 @@
       "id": "node_jCe8Kfj4",
       "type": "calculation",
       "position": {
-        "x": 3682.9240737794826,
-        "y": 21267.032508433327
+        "x": 3577.9240737794826,
+        "y": 21492.032508433327
       },
       "data": {
         "functionName": "identity",
@@ -4025,8 +4025,8 @@
       "id": "node_mwo7dpBc",
       "type": "calculation",
       "position": {
-        "x": 4002.1930854698367,
-        "y": 21424.631753901598
+        "x": 3897.1930854698367,
+        "y": 21649.631753901598
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -4048,8 +4048,8 @@
       "id": "node_xncgn3MI",
       "type": "opCodeNode",
       "position": {
-        "x": 2497.9523913953817,
-        "y": 20598.84058152376
+        "x": 2392.9523913953817,
+        "y": 20823.84058152376
       },
       "data": {
         "functionName": "op_code_select",
@@ -4072,8 +4072,8 @@
       "id": "node_qitTmrH3",
       "type": "calculation",
       "position": {
-        "x": 2998.8937405949982,
-        "y": 20681.261860037856
+        "x": 2893.8937405949982,
+        "y": 20906.261860037856
       },
       "data": {
         "functionName": "concat_all",
@@ -4131,8 +4131,8 @@
       "id": "node_aeu9Wus4",
       "type": "calculation",
       "position": {
-        "x": 2491.7767914266515,
-        "y": 20971.10472848098
+        "x": 2386.7767914266515,
+        "y": 21196.10472848098
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -4164,8 +4164,8 @@
       "id": "node_v9BXVNK4",
       "type": "calculation",
       "position": {
-        "x": 3771.402561781004,
-        "y": 20674.18510255173
+        "x": 3666.402561781004,
+        "y": 20899.18510255173
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4186,8 +4186,8 @@
       "id": "node_JkQIpCy6",
       "type": "calculation",
       "position": {
-        "x": 924.5509386020349,
-        "y": 20758.90288808624
+        "x": 819.5509386020349,
+        "y": 20983.90288808624
       },
       "data": {
         "functionName": "random_256",
@@ -4205,8 +4205,8 @@
       "id": "node_vIfBxkY0",
       "type": "calculation",
       "position": {
-        "x": 1281.1766158986866,
-        "y": 20754.577497725462
+        "x": 1176.1766158986866,
+        "y": 20979.577497725462
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -4238,8 +4238,8 @@
       "id": "node_93iVOiIY",
       "type": "calculation",
       "position": {
-        "x": 1724.1464946232081,
-        "y": 20706.928160976287
+        "x": 1619.1464946232081,
+        "y": 20931.928160976287
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -4269,8 +4269,8 @@
       "id": "node_HK49spat",
       "type": "calculation",
       "position": {
-        "x": 4630.164429601813,
-        "y": 16665.231608174345
+        "x": 4525.164429601813,
+        "y": 16890.231608174345
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -4292,8 +4292,8 @@
       "id": "node_EdlNLqbe",
       "type": "calculation",
       "position": {
-        "x": 5786.577887104824,
-        "y": 15969.31465910107
+        "x": 5681.577887104824,
+        "y": 16194.31465910107
       },
       "data": {
         "functionName": "identity",
@@ -4325,8 +4325,8 @@
       "id": "node_k3SnVZRe",
       "type": "calculation",
       "position": {
-        "x": 5850.067980512402,
-        "y": 16065.713656354645
+        "x": 5745.067980512402,
+        "y": 16290.713656354645
       },
       "data": {
         "functionName": "identity",
@@ -4358,8 +4358,8 @@
       "id": "node_DqbYrSfI",
       "type": "calculation",
       "position": {
-        "x": 5911.94736013309,
-        "y": 16143.996775948723
+        "x": 5806.94736013309,
+        "y": 16368.996775948723
       },
       "data": {
         "functionName": "identity",
@@ -4391,8 +4391,8 @@
       "id": "node_JP2m92cA",
       "type": "calculation",
       "position": {
-        "x": 5602.681144590933,
-        "y": 16440.544836247896
+        "x": 5497.681144590933,
+        "y": 16665.544836247896
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4422,8 +4422,8 @@
       "id": "node_oKa5idZA",
       "type": "calculation",
       "position": {
-        "x": 5005.195149975138,
-        "y": 16650.15089501447
+        "x": 4900.195149975138,
+        "y": 16875.15089501447
       },
       "data": {
         "functionName": "concat_all",
@@ -4478,8 +4478,8 @@
       "id": "node_SJnzUo1r",
       "type": "calculation",
       "position": {
-        "x": 5616.838363402341,
-        "y": 16793.485351611464
+        "x": 5511.838363402341,
+        "y": 17018.485351611464
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4509,8 +4509,8 @@
       "id": "node_L7ZhEpAn",
       "type": "calculation",
       "position": {
-        "x": 5624.404590353712,
-        "y": 17217.95446109136
+        "x": 5519.404590353712,
+        "y": 17442.95446109136
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4540,8 +4540,8 @@
       "id": "node_3GnmDOn2",
       "type": "calculation",
       "position": {
-        "x": 5627.423326017299,
-        "y": 17778.401444922765
+        "x": 5522.423326017299,
+        "y": 18003.401444922765
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4571,8 +4571,8 @@
       "id": "node_YIxfo9S7",
       "type": "calculation",
       "position": {
-        "x": 5700.971507268441,
-        "y": 18441.875310592124
+        "x": 5595.971507268441,
+        "y": 18666.875310592124
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4602,8 +4602,8 @@
       "id": "node_wthUxHBw",
       "type": "calculation",
       "position": {
-        "x": 5085.717500654049,
-        "y": 19442.276155729036
+        "x": 4980.717500654049,
+        "y": 19667.276155729036
       },
       "data": {
         "functionName": "identity",
@@ -4637,8 +4637,8 @@
       "id": "node_LnkQEE4u",
       "type": "calculation",
       "position": {
-        "x": 5938.778007489578,
-        "y": 17989.27248342779
+        "x": 5833.778007489578,
+        "y": 18214.27248342779
       },
       "data": {
         "functionName": "identity",
@@ -4672,8 +4672,8 @@
       "id": "node_0fVw0cvs",
       "type": "calculation",
       "position": {
-        "x": 6295.9014486647575,
-        "y": 17937.116192236022
+        "x": 6190.9014486647575,
+        "y": 18162.116192236022
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4694,8 +4694,8 @@
       "id": "node_37K6LAqe",
       "type": "calculation",
       "position": {
-        "x": 6544.592477202146,
-        "y": 16225.838908647398
+        "x": 6439.592477202146,
+        "y": 16450.838908647398
       },
       "data": {
         "functionName": "concat_all",
@@ -4815,8 +4815,8 @@
       "id": "node_9VSArPzE",
       "type": "calculation",
       "position": {
-        "x": 4069.113012339345,
-        "y": 17343.286920610313
+        "x": 3964.113012339345,
+        "y": 17568.286920610313
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4836,8 +4836,8 @@
       "id": "node_1nTRFwMM",
       "type": "calculation",
       "position": {
-        "x": 1049.3115112500163,
-        "y": 19693.18074770648
+        "x": 944.3115112500163,
+        "y": 19918.18074770648
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -4880,8 +4880,8 @@
       "id": "node_KahfJBoA",
       "type": "calculation",
       "position": {
-        "x": 1317.3501719504784,
-        "y": 21240.790337744005
+        "x": 1212.3501719504784,
+        "y": 21465.790337744005
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -4924,8 +4924,8 @@
       "id": "node_fUmc6xch",
       "type": "calculation",
       "position": {
-        "x": 4137.298840776042,
-        "y": 16244.17013656476
+        "x": 4032.298840776042,
+        "y": 16469.17013656476
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4947,8 +4947,8 @@
       "id": "node_9xg5RQgI",
       "type": "calculation",
       "position": {
-        "x": 3798.720467533196,
-        "y": 16111.886548266019
+        "x": 3693.720467533196,
+        "y": 16336.886548266019
       },
       "data": {
         "functionName": "identity",
@@ -4980,8 +4980,8 @@
       "id": "node_1h4Nvtsy",
       "type": "calculation",
       "position": {
-        "x": 4610.954581020669,
-        "y": 16950.908379586675
+        "x": 4505.954581020669,
+        "y": 17175.908379586675
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -5003,8 +5003,8 @@
       "id": "node_YM2H3ZKe",
       "type": "calculation",
       "position": {
-        "x": 4074.405290253031,
-        "y": 17600.583170602964
+        "x": 3969.405290253031,
+        "y": 17825.583170602964
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5024,8 +5024,8 @@
       "id": "node_NLsoTJku",
       "type": "calculation",
       "position": {
-        "x": 10934.527025236173,
-        "y": 17023.645732126974
+        "x": 10829.527025236173,
+        "y": 17248.645732126974
       },
       "data": {
         "functionName": "identity",
@@ -5057,8 +5057,8 @@
       "id": "node_K47YwH85",
       "type": "calculation",
       "position": {
-        "x": 10971.940168761997,
-        "y": 17367.93410101684
+        "x": 10866.940168761997,
+        "y": 17592.93410101684
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5079,8 +5079,8 @@
       "id": "node_72mYEGsz",
       "type": "calculation",
       "position": {
-        "x": 7350,
-        "y": 16212.607587779854
+        "x": 7245,
+        "y": 16437.607587779854
       },
       "data": {
         "functionName": "identity",
@@ -5112,8 +5112,8 @@
       "id": "node_BcOgAr7T",
       "type": "calculation",
       "position": {
-        "x": 7936.077214716119,
-        "y": 16224.746480946425
+        "x": 7831.077214716119,
+        "y": 16449.746480946425
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5143,8 +5143,8 @@
       "id": "node_9TIRrePY",
       "type": "calculation",
       "position": {
-        "x": 7636.761879773803,
-        "y": 16200
+        "x": 7531.761879773803,
+        "y": 16425
       },
       "data": {
         "functionName": "text_to_hex",
@@ -5175,8 +5175,8 @@
       "id": "node_ndXYlTVQ",
       "type": "calculation",
       "position": {
-        "x": 8781.615018131291,
-        "y": 16680.902058016894
+        "x": 8676.615018131291,
+        "y": 16905.902058016894
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5206,8 +5206,8 @@
       "id": "node_QKSKmKTr",
       "type": "calculation",
       "position": {
-        "x": 9275.185752020829,
-        "y": 16209.11435355847
+        "x": 9170.185752020829,
+        "y": 16434.11435355847
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -5216,7 +5216,7 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "b11fbdb712f5d37bc9e192e6c0793e6ea3313501ce644f790cdbafaba59b03c6",
+            "0": "4ee04248ed0a2c84361e6d193f86c190177da7e4e0e450c2b2f6aee12a9b3d7b",
             "1": "cea5ed8a62b8c4e6a83a0eb669a7c172948cae7202e4c54f6489046eb1796c8d",
             "2": "__EMPTY__"
           }
@@ -5261,8 +5261,8 @@
       "id": "node_QdfiJUyL",
       "type": "calculation",
       "position": {
-        "x": 11600.902686317982,
-        "y": 17192.925976496957
+        "x": 11495.902686317982,
+        "y": 17417.925976496957
       },
       "data": {
         "functionName": "concat_all",
@@ -5314,8 +5314,8 @@
       "id": "node_FOuGDk5s",
       "type": "calculation",
       "position": {
-        "x": 8256.145881749915,
-        "y": 16438.12279987823
+        "x": 8151.145881749915,
+        "y": 16663.12279987823
       },
       "data": {
         "functionName": "concat_all",
@@ -5371,8 +5371,8 @@
       "id": "node_DnTj1VPm",
       "type": "calculation",
       "position": {
-        "x": 8711.924589801063,
-        "y": 19661.196156127404
+        "x": 8606.924589801063,
+        "y": 19886.196156127404
       },
       "data": {
         "functionName": "identity",
@@ -5404,8 +5404,8 @@
       "id": "node_NTOAAKJi",
       "type": "calculation",
       "position": {
-        "x": 9298.001804517182,
-        "y": 19673.335049293975
+        "x": 9193.001804517182,
+        "y": 19898.335049293975
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5435,8 +5435,8 @@
       "id": "node_ton5DPd4",
       "type": "calculation",
       "position": {
-        "x": 8998.686469574866,
-        "y": 19648.58856834755
+        "x": 8893.686469574866,
+        "y": 19873.58856834755
       },
       "data": {
         "functionName": "text_to_hex",
@@ -5467,8 +5467,8 @@
       "id": "node_l92QZO73",
       "type": "calculation",
       "position": {
-        "x": 10143.539607932347,
-        "y": 20129.490626364444
+        "x": 10038.539607932347,
+        "y": 20354.490626364444
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5498,8 +5498,8 @@
       "id": "node_UbI4PhNy",
       "type": "calculation",
       "position": {
-        "x": 10637.110341821885,
-        "y": 19657.70292190602
+        "x": 10532.110341821885,
+        "y": 19882.70292190602
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -5508,7 +5508,7 @@
         "numInputs": 3,
         "inputs": {
           "vals": {
-            "0": "6b8955f6999c4aac3b9010a0a9467204bc70b1eb7ff2bde606d10f932fce5400",
+            "0": "9476aa096663b553c46fef5f56b98df9fe3e2afb2f55e255b9014ef9a067ed41",
             "1": "136ec2a10ab839ecc38e9260109ddce55dde798a6620f7ee836eeba3d7077831",
             "2": "__EMPTY__"
           }
@@ -5553,8 +5553,8 @@
       "id": "node_6DYrrI1T",
       "type": "calculation",
       "position": {
-        "x": 9618.070471550971,
-        "y": 19886.71136822578
+        "x": 9513.070471550971,
+        "y": 20111.71136822578
       },
       "data": {
         "functionName": "concat_all",
@@ -5610,8 +5610,8 @@
       "id": "node_4DrciV0l",
       "type": "calculation",
       "position": {
-        "x": 7028.284107584819,
-        "y": 18310.585190347894
+        "x": 6923.284107584819,
+        "y": 18535.585190347894
       },
       "data": {
         "functionName": "concat_all",
@@ -5731,8 +5731,8 @@
       "id": "node_cK5vMFjq",
       "type": "calculation",
       "position": {
-        "x": 6076.490677649337,
-        "y": 19249.692759691887
+        "x": 5971.490677649337,
+        "y": 19474.692759691887
       },
       "data": {
         "functionName": "identity",
@@ -5766,8 +5766,8 @@
       "id": "node_xHOqG69Z",
       "type": "calculation",
       "position": {
-        "x": 6433.6141188245165,
-        "y": 19197.53646850012
+        "x": 6328.6141188245165,
+        "y": 19422.53646850012
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5788,8 +5788,8 @@
       "id": "node_AdUkmQrd",
       "type": "calculation",
       "position": {
-        "x": 11190,
-        "y": 19650
+        "x": 11085,
+        "y": 19875
       },
       "data": {
         "functionName": "identity",
@@ -5821,8 +5821,8 @@
       "id": "node_uWjThGU2",
       "type": "calculation",
       "position": {
-        "x": 11227.413143525824,
-        "y": 19994.288368889866
+        "x": 11122.413143525824,
+        "y": 20219.288368889866
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5843,8 +5843,8 @@
       "id": "node_CMtrgjdL",
       "type": "calculation",
       "position": {
-        "x": 11856.375661081809,
-        "y": 19819.280244369984
+        "x": 11751.375661081809,
+        "y": 20044.280244369984
       },
       "data": {
         "functionName": "concat_all",
@@ -5896,8 +5896,8 @@
       "id": "node_sUYQF1Wo",
       "type": "calculation",
       "position": {
-        "x": 13065,
-        "y": 16755
+        "x": 12960,
+        "y": 16980
       },
       "data": {
         "functionName": "identity",
@@ -5929,8 +5929,8 @@
       "id": "node_Bl0wETqK",
       "type": "calculation",
       "position": {
-        "x": 13547.130320613986,
-        "y": 16770.58332682807
+        "x": 13442.130320613986,
+        "y": 16995.58332682807
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5952,8 +5952,8 @@
       "id": "node_0cvqaY1c",
       "type": "calculation",
       "position": {
-        "x": 13515.392243480106,
-        "y": 17118.459266276233
+        "x": 13410.392243480106,
+        "y": 17343.459266276233
       },
       "data": {
         "functionName": "identity",
@@ -5985,8 +5985,8 @@
       "id": "node_Zzorhaot",
       "type": "calculation",
       "position": {
-        "x": 13590.849860988332,
-        "y": 17160.117185835148
+        "x": 13485.849860988332,
+        "y": 17385.117185835148
       },
       "data": {
         "functionName": "identity",
@@ -6018,8 +6018,8 @@
       "id": "node_RyIa1Ju5",
       "type": "calculation",
       "position": {
-        "x": 13204.131818964495,
-        "y": 17420.040821875544
+        "x": 13099.131818964495,
+        "y": 17645.040821875544
       },
       "data": {
         "functionName": "identity",
@@ -6054,8 +6054,8 @@
       "id": "node_YTxvcOBP",
       "type": "calculation",
       "position": {
-        "x": 13566.284382387406,
-        "y": 17472.537634804863
+        "x": 13461.284382387406,
+        "y": 17697.537634804863
       },
       "data": {
         "functionName": "encode_varint",
@@ -6076,8 +6076,8 @@
       "id": "node_ijY20qpK",
       "type": "calculation",
       "position": {
-        "x": 13247.78495353552,
-        "y": 18603.227205488573
+        "x": 13142.78495353552,
+        "y": 18828.227205488573
       },
       "data": {
         "functionName": "identity",
@@ -6109,8 +6109,8 @@
       "id": "node_3u6SsEr6",
       "type": "calculation",
       "position": {
-        "x": 13637.84012095313,
-        "y": 18686.72072666571
+        "x": 13532.84012095313,
+        "y": 18911.72072666571
       },
       "data": {
         "functionName": "encode_varint",
@@ -6131,8 +6131,8 @@
       "id": "node_wJEpK7Cr",
       "type": "calculation",
       "position": {
-        "x": 15801.358811036138,
-        "y": 19170.655658967004
+        "x": 15696.358811036138,
+        "y": 19395.655658967004
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -6163,8 +6163,8 @@
       "id": "node_h4wInxDH",
       "type": "calculation",
       "position": {
-        "x": 16295.584801720855,
-        "y": 19199.960109037624
+        "x": 16190.584801720855,
+        "y": 19424.960109037624
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -6185,8 +6185,8 @@
       "id": "node_gUC3ZDTe",
       "type": "calculation",
       "position": {
-        "x": 14657.239053811754,
-        "y": 17499.017071401107
+        "x": 14552.239053811754,
+        "y": 17724.017071401107
       },
       "data": {
         "functionName": "concat_all",
@@ -6395,8 +6395,8 @@
       "id": "node_TExfEpbS",
       "type": "calculation",
       "position": {
-        "x": 15571.24513780696,
-        "y": 17531.988337454583
+        "x": 15466.24513780696,
+        "y": 17756.988337454583
       },
       "data": {
         "functionName": "script_verification",
@@ -6599,8 +6599,8 @@
       "id": "node_r38DpOxL",
       "type": "calculation",
       "position": {
-        "x": 17266.835778545275,
-        "y": 20211.73499225581
+        "x": 17161.835778545275,
+        "y": 20436.73499225581
       },
       "data": {
         "functionName": "concat_all",
@@ -6809,8 +6809,8 @@
       "id": "node_rr15IAFH",
       "type": "calculation",
       "position": {
-        "x": 17940.057971507857,
-        "y": 21456.73499225581
+        "x": 17835.057971507857,
+        "y": 21681.73499225581
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -6841,8 +6841,8 @@
       "id": "node_aHlpgSNx",
       "type": "calculation",
       "position": {
-        "x": 18273.706145187527,
-        "y": 21540.007455037343
+        "x": 18168.706145187527,
+        "y": 21765.007455037343
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -6863,8 +6863,8 @@
       "id": "node_CUu2wKhr",
       "type": "calculation",
       "position": {
-        "x": 16337.144914301774,
-        "y": 17521.658936358046
+        "x": 16232.144914301774,
+        "y": 17746.658936358046
       },
       "data": {
         "functionName": "script_verification",
@@ -7067,8 +7067,8 @@
       "id": "node_3lYRs4yr",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 1479.640436325164,
-        "y": 15635.768400312802
+        "x": 1374.640436325164,
+        "y": 15860.768400312802
       },
       "data": {
         "content": "# Multi-Input P2TR: What's Different\n\nThis flow spends **2 P2TR inputs** from the previous transaction. The sighash structure is identical — here's what changes.\n\n## Computed Once, Reused for All Signatures\n\n| Hash | Contents |\n|------|----------|\n| sha_prevouts | All inputs' outpoints concatenated |\n| sha_amounts | All inputs' amounts concatenated |\n| sha_scriptpubkeys | All inputs' scriptPubKeys concatenated |\n| sha_sequences | All inputs' sequences concatenated |\n| sha_outputs | All outputs (unchanged) |\n\n## Different Per Input\n\n| -| Input 0 | Input 1 |\n|-|---------|---------|\n| input_index | `00000000` | `01000000` |\n| Signing key | Owner of input 0 | Owner of input 1 |\n| Sighash | Different | Different |\n| Signature | Different | Different |\n\n## Witness Structure\n\nWitnesses are ordered by input index:\n```\n0140<sig_0>0140<sig_1>\n```\n\n## Verification Note\n\nFor multi-input Taproot transactions, the **Verify Script** node requires all inputs' prevout data (amount + scriptPubKey) in the \"Taproot Prevouts\" section. Single-input transactions only need `spent_amount_sats`.",
@@ -7083,8 +7083,8 @@
       "id": "node_LwIITAVJ",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 12998.385196836745,
-        "y": 22756.831374231948
+        "x": 12893.385196836745,
+        "y": 22981.831374231948
       },
       "data": {
         "content": "# Exercises\n\nPractice building Taproot transactions and understanding the efficiency gains.\n\n## Exercise 1 — Fee Comparison: P2TR vs P2WPKH\n\n**Goal:** Compare witness sizes between Taproot and SegWit v0.\n\nUsing flows from Lesson 8 (P2WPKH) and this lesson (P2TR), find:\n\n\n**Calculate:**\n- Witness weight savings (%)\n- Fee savings at 10 sat/vB for a 1-in-1-out transaction\n\n**Why is P2TR smaller?**\nHint: Where is the pubkey in each output type?\n\n---\n\n## Exercise 2 — Chain the Outputs\n\n**Goal:** Spend one of the outputs from the 2-in-2-out transaction.\n\n- Pick output 0 or output 1 \n- Build a new 1-in-1-out P2TR spend\n- Use the matching signing key\n- Verify the transaction\n\n**What to verify:**\n- Correct TXID (from the 2-in-2-out tx)\n- Correct vout (0 or 1)\n- Amount matches (minus fee)\n- Verification passes\n",
@@ -7099,8 +7099,8 @@
       "id": "node_iI7eRdRk",
       "type": "calculation",
       "position": {
-        "x": 12535.514711412623,
-        "y": 6821.315164037868
+        "x": 12430.514711412623,
+        "y": 7046.315164037868
       },
       "data": {
         "functionName": "concat_all",
@@ -7303,8 +7303,8 @@
       "id": "node_YSvPdWn5",
       "type": "calculation",
       "position": {
-        "x": 13277.491153032905,
-        "y": 7362.4938943466495
+        "x": 13172.491153032905,
+        "y": 7587.4938943466495
       },
       "data": {
         "functionName": "script_verification",
@@ -7452,8 +7452,8 @@
       "id": "node_f5uXzfij",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 14370.1554025382,
-        "y": 6868.511876936749
+        "x": 14265.1554025382,
+        "y": 7093.511876936749
       },
       "data": {
         "content": "# Soft-Fork Compatibility Demo\n\n**This transaction has NO valid signature** — just an empty witness.\n\nWith Taproot rules disabled (`exclude_flags: TAPROOT, DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM`), \nthe verifier simulates a **pre-Taproot SegWit node**:\n\n1. Sees `OP_1 <32B>` = witness version 1\n2. Doesn't recognize v1 → BIP141 says \"accept for forward compatibility\"\n3. Result: `true` \n\n**With Taproot enabled** (no excluded flags):\n- BIP341/342 rules apply — witness must be non-empty\n- Key-path: single 64/65-byte Schnorr signature\n- Script-path: control block + script + witness stack\n- Empty witness → `false`  (\"invalid schnorr signature size\")\n\n**Why two flags?**\n- `TAPROOT` — when disabled, treats v1 witness as \"upgradeable\" (skips BIP341 validation)\n- `DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM` — policy rule that rejects unknown witness versions\n\nPre-Taproot nodes had two layers:\n- **Consensus**: Accept unknown witness versions in blocks (BIP141 forward compatibility)\n- **Policy**: Reject them from mempool (prevent accidental use before activation)\n\nExcluding only `TAPROOT` → rejected as non-standard (policy).\nExcluding both → accepted as upgradeable (consensus).\n\nThis is how soft-forks work: new rules only **restrict**, never expand.\nOld nodes stay compatible by accepting what they don't understand.",
@@ -7468,8 +7468,8 @@
       "id": "node_frp0UTeq",
       "type": "calculation",
       "position": {
-        "x": 12135,
-        "y": 8460
+        "x": 12030,
+        "y": 8685
       },
       "data": {
         "functionName": "identity",
@@ -7500,8 +7500,8 @@
       "id": "node_OG0Z4ug8",
       "type": "calculation",
       "position": {
-        "x": 13771.981313436765,
-        "y": 7370.660437812256
+        "x": 13666.981313436765,
+        "y": 7595.660437812256
       },
       "data": {
         "functionName": "script_verification",
@@ -7651,8 +7651,8 @@
       "id": "node_3M75776Z",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 1974.149779602165,
-        "y": 21590.859300619264
+        "x": 1869.149779602165,
+        "y": 21815.859300619264
       },
       "data": {
         "content": "# BIP86 Proof: No Hidden Scripts\n\n**The problem:** On-chain, you only see `OP_1 <Q>`. You can't tell if Q commits to hidden script paths.\n\n**The proof:** Owner reveals their untweaked internal key P.\n\n**Verification:**\n1. Take revealed P\n2. Compute Q' = P + tagged_hash(\"TapTweak\", P) × G\n3. Compare Q' with on-chain Q\n4. Match? → Proven: no scripts exist\n\n**Why it works:**\nIf scripts existed, the tweak would include a merkle root:\n`Q = P + tagged_hash(\"TapTweak\", P || merkle_root) × G`\n\nDifferent hash input → different Q. Owner can't fake a P that matches.\n\n**Use cases:**\n- Custody audits: \"Prove no backdoor spending paths\"\n- Collateral contracts: \"Prove no hidden escape clause\"\n- Exchange proof-of-reserves: \"Prove simple single-key holdings\"\n\n**Note:** The flow above shows this exact computation — the internal key P is tweaked (with empty merkle root) to produce output key Q.",
@@ -7667,8 +7667,8 @@
       "id": "node_IcuvZiJ7",
       "type": "calculation",
       "position": {
-        "x": 4787.367163209354,
-        "y": 18389.0371840591
+        "x": 4682.367163209354,
+        "y": 18614.0371840591
       },
       "data": {
         "functionName": "concat_all",
@@ -7743,8 +7743,8 @@
       "id": "node_u38djmt",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -6176.933031852542,
-        "y": 689.8344766420367
+        "x": -6281.933031852542,
+        "y": 914.8344766420367
       },
       "data": {
         "content": "# Lesson 11: Taproot Key-Path Spends\n\nTaproot is three BIPs working together: BIP340 (Schnorr), BIP341 (P2TR), BIP342 (Tapscript).\n\nThis lesson builds a key-path spend from scratch:\n\n1. Generate a key, normalize to even-Y, get x-only pubkey (32 bytes, no prefix)\n2. Tweak it: Q = P + H(\"TapTweak\", P)·G → bech32m address\n3. Build the BIP341 sighash (new structure: commits to ALL inputs' amounts and scripts)\n4. Sign with tweaked privkey → 64-byte Schnorr signature\n5. Witness = just the signature. Done.\n\nAlso covers: multi-input signing, soft-fork compatibility demo, BIP86 proof-of-no-scripts.",
@@ -7759,8 +7759,8 @@
       "id": "node_xa7k85s",
       "type": "calculation",
       "position": {
-        "x": 3434.9610509915688,
-        "y": 8037.639912700257
+        "x": 3329.9610509915688,
+        "y": 8262.639912700257
       },
       "data": {
         "functionName": "concat_all",
@@ -7822,8 +7822,8 @@
       "id": "node_k3inpu0",
       "type": "calculation",
       "position": {
-        "x": 4518.93888888889,
-        "y": 17347.655555555557
+        "x": 4413.93888888889,
+        "y": 17572.655555555557
       },
       "data": {
         "functionName": "concat_all",
@@ -7887,8 +7887,8 @@
       "id": "node_5pvb0i9",
       "type": "calculation",
       "position": {
-        "x": 2571.6251011320796,
-        "y": 3696.1218469953023
+        "x": 2466.6251011320796,
+        "y": 3921.1218469953023
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -7943,8 +7943,8 @@
       "id": "node_3fzjhaf",
       "type": "calculation",
       "position": {
-        "x": 1672.3601671179001,
-        "y": 6120.243363930555
+        "x": 1567.3601671179001,
+        "y": 6345.243363930555
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -8000,8 +8000,8 @@
       "id": "node_f1u1bf4",
       "type": "calculation",
       "position": {
-        "x": 2031.531535342206,
-        "y": 20598.77202878333
+        "x": 1926.531535342206,
+        "y": 20823.77202878333
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -8059,8 +8059,8 @@
       "id": "node_yhfsbwv",
       "type": "calculation",
       "position": {
-        "x": 1855.1849793347042,
-        "y": 19465.058365649216
+        "x": 1750.1849793347042,
+        "y": 19690.058365649216
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -9272,13 +9272,6 @@
       "selected": false
     },
     {
-      "id": "edge_P5UT4xS1",
-      "source": "node_5ysyGjuU",
-      "target": "node_QKSKmKTr",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
       "source": "node_DnTj1VPm",
       "target": "node_ton5DPd4",
       "targetHandle": "input-0",
@@ -9409,13 +9402,6 @@
       "source": "node_4DrciV0l",
       "target": "node_6DYrrI1T",
       "targetHandle": "input-200",
-      "selected": false
-    },
-    {
-      "id": "edge_3sV50I3n",
-      "source": "node_B3eyknfR",
-      "target": "node_UbI4PhNy",
-      "targetHandle": "input-0",
       "selected": false
     },
     {
@@ -10137,63 +10123,71 @@
       "target": "node_3fzjhaf",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_T7cz8xkK-node_3fzjhafinput-0",
-      "sourceHandle": null
+      "id": "xy-edge__node_T7cz8xkK-node_3fzjhafinput-0"
     },
     {
       "source": "node_3fzjhaf",
       "target": "node_YfdM6z0I",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_3fzjhaf-node_YfdM6z0Iinput-0",
-      "sourceHandle": null
+      "id": "xy-edge__node_3fzjhaf-node_YfdM6z0Iinput-0"
     },
     {
       "source": "node_93iVOiIY",
       "target": "node_f1u1bf4",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_93iVOiIY-node_f1u1bf4input-0",
-      "sourceHandle": null
+      "id": "xy-edge__node_93iVOiIY-node_f1u1bf4input-0"
     },
     {
       "source": "node_f1u1bf4",
       "target": "node_aeu9Wus4",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_f1u1bf4-node_aeu9Wus4input-0",
-      "sourceHandle": null
+      "id": "xy-edge__node_f1u1bf4-node_aeu9Wus4input-0"
     },
     {
       "source": "node_f1u1bf4",
       "target": "node_qitTmrH3",
       "targetHandle": "input-200",
       "selected": false,
-      "id": "xy-edge__node_f1u1bf4-node_qitTmrH3input-200",
-      "sourceHandle": null
+      "id": "xy-edge__node_f1u1bf4-node_qitTmrH3input-200"
     },
     {
       "source": "node_yhfsbwv",
       "target": "node_7HIQdWsw",
       "targetHandle": "input-200",
       "selected": false,
-      "id": "xy-edge__node_yhfsbwv-node_7HIQdWswinput-200",
-      "sourceHandle": null
+      "id": "xy-edge__node_yhfsbwv-node_7HIQdWswinput-200"
     },
     {
       "source": "node_yhfsbwv",
       "target": "node_McPi4jTC",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_yhfsbwv-node_McPi4jTCinput-0",
-      "sourceHandle": null
+      "id": "xy-edge__node_yhfsbwv-node_McPi4jTCinput-0"
     },
     {
       "source": "node_SyJZmYH6",
       "target": "node_yhfsbwv",
       "targetHandle": "input-0",
       "selected": false,
-      "id": "xy-edge__node_SyJZmYH6-node_yhfsbwvinput-0",
+      "id": "xy-edge__node_SyJZmYH6-node_yhfsbwvinput-0"
+    },
+    {
+      "source": "node_Qm8Ur78A",
+      "target": "node_QKSKmKTr",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_Qm8Ur78A-node_QKSKmKTrinput-0",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_2bvTuRO4",
+      "target": "node_UbI4PhNy",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_2bvTuRO4-node_UbI4PhNyinput-0",
       "sourceHandle": null
     }
   ]

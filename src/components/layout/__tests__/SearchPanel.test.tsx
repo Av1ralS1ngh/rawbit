@@ -30,17 +30,15 @@ describe("SearchPanel", () => {
         setQuery={vi.fn()}
         onSelect={vi.fn()}
         hasVisibleTabs
-        onHighlightAll={vi.fn()}
         {...override}
       />
     );
 
-  it("debounces query updates and clears highlights on change", () => {
+  it("debounces query updates on change", () => {
     vi.useFakeTimers();
     const setQuery = vi.fn();
-    const onHighlightAll = vi.fn();
 
-    renderPanel({ setQuery, onHighlightAll });
+    renderPanel({ setQuery });
 
     const input = screen.getByPlaceholderText("Search node id, name, text");
     fireEvent.change(input, { target: { value: "hash" } });
@@ -48,17 +46,7 @@ describe("SearchPanel", () => {
     expect(setQuery).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(100));
     expect(setQuery).toHaveBeenCalledWith("hash");
-    expect(onHighlightAll).toHaveBeenCalledWith([]);
     vi.useRealTimers();
-  });
-
-  it("supports highlight-all toggle with matches", async () => {
-    const onHighlightAll = vi.fn();
-    renderPanel({ query: "hash node", setQuery: vi.fn(), onHighlightAll });
-
-    const button = await screen.findByText(/Highlight & Select all/);
-    fireEvent.click(button);
-    expect(onHighlightAll).toHaveBeenCalledWith(["hash-node"]);
   });
 
   it("invokes onSelect via keyboard interaction", () => {

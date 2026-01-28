@@ -107,11 +107,16 @@ This flow demonstrates that SegWit's advantages become even more pronounced as s
 - Sign with the tweaked privkey → 64‑byte Schnorr signature; witness = `[signature]`.
 - Also covers multi‑input signing, soft‑fork compatibility, and the BIP86 proof‑of‑no‑scripts.
 
-# Lesson 12: Taproot Script‑Path Spends & MAST
+# Lesson 12: Taproot Script-Path Spends
 
-- Contrast key‑path vs script‑path; script‑path witness is `[script_args] [script] [control_block]`.
-- Build tapleaves: `tagged_hash("TapLeaf", leaf_version || compact_size(script) || script)` (leaf_version = `0xc0`).
-- Build the Merkle tree: sort siblings, hash with `TapBranch`, and commit the root into `Q`.
-- Construct the control block: `[c0/c1 parity] [internal key P] [merkle path]`.
-- Script‑path sighash: `SPEND_TYPE = 0x02`, append `tapleaf_hash || key_version (00) || codesep_pos (ffffffff)`.
-- Example 3‑leaf inheritance tree (owner, heir after CSV, 2‑of‑2 via `OP_CHECKSIGADD`) and a script‑path spend that reveals only the used leaf.
+Lesson 11 used key-path — just a signature. Now we add scripts.
+
+This lesson builds a 3-leaf inheritance tree and spends via script-path:
+
+1. Create tapleaves (tagged hash of version + script)
+2. Build Merkle tree (sort siblings, hash branches)
+3. Tweak internal key with merkle root → output key Q
+4. Spend: reveal one script + control block + merkle proof
+5. Other leaves stay hidden forever
+
+Covers: control block parity, script-path sighash (SPEND_TYPE = 02).

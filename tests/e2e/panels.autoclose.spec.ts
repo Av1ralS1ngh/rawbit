@@ -12,7 +12,7 @@ import type { CalculationNodeData, FlowData, FlowNode } from '@/types';
 import { doubleSha256Hex, parseBulkRequestPayload } from './fixtures';
 
 test.describe('Panel coordination', () => {
-  test('auto-closes sibling panels and supports search highlighting', async ({ page }) => {
+  test('auto-closes sibling panels and supports search selection', async ({ page }) => {
     test.setTimeout(60_000);
 
     const readViewport = async () => {
@@ -141,14 +141,9 @@ test.describe('Panel coordination', () => {
     const searchInput = page.getByPlaceholder('Search node id, name, text');
     await searchInput.fill('hash');
 
-    const highlightAll = page.getByRole('button', { name: /Highlight & Select all/ });
-    await highlightAll.click();
-    await expect(page.locator('.react-flow__node.is-highlighted')).toHaveCount(1);
-
     const beforeFocus = (await readViewport()) ?? { x: 0, y: 0, zoom: 1 };
     const resultRow = searchPanel.locator('[role="button"]').first();
     await resultRow.click();
-    await expect(page.locator('.react-flow__node.selected')).toHaveCount(1);
     await expect.poll(async () => {
       const vp = await readViewport();
       if (!vp) return null;

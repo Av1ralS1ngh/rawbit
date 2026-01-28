@@ -50,8 +50,6 @@ describe("FlowPanels", () => {
         searchQuery="hash"
         setSearchQuery={setSearchQuery}
         edges={edges}
-        highlightAndFit={vi.fn()}
-        highlightedNodes={new Set()}
         centerOnNode={vi.fn()}
         focusSearchHit={vi.fn()}
         hasMultipleTabs

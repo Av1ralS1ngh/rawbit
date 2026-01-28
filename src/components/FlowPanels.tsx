@@ -16,8 +16,6 @@ interface FlowPanelsProps {
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   edges: Edge[];
-  highlightAndFit: (ids: string[]) => void;
-  highlightedNodes: Set<string>;
   centerOnNode: (id: string) => void;
   focusSearchHit: (id: string, term: string) => void;
   hasMultipleTabs: boolean;
@@ -35,8 +33,6 @@ export function FlowPanels({
   searchQuery,
   setSearchQuery,
   edges,
-  highlightAndFit,
-  highlightedNodes,
   centerOnNode,
   focusSearchHit,
   hasMultipleTabs,
@@ -65,8 +61,6 @@ export function FlowPanels({
         hasVisibleTabs={hasMultipleTabs}
         onSelect={centerOnNode}
         onLocateMatch={focusSearchHit}
-        onHighlightAll={highlightAndFit}
-        highlightActive={highlightedNodes.size > 0}
         onClose={() => setShowSearchPanel(false)}
       />
     </>

@@ -49,3 +49,14 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 ### Fixed
 
 - Lesson 12: update Taproot flow input transactions and amounts.
+
+## [0.3.4] - 2026-01-28
+
+### Changed
+
+- Search panel no longer includes “Highlight & Select”.
+
+### Fixed
+
+- TextInfoNode header corner bleed when zoomed out.
+- Lesson flows: refreshed Lesson 12 spending logic and rewired Lesson 11 multi-input signing to use even-Y privkeys.

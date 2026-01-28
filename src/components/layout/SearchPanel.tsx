@@ -15,8 +15,6 @@ export interface SearchPanelProps {
   hasVisibleTabs?: boolean;
   onSelect: (nodeId: string) => void;
   style?: CSSProperties;
-  onHighlightAll?: (ids: string[]) => void;
-  highlightActive?: boolean;
 }
 
 /* ------------------------------------------------------------------
@@ -45,8 +43,6 @@ export function SearchPanel(props: SearchPanelFullProps) {
     setQuery, // ← comes from parent
     hasVisibleTabs = false,
     onSelect,
-    onHighlightAll,
-    highlightActive = false,
     onClose,
     onLocateMatch,
     style = {},
@@ -60,8 +56,6 @@ export function SearchPanel(props: SearchPanelFullProps) {
   const timer = useRef<number | undefined>(undefined);
 
   const handleChange = (val: string) => {
-    // Reset any highlight/selection as soon as the user changes input
-    if (val !== draft) onHighlightAll?.([]);
     setDraft(val);
 
     if (timer.current !== undefined) window.clearTimeout(timer.current);
@@ -72,7 +66,6 @@ export function SearchPanel(props: SearchPanelFullProps) {
     if (timer.current !== undefined) window.clearTimeout(timer.current);
     setDraft("");
     setQuery(""); // clear immediately (no debounce)
-    onHighlightAll?.([]); // also clear highlight & selection
   };
 
   // Keep local state in-sync when parent clears the query
@@ -265,26 +258,6 @@ export function SearchPanel(props: SearchPanelFullProps) {
 
           {/* Action buttons --------------------------------------------- */}
           <div className="px-2 my-2 space-y-2">
-            {matches.length > 0 && (
-              <button
-                className="w-full rounded bg-secondary py-1 text-sm"
-                onClick={() =>
-                  highlightActive
-                    ? onHighlightAll?.([])
-                    : onHighlightAll?.(matches.map((m) => m.id))
-                }
-                title={
-                  highlightActive
-                    ? "Clear highlight & selection"
-                    : "Highlight & select all matches"
-                }
-              >
-                {highlightActive
-                  ? "Clear highlight & selection"
-                  : `Highlight & Select all (${matches.length})`}
-              </button>
-            )}
-
             {/* Only show 'partial' quick action when nothing is typed */}
             {!draft.trim() && (
               <button
