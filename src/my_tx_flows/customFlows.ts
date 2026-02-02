@@ -17,6 +17,7 @@ import SegWit_P2WSH from "@/my_tx_flows/p9_SegWit_P2WSH.json";
 import Wrapped_Addresses from "@/my_tx_flows/p10_Wrapped_Addresses.json";
 import Taproot_Intro from "@/my_tx_flows/p11_Taproot_intro.json";
 import Taproot_Script from "@/my_tx_flows/p12_Taproot_script.json";
+import Taproot_MultiSig from "@/my_tx_flows/p13_Taproot_MultiSig.json";
 
 // Then build the array, casting each import to FlowData:
 export const customFlows = [
@@ -80,5 +81,10 @@ export const customFlows = [
     id: "flow-12",
     label: "Taproot Script",
     data: Taproot_Script as unknown as FlowData,
+  },
+  {
+    id: "flow-13",
+    label: "Taproot MultiSig",
+    data: Taproot_MultiSig as unknown as FlowData,
   },
 ];

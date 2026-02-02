@@ -25,6 +25,51 @@ export function getNextGapIndex(offsets: number[], base: number): number {
   return offsets.length ? Math.max(...offsets) + INSTANCE_STRIDE : base;
 }
 
+/** Collect indices that are already reserved by non-target groups + static fields. */
+export function collectReservedIndices(
+  data: NodeData,
+  excludeGroupTitle?: string
+): Set<number> {
+  const reserved = new Set<number>();
+
+  data.inputStructure?.ungrouped?.forEach((field) => {
+    if (field.index !== undefined) reserved.add(field.index);
+  });
+
+  data.inputStructure?.afterGroups?.forEach((field) => {
+    if (field.index !== undefined) reserved.add(field.index);
+  });
+
+  Object.values(data.inputStructure?.betweenGroups ?? {}).forEach((fields) => {
+    fields.forEach((field) => {
+      if (field.index !== undefined) reserved.add(field.index);
+    });
+  });
+
+  data.inputStructure?.groups?.forEach((group: GroupDefinition) => {
+    if (group.title === excludeGroupTitle) return;
+    const keys = data.groupInstanceKeys?.[group.title];
+    if (keys?.length) {
+      keys.forEach((offset) => {
+        group.fields.forEach((field) => {
+          reserved.add(offset + field.index);
+        });
+      });
+      return;
+    }
+
+    const instanceCount = data.groupInstances?.[group.title] ?? 0;
+    for (let i = 0; i < instanceCount; i += 1) {
+      const offset = group.baseIndex + i * INSTANCE_STRIDE;
+      group.fields.forEach((field) => {
+        reserved.add(offset + field.index);
+      });
+    }
+  });
+
+  return reserved;
+}
+
 /** Counts visible input handles based on current group-instance keys. */
 export function countVisibleInputs(data: NodeData): number {
   let total =

@@ -29,4 +29,19 @@ describe("mdToHtml", () => {
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
   });
+
+  it("sanitizes unsafe links and allows safe/relative ones", () => {
+    const html = mdToHtml(
+      "[bad](javascript:alert(1)) [safe](https://example.com) [mail](mailto:test@a.com) [rel](/docs) [anchor](#section)"
+    );
+
+    expect(html).toContain(
+      '<span class="text-primary underline underline-offset-2">bad</span>'
+    );
+    expect(html).not.toContain("javascript:alert(1)");
+    expect(html).toContain('href="https://example.com"');
+    expect(html).toContain('href="mailto:test@a.com"');
+    expect(html).toContain('href="/docs"');
+    expect(html).toContain('href="#section"');
+  });
 });

@@ -2,7 +2,11 @@ import { useCallback, useEffect } from "react";
 
 import type { Edge } from "@xyflow/react";
 
-import { canGrowGroup, getNextGapIndex } from "@/lib/nodes/fieldUtils";
+import {
+  canGrowGroup,
+  collectReservedIndices,
+  getNextGapIndex,
+} from "@/lib/nodes/fieldUtils";
 import { INSTANCE_STRIDE } from "@/lib/utils";
 import type { FlowNode, GroupDefinition, NodeData } from "@/types";
 
@@ -70,7 +74,13 @@ export function useGroupInstances(
 
       if (increment) {
         if (!canGrowGroup(group.baseIndex, keys, group.fields)) return;
-        keys.push(getNextGapIndex(keys, group.baseIndex));
+        const nextBase = getNextGapIndex(keys, group.baseIndex);
+        const reserved = collectReservedIndices(nodeData, title);
+        const overlaps = group.fields.some((field) =>
+          reserved.has(nextBase + field.index)
+        );
+        if (overlaps) return;
+        keys.push(nextBase);
       } else {
         if (!keys.length) return;
         removedOffset = keys.pop();

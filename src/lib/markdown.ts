@@ -37,6 +37,35 @@ export function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
+const ALLOWED_LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
+export function sanitizeLinkUrl(rawUrl: string): string | null {
+  const decoded = decodeHtmlEntities(rawUrl);
+  const trimmed = decoded.trim();
+
+  if (!trimmed) return null;
+
+  if (
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./") ||
+    trimmed.startsWith("../")
+  ) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed, "https://rawbit.local");
+    if (ALLOWED_LINK_PROTOCOLS.has(parsed.protocol)) {
+      return trimmed;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function parseTable(tableText: string): string {
   const lines = tableText.trim().split("\n");
   if (lines.length < 2) return tableText;
@@ -156,10 +185,13 @@ export function mdToHtml(src: string): string {
   result = result
     .replace(BOLD, '<strong style="font-weight:600">$1</strong>')
     .replace(ITALIC, "<em>$1</em>")
-    .replace(
-      LINK,
-      '<a href="$2" class="text-primary underline underline-offset-2 hover:opacity-90" target="_blank" rel="noopener noreferrer">$1</a>'
-    )
+    .replace(LINK, (_, text, url) => {
+      const safeUrl = sanitizeLinkUrl(url);
+      if (!safeUrl) {
+        return `<span class="text-primary underline underline-offset-2">${text}</span>`;
+      }
+      return `<a href="${escapeHtml(safeUrl)}" class="text-primary underline underline-offset-2 hover:opacity-90" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    })
     .replace(CODE, (_, content) => {
       return `<code class="bg-muted/60 text-foreground" style="font-family:'JetBrains Mono','Fira Code',SFMono-Regular,monospace;padding:0 0.25em;border-radius:4px">${content}</code>`;
     });
@@ -168,4 +200,3 @@ export function mdToHtml(src: string): string {
 
   return result;
 }
-

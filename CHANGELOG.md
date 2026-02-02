@@ -60,3 +60,19 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 
 - TextInfoNode header corner bleed when zoomed out.
 - Lesson flows: refreshed Lesson 12 spending logic and rewired Lesson 11 multi-input signing to use even-Y privkeys.
+
+## [0.3.5] - 2026-02-02
+
+### Added
+
+- Lesson 13 Taproot Multisig flow and summary content.
+
+### Changed
+
+- Lesson 12 Taproot script-path flow updated with the new witness node.
+
+### Fixed
+
+- Script execution steps display Taproot opcode labels (including OP_CHECKSIGADD).
+- Editor stability: guard against group index collisions and skip pasted edges missing endpoints.
+- Markdown rendering now sanitizes link URLs to block unsafe schemes.

@@ -914,7 +914,7 @@ export const allSidebarNodes: NodeTemplate[] = [
         groups: [
           {
             title: "STACK_ITEMS[]",
-            baseIndex: 100,
+            baseIndex: 1000,
             expandable: true,
             fieldCountToAdd: 2,
             minInstances: 1,
@@ -940,25 +940,25 @@ export const allSidebarNodes: NodeTemplate[] = [
         ],
         afterGroups: [
           {
-            index: 200,
+            index: 2000,
             label: "SCRIPT_LENGTH (VarInt):",
             rows: 1,
             placeholder: "<len(script)>",
           },
           {
-            index: 210,
+            index: 2010,
             label: "SCRIPT (hex):",
             rows: 3,
             placeholder: "<tapscript hex>",
           },
           {
-            index: 220,
+            index: 2020,
             label: "CONTROL_BLOCK_LENGTH (VarInt):",
             rows: 1,
             placeholder: "<len(control block)>",
           },
           {
-            index: 230,
+            index: 2030,
             label: "CONTROL_BLOCK (hex):",
             rows: 3,
             placeholder: "<control block hex>",
@@ -966,7 +966,7 @@ export const allSidebarNodes: NodeTemplate[] = [
         ],
       },
       groupInstances: { "STACK_ITEMS[]": 1 },
-      groupInstanceKeys: { "STACK_ITEMS[]": [100] },
+      groupInstanceKeys: { "STACK_ITEMS[]": [1000] },
       result: "",
       baseHeight: 140,
     },

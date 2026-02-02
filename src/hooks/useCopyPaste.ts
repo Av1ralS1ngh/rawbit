@@ -220,6 +220,12 @@ export function useCopyPaste() {
         renameMode: "collision",
       });
 
+      // Defensive: ensure we only keep edges that connect within the pasted set.
+      const newNodeIdSet = new Set(newNodes.map((n) => n.id));
+      const filteredEdges = newEdges.filter(
+        (e) => newNodeIdSet.has(e.source) && newNodeIdSet.has(e.target)
+      );
+
       // Copy cached script steps to freshly minted node ids
       copied.forEach((info) => {
         if (!info.scriptSteps) return;
@@ -239,11 +245,11 @@ export function useCopyPaste() {
         ...existing.map((n) => ({ ...n, selected: false })),
         ...ordered,
       ]);
-      setEdges((existing) => [...existing, ...newEdges]);
+      setEdges((existing) => [...existing, ...filteredEdges]);
 
       log("copyPaste", "Pasted", {
         nodes: ordered.length,
-        edges: newEdges.length,
+        edges: filteredEdges.length,
       });
     },
     [copiedContent, getEdges, getNodes, setNodes, setEdges]

@@ -120,3 +120,26 @@ This lesson builds a 3-leaf inheritance tree and spends via script-path:
 5. Other leaves stay hidden forever
 
 Covers: control block parity, script-path sighash (SPEND_TYPE = 02).
+
+# Lesson 13: Taproot Multisig
+
+## What We Built
+
+**Flow 1** — Locked coins to a 2-of-3 multisig address using:
+
+- NUMS internal key (disables key-path — nobody can bypass the script)
+- OP_CHECKSIGADD threshold script (any 2 of 3 signers)
+
+**Flow 2** — Spent with Bob + Charlie (Alice absent):
+
+- Signatures in REVERSE order of pubkeys in script
+- Missing signer = empty byte vector (not OP_0)
+- Witness: 271 bytes (2 sigs + empty + script + control block)
+
+## Key Takeaway
+
+The internal key is a spending condition, not just metadata. Whoever controls it can bypass all scripts. NUMS ensures nobody has that power.
+
+## What's Different from Legacy Multisig
+
+OP_CHECKSIGADD replaces OP_CHECKMULTISIG — each signature maps to exactly one pubkey. No dummy element bug, no guessing which sig matches which key.

@@ -44,6 +44,15 @@ const FLOW_SCENARIOS: Scenario[] = [
     txidNode: 'node_Jev5NWr0',
     scriptNode: 'node_xXU31KtR',
   },
+  {
+    name: 'p13_Taproot_MultiSig',
+    relativePath: path.join('src', 'my_tx_flows', 'p13_Taproot_MultiSig.json'),
+    nodeChanges: {
+      node_FZ9oWjOJ: '187000',
+    },
+    txidNode: 'node_0d7XluIl',
+    scriptNode: 'node_KfX3PTyG',
+  },
 ];
 
 test.describe.configure({ mode: 'serial' });

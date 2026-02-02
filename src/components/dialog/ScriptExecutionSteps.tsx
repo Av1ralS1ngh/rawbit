@@ -24,6 +24,7 @@ import {
   RenderHighlightedScriptProps,
   StepData,
 } from "@/types";
+import { OP_CODES, OpCodeCategories } from "@/lib/opcodes";
 
 /* ---------- helpers ------------------------------------------------ */
 
@@ -128,6 +129,8 @@ const OPCODES: Record<string, string> = {
   OP_HASH256: "Double SHA-256.",
   OP_CHECKSIG: "Verify signature against pubkey & tx hash.",
   OP_CHECKSIGVERIFY: "CHECKSIG then VERIFY.",
+  OP_CHECKSIGADD:
+    "Pop sig, counter, pubkey. Valid sig → counter+1; empty sig → counter unchanged; invalid non-empty → FAIL.",
   OP_CHECKMULTISIG: "m-of-n multisig validation.",
   OP_CHECKMULTISIGVERIFY: "CHECKMULTISIG then VERIFY.",
   OP_CHECKLOCKTIMEVERIFY: "Require nLockTime ≥ value.",
@@ -151,10 +154,25 @@ const OPCODES: Record<string, string> = {
   /* you can continue with OP_CODESEPARATOR, OP_CAT (disabled)… */
 };
 
-const prettify = (code: number, name: string) =>
-  name.toLowerCase().includes("unknown opcode") && code >= 1 && code <= 0x4b
-    ? `OP_PUSHDATA(${code} bytes)`
-    : name;
+const OPCODE_NAME_BY_BYTE = (() => {
+  const map = new Map<number, string>();
+  (Object.keys(OP_CODES) as OpCodeCategories[]).forEach((category) => {
+    OP_CODES[category].forEach((item) => {
+      if (item.hex.length !== 2) return;
+      const value = parseInt(item.hex, 16);
+      if (Number.isNaN(value)) return;
+      map.set(value, item.name);
+    });
+  });
+  return map;
+})();
+
+const prettify = (code: number, name: string) => {
+  if (!name.toLowerCase().includes("unknown opcode")) return name;
+  if (code >= 1 && code <= 0x4b) return `OP_PUSHDATA(${code} bytes)`;
+  const known = OPCODE_NAME_BY_BYTE.get(code);
+  return known ?? name;
+};
 
 const pushLenInParens = (n: string) =>
   Number((/\((\d+)\s*bytes?\)/i.exec(n) || [])[1] ?? 0);
@@ -315,8 +333,9 @@ export default function ScriptExecutionSteps({
     (scriptResult.steps || []).forEach((s, i) => {
       const stackBefore = s.stack_before ?? [];
       const stackAfter = s.stack_after ?? [];
+      const prettyName = prettify(s.opcode, s.opcode_name);
       lines.push(
-        `Step #${i}  PC=${s.pc}  opcode_name=${s.opcode_name}`,
+        `Step #${i}  PC=${s.pc}  opcode_name=${prettyName}`,
         `StackBefore: [${stackBefore.join(", ")}]`,
         `StackAfter: [${stackAfter.join(", ")}]`,
         ...(s.failed ? [`ERROR: ${s.error ?? "Unknown error"}`] : []),
