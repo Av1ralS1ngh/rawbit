@@ -90,3 +90,11 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 
 - Undo/redo now captures node comment blur commits and flow-map/group comment commits reliably.
 - UI fixes: tab-strip scrollbar appearance, and TextInfo/group interaction stability.
+
+## [0.3.7] - 2026-03-17
+
+### Changed
+
+- `LICENSE-docs` now contains the full CC BY 4.0 legal text.
+- `package.json` now declares `"license": "MIT"`.
+- README flow list now includes Lessons 13 and 14.

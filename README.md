@@ -6,7 +6,7 @@ _rawBit is a visual, node-based editor for constructing and understanding Bitcoi
 
 ## Flow Examples
 
-rawBit ships with **12 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit and Taproot, but each is standalone — start anywhere.
+rawBit ships with **14 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit and Taproot, but each is standalone — start anywhere.
 
 - **Lessons 1–2:** P2PKH, P2PK, multisig, and P2SH fundamentals
 - **Lessons 3–4:** Timelocks (nLockTime / nSequence), CLTV/CSV patterns
@@ -17,6 +17,8 @@ rawBit ships with **12 hands-on example lessons** you can load, tweak, and inspe
 - **Lesson 10:** Fee savings: wrapped SegWit vs legacy
 - **Lesson 11:** Taproot key-path spend (P2TR, Schnorr)
 - **Lesson 12:** Taproot script-path spend (taptree, control block, tapscript)
+- **Lesson 13:** Taproot script-path multisig (NUMS + `OP_CHECKSIGADD`)
+- **Lesson 14:** MuSig2 multisig (BIP327, aggregated Schnorr)
 
 All example transactions were broadcast to **testnet3** and can be verified on explorers.
 
