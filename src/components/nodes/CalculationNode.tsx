@@ -124,7 +124,7 @@ function CalculationNode({ id, data, selected }: NodeProps<FlowNode>) {
 
   useEffect(() => {
     const nodeData = data as NodeData;
-    if (nodeData.functionName !== "taproot_tree_builder") return;
+    if (nodeData.outputLayout !== "taproot_tree_builder") return;
 
     const groupTitle = "LEAF_HASHES[]";
     const group = nodeData.inputStructure?.groups?.find(

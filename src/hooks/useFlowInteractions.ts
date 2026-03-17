@@ -77,6 +77,7 @@ interface UseFlowInteractionsOptions {
   incRev: () => number;
   pushCleanState: (nodes: FlowNode[], edges: Edge[], label: string) => void;
   updatePaletteEligibility: () => void;
+  isSelectionModeActive?: boolean;
 }
 
 export function useFlowInteractions({
@@ -111,6 +112,7 @@ export function useFlowInteractions({
   updatePaletteEligibility,
   skipNextNodeRemovalRef,
   releaseNodeRemovalSnapshotSkip,
+  isSelectionModeActive = false,
 }: UseFlowInteractionsOptions) {
   const coalescedPosRef = useRef<Map<string, NodePositionChange>>(new Map());
   const pendingNonPosRef = useRef<NodeChange<FlowNode>[] | null>(null);
@@ -526,17 +528,28 @@ export function useFlowInteractions({
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      const selectionOnly = changes.every((change) => change.type === "select");
+      const filteredChanges = changes.filter(
+        (change) =>
+          !(
+            isSelectionModeActive &&
+            change.type === "select" &&
+            change.selected
+          )
+      );
+      if (!filteredChanges.length) return;
+      const selectionOnly = filteredChanges.every(
+        (change) => change.type === "select"
+      );
 
       if (loadingUndoRef.current || isPastingRef.current) {
-        rawOnEdgesChange(changes);
+        rawOnEdgesChange(filteredChanges);
         return;
       }
 
-      rawOnEdgesChange(changes);
+      rawOnEdgesChange(filteredChanges);
 
-      const hasAdd = changes.some((change) => change.type === "add");
-      const hasRemove = changes.some((change) => change.type === "remove");
+      const hasAdd = filteredChanges.some((change) => change.type === "add");
+      const hasRemove = filteredChanges.some((change) => change.type === "remove");
 
       if (!selectionOnly && (hasAdd || hasRemove)) {
         const label = hasAdd ? "Edge(s) added" : "Edge(s) removed";
@@ -553,6 +566,7 @@ export function useFlowInteractions({
       }
     },
     [
+      isSelectionModeActive,
       isPastingRef,
       loadingUndoRef,
       rawOnEdgesChange,

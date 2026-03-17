@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import type { Edge, ReactFlowInstance } from "@xyflow/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FlowNode } from "@/types";
+import type { FlowNode, ProtocolDiagramLayout } from "@/types";
 import { buildFlowData, buildFlowNode } from "@/test-utils/types";
 import { useNodeOperations } from "../useNodeOperations";
 
@@ -99,6 +99,93 @@ const createMockInstance = (
     expect(result.current.nodes.some((n) => n.id === "template-node")).toBe(true);
   });
 
+  it("imports protocol diagram layout when dropping flow templates", () => {
+    let protocolDiagramLayout: ProtocolDiagramLayout | undefined;
+    const setProtocolDiagramLayout = vi.fn(
+      (layout: ProtocolDiagramLayout | undefined) => {
+        protocolDiagramLayout = layout;
+      }
+    );
+
+    const { result } = renderHook(
+      () =>
+        useNodeOperations({
+          getProtocolDiagramLayout: () => protocolDiagramLayout,
+          setProtocolDiagramLayout,
+        }),
+      { wrapper }
+    );
+    const mockRf = createMockInstance(result);
+
+    act(() => {
+      result.current.onInit(mockRf);
+    });
+
+    const flowData = buildFlowData({
+      nodes: [
+        buildFlowNode({
+          id: "group-template",
+          type: "shadcnGroup",
+          position: { x: 20, y: 20 },
+          data: {
+            title: "Template Group",
+            width: 320,
+            height: 220,
+            isGroup: true,
+          },
+        }),
+        buildFlowNode({
+          id: "child-template",
+          type: "calculation",
+          parentId: "group-template",
+          extent: "parent",
+          position: { x: 40, y: 40 },
+          data: { functionName: "identity" },
+        }),
+      ],
+      edges: [],
+      protocolDiagramLayout: {
+        groupOffsets: {
+          "group-template": {
+            dx: 111,
+            dy: -42,
+          },
+        },
+      },
+    });
+
+    const event = {
+      preventDefault: vi.fn(),
+      dataTransfer: {
+        getData: (type: string) =>
+          type === "application/reactflow"
+            ? JSON.stringify({
+                functionName: "flow_template",
+                nodeData: { flowData },
+              })
+            : "",
+      },
+      clientX: 100,
+      clientY: 120,
+    } as unknown as React.DragEvent<HTMLDivElement>;
+
+    act(() => {
+      result.current.onDrop(event);
+    });
+
+    const importedGroup = result.current.nodes.find(
+      (node) =>
+        node.type === "shadcnGroup" &&
+        node.data?.title === "Template Group"
+    );
+    expect(importedGroup).toBeDefined();
+    expect(setProtocolDiagramLayout).toHaveBeenCalled();
+    expect(protocolDiagramLayout?.groupOffsets?.[importedGroup!.id]).toEqual({
+      dx: 111,
+      dy: -42,
+    });
+  });
+
   it("groups selected nodes into a new group", () => {
     const { result } = renderHook(() => useNodeOperations(), { wrapper });
     const mockRf = createMockInstance(result);
@@ -141,5 +228,124 @@ const createMockInstance = (
     const group = result.current.nodes.find((n) => n.type === "shadcnGroup");
     expect(group).toBeDefined();
     expect(result.current.nodes.filter((n) => n.parentId === group?.id)).toHaveLength(2);
+  });
+
+  it("ungroups only selected children when selected nodes are inside a group", () => {
+    const { result } = renderHook(() => useNodeOperations(), { wrapper });
+    const mockRf = createMockInstance(result);
+
+    act(() => {
+      result.current.onInit(mockRf);
+    });
+
+    act(() => {
+      result.current.setNodes(() => [
+        buildFlowNode({
+          id: "group-1",
+          type: "shadcnGroup",
+          position: { x: 100, y: 200 },
+          data: {
+            isGroup: true,
+            width: 320,
+            height: 220,
+            title: "Group Node",
+          },
+        }),
+        buildFlowNode({
+          id: "child-a",
+          type: "calculation",
+          parentId: "group-1",
+          extent: "parent",
+          position: { x: 10, y: 20 },
+          selected: true,
+          data: { functionName: "identity" },
+        }),
+        buildFlowNode({
+          id: "child-b",
+          type: "calculation",
+          parentId: "group-1",
+          extent: "parent",
+          position: { x: 40, y: 50 },
+          selected: true,
+          data: { functionName: "identity" },
+        }),
+        buildFlowNode({
+          id: "child-c",
+          type: "calculation",
+          parentId: "group-1",
+          extent: "parent",
+          position: { x: 70, y: 80 },
+          selected: false,
+          data: { functionName: "identity" },
+        }),
+      ]);
+    });
+
+    let didUngroup = false;
+    act(() => {
+      mockRf.getNodes = () => result.current.nodes;
+      didUngroup = result.current.ungroupSelectedNodes();
+    });
+
+    expect(didUngroup).toBe(true);
+    expect(result.current.nodes.find((n) => n.id === "group-1")).toBeDefined();
+
+    const childA = result.current.nodes.find((n) => n.id === "child-a");
+    const childB = result.current.nodes.find((n) => n.id === "child-b");
+    const childC = result.current.nodes.find((n) => n.id === "child-c");
+
+    expect(childA?.parentId).toBeUndefined();
+    expect(childB?.parentId).toBeUndefined();
+    expect(childC?.parentId).toBe("group-1");
+    expect(childA?.position).toEqual({ x: 110, y: 220 });
+    expect(childB?.position).toEqual({ x: 140, y: 250 });
+  });
+
+  it("ungroups the only group as fallback when nothing is selected", () => {
+    const { result } = renderHook(() => useNodeOperations(), { wrapper });
+    const mockRf = createMockInstance(result);
+
+    act(() => {
+      result.current.onInit(mockRf);
+    });
+
+    act(() => {
+      result.current.setNodes(() => [
+        buildFlowNode({
+          id: "group-1",
+          type: "shadcnGroup",
+          position: { x: 50, y: 60 },
+          data: {
+            isGroup: true,
+            width: 320,
+            height: 220,
+            title: "Group Node",
+          },
+          selected: false,
+        }),
+        buildFlowNode({
+          id: "child-a",
+          type: "calculation",
+          parentId: "group-1",
+          extent: "parent",
+          position: { x: 5, y: 7 },
+          selected: false,
+          data: { functionName: "identity" },
+        }),
+      ]);
+    });
+
+    let didUngroup = false;
+    act(() => {
+      mockRf.getNodes = () => result.current.nodes;
+      didUngroup = result.current.ungroupSelectedNodes();
+    });
+
+    expect(didUngroup).toBe(true);
+    expect(result.current.nodes.find((n) => n.id === "group-1")).toBeUndefined();
+
+    const childA = result.current.nodes.find((n) => n.id === "child-a");
+    expect(childA?.parentId).toBeUndefined();
+    expect(childA?.position).toEqual({ x: 55, y: 67 });
   });
 });

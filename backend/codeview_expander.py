@@ -1,7 +1,9 @@
-# Builds an "educational" code view by prepending Base58/Bech32 helpers when referenced by the function.
+# Builds an "educational" code view by prepending helper code when referenced
+# by the function.
 
 from __future__ import annotations
 
+import ast
 import inspect
 import re
 from typing import Optional, Union, Type, Any
@@ -49,6 +51,8 @@ _HELPER_PATTERN = re.compile(
     r"\b(" + "|".join(map(re.escape, _BASE58_HELPERS + _BECH32_HELPERS)) + r")\b"
 )
 
+_MAX_HELPER_EXPANSION_DEPTH = 8
+
 
 def _get_source(fn: Optional[SourceObject]) -> Optional[str]:
     """Safely get source for a supported object; return None if not available."""
@@ -89,30 +93,142 @@ def _bech32_bundle() -> str:
     return "\n\n".join(parts).strip()
 
 
+def _extract_called_names(source: str) -> list[str]:
+    """
+    Parse source and return called symbol names in first-seen order.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    ordered: list[str] = []
+    seen: set[str] = set()
+
+    class _CallVisitor(ast.NodeVisitor):
+        def visit_Call(self, node: ast.Call) -> None:
+            name: Optional[str] = None
+            if isinstance(node.func, ast.Name):
+                name = node.func.id
+            elif isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+                # Support rare explicit module calls: calc_ops._helper(...)
+                if node.func.value.id == "calc_ops":
+                    name = node.func.attr
+
+            if name and name not in seen:
+                seen.add(name)
+                ordered.append(name)
+
+            self.generic_visit(node)
+
+    _CallVisitor().visit(tree)
+    return ordered
+
+
+def _resolve_local_helper(name: str) -> Optional[FunctionType]:
+    """
+    Resolve top-level helper functions from calc_func by name.
+    """
+    if not name.startswith("_"):
+        return None
+    candidate = getattr(calc_ops, name, None)
+    if not inspect.isfunction(candidate):
+        return None
+    if getattr(candidate, "__module__", "") != calc_ops.__name__:
+        return None
+    return candidate
+
+
+def _collect_local_helpers(func_source: str) -> list[tuple[str, str]]:
+    """
+    Recursively collect local helper sources referenced by func_source.
+
+    - Dedupe: each helper included once.
+    - Stable order: source-call order + DFS post-order (deps first).
+    - Cycle guard: via `visiting`.
+    - Depth cap: `_MAX_HELPER_EXPANSION_DEPTH`.
+    """
+    ordered: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    visiting: set[str] = set()
+
+    def visit(name: str, depth: int) -> None:
+        if name in seen or name in visiting:
+            return
+        if depth > _MAX_HELPER_EXPANSION_DEPTH:
+            return
+
+        fn = _resolve_local_helper(name)
+        if fn is None:
+            return
+
+        src = _get_source(fn)
+        if not src:
+            return
+
+        visiting.add(name)
+        for called in _extract_called_names(src):
+            visit(called, depth + 1)
+        visiting.remove(name)
+
+        seen.add(name)
+        ordered.append((name, src))
+
+    for called in _extract_called_names(func_source):
+        visit(called, 1)
+
+    return ordered
+
+
 def expand_function_source(_func_obj: SourceObject, func_source: str) -> str:
     """
     If the given function's source mentions Base58/Bech32 helpers,
     return an expanded block with helper code prepended.
     Otherwise return the original source unchanged.
     """
-    uses = set(_HELPER_PATTERN.findall(func_source or ""))
-    if not uses:
+    source = func_source or ""
+    direct_uses = set(_HELPER_PATTERN.findall(source))
+
+    helper_entries = _collect_local_helpers(source)
+    helper_names = [name for name, _ in helper_entries]
+    helper_name_set = set(helper_names)
+
+    uses_base58 = bool(direct_uses.intersection(_BASE58_HELPERS)) or bool(
+        helper_name_set.intersection(_BASE58_HELPERS)
+    )
+    uses_bech32 = bool(direct_uses.intersection(_BECH32_HELPERS)) or bool(
+        helper_name_set.intersection(_BECH32_HELPERS)
+    )
+
+    # Keep existing Base58/Bech32 bundle behavior (includes constants),
+    # but avoid duplicate helper definitions in generic helper block.
+    generic_helpers: list[str] = []
+    for name, src in helper_entries:
+        if uses_base58 and name in _BASE58_HELPERS:
+            continue
+        if uses_bech32 and name in _BECH32_HELPERS:
+            continue
+        generic_helpers.append(src)
+
+    if not uses_base58 and not uses_bech32 and not generic_helpers:
         return func_source
 
     blocks = [
         "# --- Expanded view: helper code inlined for educational purposes ---",
-       
     ]
 
-    if uses.intersection(_BASE58_HELPERS):
+    if uses_base58:
         b58 = _base58_bundle()
         if b58:
             blocks.append("# --- Base58 / Base58Check helpers ---\n" + b58)
 
-    if uses.intersection(_BECH32_HELPERS):
+    if uses_bech32:
         b32 = _bech32_bundle()
         if b32:
             blocks.append("# --- Bech32 / Bech32m helpers ---\n" + b32)
 
-    blocks.append("# --- Node function ---\n" + (func_source or ""))
+    if generic_helpers:
+        blocks.append("# --- Local helper functions ---\n" + "\n\n".join(generic_helpers))
+
+    blocks.append("# --- Node function ---\n" + source)
     return "\n\n".join(blocks)

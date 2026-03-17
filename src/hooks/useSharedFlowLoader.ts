@@ -5,7 +5,7 @@ import type {
   NodeChange,
   ReactFlowInstance,
 } from "@xyflow/react";
-import type { FlowData, FlowNode } from "@/types";
+import type { FlowData, FlowNode, ProtocolDiagramLayout } from "@/types";
 import { getShareJsonUrl, loadShared } from "@/lib/share";
 import { importWithFreshIds } from "@/lib/idUtils";
 import { validateFlowData } from "@/lib/flow/validate";
@@ -21,6 +21,13 @@ import {
   isRecord,
   isXYPosition,
 } from "@/lib/flow/guards";
+import {
+  collectGroupNodeIds,
+  mergeProtocolDiagramLayout,
+  protocolDiagramLayoutEquals,
+  remapProtocolDiagramLayout,
+  sanitizeProtocolDiagramLayout,
+} from "@/lib/protocolDiagram/layoutPersistence";
 
 const SHARE_ALT_LINK_ID = "rawbit-share-json-link";
 
@@ -53,6 +60,8 @@ function setAlternateShareJsonLink(href?: string) {
 interface UseSharedFlowLoaderOptions {
   getNodes: () => FlowNode[];
   getEdges: () => Edge[];
+  getProtocolDiagramLayout?: () => ProtocolDiagramLayout | undefined;
+  setProtocolDiagramLayout?: (layout: ProtocolDiagramLayout | undefined) => void;
   onNodesChange: (changes: NodeChange<FlowNode>[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   scheduleSnapshot: (label: string, options?: { refresh?: boolean }) => void;
@@ -71,6 +80,8 @@ interface UseSharedFlowLoaderOptions {
 export function useSharedFlowLoader({
   getNodes,
   getEdges,
+  getProtocolDiagramLayout,
+  setProtocolDiagramLayout,
   onNodesChange,
   onEdgesChange,
   scheduleSnapshot,
@@ -202,7 +213,11 @@ export function useSharedFlowLoader({
         const targetWasEmpty =
           currentNodes.length === 0 && currentEdges.length === 0;
 
-        const { nodes: mergedNodes, edges: mergedEdges } = importWithFreshIds<
+        const {
+          nodes: mergedNodes,
+          edges: mergedEdges,
+          idMap,
+        } = importWithFreshIds<
           FlowNode,
           Edge
         >({
@@ -251,6 +266,26 @@ export function useSharedFlowLoader({
           type: "add" as const,
           item: { ...edge },
         }));
+
+        const sharedLayout = sanitizeProtocolDiagramLayout(
+          parsedData.protocolDiagramLayout,
+          collectGroupNodeIds(sharedNodes)
+        );
+        const remappedLayout = remapProtocolDiagramLayout(
+          sharedLayout,
+          idMap,
+          collectGroupNodeIds(sanitizedNodes)
+        );
+        const currentLayout = sanitizeProtocolDiagramLayout(
+          getProtocolDiagramLayout?.()
+        );
+        const mergedLayout = mergeProtocolDiagramLayout(
+          currentLayout,
+          remappedLayout
+        );
+        if (!protocolDiagramLayoutEquals(currentLayout, mergedLayout)) {
+          setProtocolDiagramLayout?.(mergedLayout);
+        }
 
         if (cancelled) return;
 
@@ -330,9 +365,11 @@ export function useSharedFlowLoader({
     flowInstanceRef,
     getEdges,
     getNodes,
+    getProtocolDiagramLayout,
     onEdgesChange,
     onNodesChange,
     scheduleSnapshot,
+    setProtocolDiagramLayout,
     setInfoDialog,
     setTabTooltip,
     renameTab,

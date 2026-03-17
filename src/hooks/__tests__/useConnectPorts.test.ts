@@ -142,4 +142,43 @@ describe("useConnectPorts", () => {
       },
     ]);
   });
+
+  it("does not expose hidden source outputs in connect dialog ports", async () => {
+    const taprootTweakNode = {
+      id: "taproot-tweak",
+      type: "calculation",
+      position: { x: 0, y: 0 },
+      data: {
+        functionName: "taproot_tweak_xonly_pubkey",
+        numInputs: 2,
+        outputPorts: [
+          { label: "Q (x-only)", handleId: "" },
+          { label: "parity (c0/c1)", handleId: "output-1" },
+          { label: "tweak (32B)", handleId: "output-2", showHandle: false },
+        ],
+      },
+    } as FlowNode;
+
+    const nonceNode = makeNode("musig2-nonce", 5);
+
+    const { result } = renderHook(() =>
+      useConnectPorts({
+        nodes: [taprootTweakNode, nonceNode],
+        edges: [],
+        connectOpen: true,
+        selectedSignature: "taproot-tweak|musig2-nonce",
+        selectedNodeIds: ["taproot-tweak", "musig2-nonce"],
+        isSwapped: false,
+      })
+    );
+
+    await flushEffects();
+
+    await waitFor(() => {
+      expect(result.current.sourcePorts?.outputs).toEqual([
+        { label: "Q (x-only)", handleId: "" },
+        { label: "parity (c0/c1)", handleId: "output-1" },
+      ]);
+    });
+  });
 });

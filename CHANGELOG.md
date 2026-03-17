@@ -76,3 +76,17 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 - Script execution steps display Taproot opcode labels (including OP_CHECKSIGADD).
 - Editor stability: guard against group index collisions and skip pasted edges missing endpoints.
 - Markdown rendering now sanitizes link URLs to block unsafe schemes.
+
+## [0.3.6] - 2026-03-16
+
+### Added
+
+- First public release of **Lesson 14: MuSig2** flow.
+- MuSig2 node/backend set required by Lesson 14
+- First release of **Flow Map / Protocol Diagram**.
+- First release of the **skin/theme system**.
+
+### Fixed
+
+- Undo/redo now captures node comment blur commits and flow-map/group comment commits reliably.
+- UI fixes: tab-strip scrollbar appearance, and TextInfo/group interaction stability.

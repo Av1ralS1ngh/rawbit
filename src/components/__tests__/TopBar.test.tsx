@@ -7,13 +7,19 @@ import { TopBar, type TopBarProps, type ExtraTopBarProps } from "@/components/la
 const undoMock = vi.fn();
 const redoMock = vi.fn();
 const setThemeMock = vi.fn<(theme: string) => void>();
+const setSkinMock = vi.fn<(skin: string) => void>();
 
 vi.mock("@/hooks/useUndoRedo", () => ({
   useUndoRedo: () => ({ undo: undoMock, redo: redoMock, canUndo: false, canRedo: true }),
 }));
 
 vi.mock("@/hooks/useTheme", () => ({
-  useTheme: () => ({ theme: "light", setTheme: setThemeMock }),
+  useTheme: () => ({
+    theme: "light",
+    setTheme: setThemeMock,
+    skin: "shadcn",
+    setSkin: setSkinMock,
+  }),
 }));
 
 const fileInputRef: MutableRefObject<HTMLInputElement | null> = { current: null };
@@ -23,6 +29,7 @@ const baseProps: TopBarProps & ExtraTopBarProps = {
   onToggle: vi.fn(),
   onSave: vi.fn(),
   onSaveSimplified: vi.fn(),
+  onSaveLlmExport: vi.fn(),
   onShare: vi.fn(),
   shareDisabled: true,
   onLoad: vi.fn(),
@@ -58,6 +65,10 @@ const baseProps: TopBarProps & ExtraTopBarProps = {
   connectDisabled: true,
   onSearchClick: vi.fn(),
   setShowSearchPanel: vi.fn(),
+  showProtocolDiagramPanel: false,
+  setShowProtocolDiagramPanel: vi.fn(),
+  hasProtocolDiagram: true,
+  protocolDiagramDisabledTooltip: "Add groups to enable diagram view",
   showMiniMap: true,
   onToggleMiniMap: vi.fn(),
   isSelectionModeActive: false,
@@ -68,6 +79,7 @@ describe("TopBar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setThemeMock.mockClear();
+    setSkinMock.mockClear();
   });
 
   it("disables share and undo buttons based on props", () => {
@@ -95,6 +107,20 @@ describe("TopBar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle theme" }));
     expect(setThemeMock).toHaveBeenCalledWith("dark");
+  });
+
+  it("applies skin selection and clears focus from skin trigger on close", () => {
+    render(<TopBar {...baseProps} />);
+
+    const trigger = screen.getByRole("button", { name: "Skin: shadcn" });
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+
+    fireEvent.keyDown(trigger, { key: "Enter" });
+    fireEvent.click(screen.getByRole("menuitem", { name: /paper ledger/i }));
+
+    expect(setSkinMock).toHaveBeenCalledWith("paper");
+    expect(trigger).not.toHaveFocus();
   });
 
   it("opens share dialog handler when enabled", () => {
@@ -140,6 +166,7 @@ describe("TopBar", () => {
   it("closes other panels before showing search", () => {
     const setShowUndoRedoPanel = vi.fn();
     const setShowErrorPanel = vi.fn();
+    const setShowProtocolDiagramPanel = vi.fn();
     const onSearchClick = vi.fn();
 
     render(
@@ -147,6 +174,7 @@ describe("TopBar", () => {
         {...baseProps}
         setShowUndoRedoPanel={setShowUndoRedoPanel}
         setShowErrorPanel={setShowErrorPanel}
+        setShowProtocolDiagramPanel={setShowProtocolDiagramPanel}
         onSearchClick={onSearchClick}
       />
     );
@@ -155,6 +183,7 @@ describe("TopBar", () => {
 
     expect(setShowUndoRedoPanel).toHaveBeenCalledWith(false);
     expect(setShowErrorPanel).toHaveBeenCalledWith(false);
+    expect(setShowProtocolDiagramPanel).toHaveBeenCalledWith(false);
     expect(onSearchClick).toHaveBeenCalled();
   });
 
@@ -178,6 +207,37 @@ describe("TopBar", () => {
     expect(setShowErrorPanel).toHaveBeenCalledWith(true);
   });
 
+  it("disables protocol diagram button when no groups exist", () => {
+    render(<TopBar {...baseProps} hasProtocolDiagram={false} />);
+    expect(screen.getByRole("button", { name: "Flow map" })).toBeDisabled();
+  });
+
+  it("toggles protocol diagram and closes other right-side panels", () => {
+    const setShowUndoRedoPanel = vi.fn();
+    const setShowErrorPanel = vi.fn();
+    const setShowSearchPanel = vi.fn();
+    const setShowProtocolDiagramPanel = vi.fn();
+
+    render(
+      <TopBar
+        {...baseProps}
+        showProtocolDiagramPanel={false}
+        setShowUndoRedoPanel={setShowUndoRedoPanel}
+        setShowErrorPanel={setShowErrorPanel}
+        setShowSearchPanel={setShowSearchPanel}
+        setShowProtocolDiagramPanel={setShowProtocolDiagramPanel}
+        hasProtocolDiagram
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Flow map" }));
+
+    expect(setShowUndoRedoPanel).toHaveBeenCalledWith(false);
+    expect(setShowErrorPanel).toHaveBeenCalledWith(false);
+    expect(setShowSearchPanel).toHaveBeenCalledWith(false);
+    expect(setShowProtocolDiagramPanel).toHaveBeenCalledWith(true);
+  });
+
   it("invokes simplified save when holding the S key", () => {
     const onSave = vi.fn();
     const onSaveSimplified = vi.fn();
@@ -199,4 +259,30 @@ describe("TopBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalled();
   });
+
+  it("invokes LLM export when holding the L key", () => {
+    const onSave = vi.fn();
+    const onSaveSimplified = vi.fn();
+    const onSaveLlmExport = vi.fn();
+
+    render(
+      <TopBar
+        {...baseProps}
+        onSave={onSave}
+        onSaveSimplified={onSaveSimplified}
+        onSaveLlmExport={onSaveLlmExport}
+      />
+    );
+
+    fireEvent.keyDown(window, { key: "l" });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSaveLlmExport).toHaveBeenCalled();
+    expect(onSaveSimplified).not.toHaveBeenCalled();
+    expect(onSave).not.toHaveBeenCalled();
+
+    fireEvent.keyUp(window, { key: "l" });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSave).toHaveBeenCalled();
+  });
+
 });

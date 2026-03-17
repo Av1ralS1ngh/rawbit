@@ -23,6 +23,7 @@ import {
 } from "@xyflow/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertTriangle,
   Minus,
@@ -38,7 +39,7 @@ import { useClipboardLite } from "@/hooks/nodes/useClipboardLite";
 import { useSnapshotSchedulerContext } from "@/hooks/useSnapshotSchedulerContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useFlowActions } from "@/hooks/useFlowActions";
-import type { CalculationNodeData, FlowNode } from "@/types";
+import type { CalculationNodeData, FlowNode, NodeData } from "@/types";
 import { produce, setAutoFreeze } from "immer";
 import { EditableLabel } from "./common/EditableLabel";
 import { BorderDragHandles } from "./common/BorderDragHandles";
@@ -51,7 +52,7 @@ const MIN_HEADER_H = 36;
 const HEADER_VERTICAL_PADDING = 8;
 const DEFAULT_FONT_SIZE = 20;
 const MIN_FONT_SIZE = 12;
-const MAX_FONT_SIZE = 72;
+const MAX_FONT_SIZE = 150;
 const RESIZE_HANDLE_SIZE = 24;
 
 const MIN_W = 380;
@@ -59,7 +60,9 @@ const MIN_H = 220;
 
 const BORDER_WIDTH = 10;
 const FILL_OPACITY = 0.1;
-const MENU_WIDTH = 200;
+const MENU_WIDTH = 240;
+const GROUP_COMMENT_MAX_LENGTH = 2200;
+const GROUP_COMMENT_SAVE_DEBOUNCE_MS = 350;
 
 const normalizeFontSize = (value: unknown) => {
   const numeric = Number(value);
@@ -91,6 +94,16 @@ export default function ShadcnGroupNode({
       onClose: () => setShowMenu(false),
     });
   const rawTitle = data.title || "Group Node";
+  const currentComment =
+    typeof data.comment === "string" ? data.comment : "";
+  const excludeFromFlowMap = data.excludeFromFlowMap === true;
+  const [commentDraft, setCommentDraft] = useState(currentComment);
+  const commentDraftRef = useRef(commentDraft);
+  commentDraftRef.current = commentDraft;
+  const commentSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const wasMenuOpenRef = useRef(false);
   const { copyId, idCopied } = useClipboardLite({
     result: undefined,
     rawTitle,
@@ -128,6 +141,12 @@ export default function ShadcnGroupNode({
     };
   }, [showMenu]);
 
+  useEffect(() => {
+    if (!showMenu) {
+      setCommentDraft(currentComment);
+    }
+  }, [currentComment, showMenu]);
+
   /* ----------------------------------------------------------------
        Helper: mutate node data in place (keeps RF internals intact)
   ---------------------------------------------------------------- */
@@ -159,6 +178,55 @@ export default function ShadcnGroupNode({
     );
   };
 
+  const clearSelectedEdges = useCallback(() => {
+    rf.setEdges((currentEdges) => {
+      let changed = false;
+      const next = currentEdges.map((edge) => {
+        if (!edge.selected) return edge;
+        changed = true;
+        return { ...edge, selected: false };
+      });
+      return changed ? next : currentEdges;
+    });
+  }, [rf]);
+
+  const selectGroupNode = useCallback(() => {
+    clearSelectedEdges();
+
+    rf.setNodes((currentNodes) => {
+      let changed = false;
+      const next = currentNodes.map((node) => {
+        const shouldSelect = node.id === id;
+        if (node.selected === shouldSelect) return node;
+        changed = true;
+        return { ...node, selected: shouldSelect };
+      });
+      return changed ? next : currentNodes;
+    });
+  }, [clearSelectedEdges, id, rf]);
+
+  const blurActiveEditableElement = useCallback(() => {
+    if (typeof document === "undefined") return;
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement)) return;
+    if (active === document.body) return;
+    const isEditable =
+      active.isContentEditable ||
+      active.matches("input, textarea, select, [contenteditable]");
+    if (!isEditable) return;
+    active.blur();
+  }, []);
+
+  const handleHeaderControlPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      blurActiveEditableElement();
+      event.preventDefault();
+      event.stopPropagation();
+      selectGroupNode();
+    },
+    [blurActiveEditableElement, selectGroupNode]
+  );
+
   const increaseFontSize = () => {
     const currentSize = normalizeFontSize(data.fontSize);
     if (currentSize < MAX_FONT_SIZE) {
@@ -168,6 +236,7 @@ export default function ShadcnGroupNode({
           d.fontSize = Math.min(currentSize + step, MAX_FONT_SIZE);
         }
       );
+      selectGroupNode();
       setTimeout(
         () => pushState(rf.getNodes(), rf.getEdges(), "Increase Font Size"),
         0
@@ -184,12 +253,91 @@ export default function ShadcnGroupNode({
           d.fontSize = Math.max(currentSize - step, MIN_FONT_SIZE);
         }
       );
+      selectGroupNode();
       setTimeout(
         () => pushState(rf.getNodes(), rf.getEdges(), "Decrease Font Size"),
         0
       );
     }
   };
+
+  const commitComment = useCallback(
+    (nextValue: string) => {
+      const normalizedNext = nextValue.trim();
+      const currentNode = rf.getNodes().find((node) => node.id === id);
+      const existingComment =
+        typeof currentNode?.data?.comment === "string"
+          ? currentNode.data.comment
+          : "";
+      const normalizedCurrent = existingComment.trim();
+      if (normalizedNext === normalizedCurrent) return;
+
+      mutateNode((d) => {
+        if (normalizedNext) {
+          d.comment = normalizedNext;
+        } else {
+          delete d.comment;
+        }
+      });
+
+      setTimeout(
+        () => pushState(rf.getNodes(), rf.getEdges(), "Update Group Comment"),
+        0
+      );
+    },
+    [id, mutateNode, pushState, rf]
+  );
+
+  const toggleExcludeFromFlowMap = useCallback(() => {
+    const currentNode = rf.getNodes().find((node) => node.id === id);
+    const currentlyExcluded =
+      (currentNode?.data as NodeData | undefined)?.excludeFromFlowMap === true;
+    const nextExcluded = !currentlyExcluded;
+    mutateNode((d) => {
+      if (nextExcluded) {
+        d.excludeFromFlowMap = true;
+      } else {
+        delete d.excludeFromFlowMap;
+      }
+    });
+
+    setTimeout(
+      () =>
+        pushState(
+          rf.getNodes(),
+          rf.getEdges(),
+          nextExcluded
+            ? "Exclude Group From Flow Map"
+            : "Include Group In Flow Map"
+        ),
+      0
+    );
+  }, [id, mutateNode, pushState, rf]);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    if (commentSaveTimerRef.current) {
+      clearTimeout(commentSaveTimerRef.current);
+    }
+    commentSaveTimerRef.current = setTimeout(() => {
+      commitComment(commentDraftRef.current);
+      commentSaveTimerRef.current = null;
+    }, GROUP_COMMENT_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (commentSaveTimerRef.current) {
+        clearTimeout(commentSaveTimerRef.current);
+        commentSaveTimerRef.current = null;
+      }
+    };
+  }, [commentDraft, showMenu, commitComment]);
+
+  useEffect(() => {
+    if (wasMenuOpenRef.current && !showMenu) {
+      commitComment(commentDraftRef.current);
+    }
+    wasMenuOpenRef.current = showMenu;
+  }, [showMenu, commitComment]);
 
   /* ----------------------------------------------------------------
        Resize handlers
@@ -257,6 +405,8 @@ export default function ShadcnGroupNode({
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (e.button !== 0) return;
       if (isInteractionTargetEditable(e.target)) return;
+      blurActiveEditableElement();
+      clearSelectedEdges();
 
       if (isSelectionModeActive()) {
         // Let the pane create a marquee selection
@@ -288,7 +438,7 @@ export default function ShadcnGroupNode({
       };
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     },
-    [rf]
+    [blurActiveEditableElement, clearSelectedEdges, rf]
   );
 
   const handleBodyPointerMove = useCallback(
@@ -410,6 +560,11 @@ export default function ShadcnGroupNode({
           : ""
       )}
       style={{ width: w, height: h, ...borderStyle }}
+      onPointerDownCapture={(event) => {
+        if (event.button !== 0) return;
+        if (isInteractionTargetEditable(event.target)) return;
+        selectGroupNode();
+      }}
     >
       <NodeResizer
         isVisible={selected}
@@ -440,7 +595,41 @@ export default function ShadcnGroupNode({
         data-testid="group-header"
         className={headerClasses}
         style={{ height: headerHeight }}
+        onPointerDownCapture={selectGroupNode}
       >
+        {/* Font size controls (left aligned, with value between - and +) */}
+        <div className="flex items-center gap-1 pr-2 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onPointerDownCapture={handleHeaderControlPointerDown}
+            onClick={decreaseFontSize}
+            disabled={currentFontSize <= MIN_FONT_SIZE}
+            title="Decrease font size"
+            aria-label="Decrease font size"
+            className="h-8 w-8"
+          >
+            <Minus className="h-4 w-4 text-foreground" />
+          </Button>
+
+          <span className="w-9 text-center text-xs text-muted-foreground tabular-nums select-none">
+            {Math.round(currentFontSize)}
+          </span>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onPointerDownCapture={handleHeaderControlPointerDown}
+            onClick={increaseFontSize}
+            disabled={currentFontSize >= MAX_FONT_SIZE}
+            title="Increase font size"
+            aria-label="Increase font size"
+            className="h-8 w-8"
+          >
+            <Plus className="h-4 w-4 text-foreground" />
+          </Button>
+        </div>
+
         <div className="leading-tight whitespace-normal break-words flex-1 min-w-0">
           <EditableLabel
             value={rawTitle}
@@ -461,33 +650,6 @@ export default function ShadcnGroupNode({
           </div>
         )}
 
-        {/* Font size controls */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onPointerDownCapture={(e) => e.stopPropagation()}
-          onClick={decreaseFontSize}
-          disabled={currentFontSize <= MIN_FONT_SIZE}
-          title="Decrease font size"
-          aria-label="Decrease font size"
-          className="h-8 w-8"
-        >
-          <Minus className="h-4 w-4 text-foreground" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onPointerDownCapture={(e) => e.stopPropagation()}
-          onClick={increaseFontSize}
-          disabled={currentFontSize >= MAX_FONT_SIZE}
-          title="Increase font size"
-          aria-label="Increase font size"
-          className="h-8 w-8"
-        >
-          <Plus className="h-4 w-4 text-foreground" />
-        </Button>
-
         {/* More menu toggle (STOP events so we don't drag the group) */}
         <Button
           ref={menuAnchorRef}
@@ -495,7 +657,7 @@ export default function ShadcnGroupNode({
           size="icon"
           className="h-8 w-8 nodrag"
           onClick={() => setShowMenu((v) => !v)}
-          onPointerDownCapture={(e) => e.stopPropagation()}
+          onPointerDownCapture={handleHeaderControlPointerDown}
           aria-label="More"
           title="More"
         >
@@ -549,6 +711,40 @@ export default function ShadcnGroupNode({
             }}
             onPointerDownCapture={(e) => e.stopPropagation()}
           >
+            <div className="px-1 pb-1">
+              <label
+                htmlFor={`group-comment-${id}`}
+                className="mb-1 block text-xs font-medium text-muted-foreground"
+              >
+                Group Comment
+              </label>
+              <textarea
+                id={`group-comment-${id}`}
+                value={commentDraft}
+                onChange={(event) =>
+                  setCommentDraft(event.target.value.slice(0, GROUP_COMMENT_MAX_LENGTH))
+                }
+                placeholder="Describe what this group does..."
+                className="w-full rounded-sm border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                rows={3}
+              />
+              <label
+                htmlFor={`group-flow-map-exclude-${id}`}
+                className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-foreground"
+              >
+                <Checkbox
+                  id={`group-flow-map-exclude-${id}`}
+                  checked={excludeFromFlowMap}
+                  onCheckedChange={toggleExcludeFromFlowMap}
+                  className="h-3.5 w-3.5 data-[state=checked]:bg-transparent data-[state=checked]:text-primary"
+                />
+                Exclude from Flow Map
+              </label>
+              <div className="mt-1 text-[10px] text-muted-foreground">
+                Hidden groups and their connections are omitted from Flow Map.
+              </div>
+            </div>
+            <div className="my-1 h-px bg-border" />
             <button
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
               onClick={handleCopyId}

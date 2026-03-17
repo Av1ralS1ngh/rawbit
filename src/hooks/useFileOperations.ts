@@ -49,6 +49,7 @@ import type {
   FieldDefinition,
   GroupDefinition,
   InputStructure,
+  ProtocolDiagramLayout,
   ScriptExecutionResult,
 } from "@/types";
 import type { Edge, NodeChange, EdgeChange } from "@xyflow/react";
@@ -72,6 +73,13 @@ import {
   isRecord,
   isXYPosition,
 } from "@/lib/flow/guards";
+import {
+  collectGroupNodeIds,
+  mergeProtocolDiagramLayout,
+  protocolDiagramLayoutEquals,
+  remapProtocolDiagramLayout,
+  sanitizeProtocolDiagramLayout,
+} from "@/lib/protocolDiagram/layoutPersistence";
 
 // Strip ephemeral UI fields from saved JSON
 const omitUIState = (key: string, value: unknown) =>
@@ -114,6 +122,22 @@ interface SimplifiedEdgePayload {
   targetHandle?: string;
 }
 
+interface LlmExportPayload {
+  exportType: "rawbit-llm-export";
+  llmBackground: string;
+  llmContext: {
+    aboutRawbit: string;
+    whatIsExported: string[];
+  };
+  name: string;
+  schemaVersion: number;
+  exportedAt: string;
+  nodes: SimplifiedNodePayload[];
+  edges: SimplifiedEdgePayload[];
+  functionSources: Record<string, string>;
+  functionSourceErrors?: Record<string, string>;
+}
+
 interface SimplifiedExportPayload {
   name: string;
   schemaVersion: number;
@@ -124,12 +148,121 @@ interface SimplifiedExportPayload {
 interface ImportBehaviorOptions {
   getNodes?: () => FlowNode[];
   getEdges?: () => Edge[];
+  getProtocolDiagramLayout?: () => ProtocolDiagramLayout | undefined;
+  setProtocolDiagramLayout?: (layout: ProtocolDiagramLayout | undefined) => void;
   scheduleSnapshot?: (label: string, options?: { refresh?: boolean }) => void;
   fitView?: () => void;
   onTooltip?: (filename?: string) => void;
   onError?: (message: string, details?: FlowValidationIssue[]) => void;
   getActiveTabTitle?: () => string | undefined;
   renameActiveTab?: (title: string, options?: { onlyIfEmpty?: boolean }) => void;
+}
+
+const DEFAULT_LOCAL_API = "http://localhost:5007";
+const LOCAL_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "::1",
+  "[::1]",
+  "0.0.0.0",
+]);
+
+const LLM_EXPORT_BACKGROUND =
+  "This is a compact Rawbit flow export for LLM explanation. It includes node/edge graph data plus the Python backend function sources used by exported nodes.";
+const LLM_EXPORT_ABOUT_RAWBIT =
+  "Rawbit is a node-based visual builder for Bitcoin transaction, script, and cryptography workflows. Nodes represent calculation steps, data transforms, and script logic connected by directed edges.";
+
+const isLocalHost = (hostname?: string) =>
+  typeof hostname === "string" && LOCAL_HOSTS.has(hostname.toLowerCase());
+
+const resolveApiBaseForCode = (): string => {
+  const envBase =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ||
+    DEFAULT_LOCAL_API;
+  const allowRemote =
+    (import.meta.env.VITE_ALLOW_REMOTE_API || "")
+      .toString()
+      .toLowerCase() === "true";
+  const isPageLocal =
+    typeof window !== "undefined" && isLocalHost(window.location.hostname);
+
+  try {
+    const envUrl = new URL(envBase);
+    const isEnvLocal = isLocalHost(envUrl.hostname);
+    if (import.meta.env.DEV && isPageLocal && !isEnvLocal && !allowRemote) {
+      return DEFAULT_LOCAL_API;
+    }
+    return envBase;
+  } catch {
+    return DEFAULT_LOCAL_API;
+  }
+};
+
+async function fetchFunctionSourcesForNames(
+  functionNames: Iterable<string>
+): Promise<{
+  functionSources: Record<string, string>;
+  functionSourceErrors: Record<string, string>;
+}> {
+  const uniqueNames = Array.from(new Set(functionNames))
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0)
+    .sort();
+
+  if (uniqueNames.length === 0) {
+    return { functionSources: {}, functionSourceErrors: {} };
+  }
+
+  const baseUrl = resolveApiBaseForCode();
+  const results = await Promise.allSettled(
+    uniqueNames.map(async (functionName) => {
+      const endpoint = `${baseUrl}/code?functionName=${encodeURIComponent(functionName)}`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: { accept: "application/json" },
+      });
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new Error(`Invalid JSON response (${response.status})`);
+      }
+
+      if (!payload || typeof payload !== "object") {
+        throw new Error(`Unexpected response (${response.status})`);
+      }
+
+      const record = payload as Record<string, unknown>;
+      if (typeof record.code === "string" && record.code.trim().length > 0) {
+        return { functionName, code: record.code };
+      }
+
+      const backendError =
+        typeof record.error === "string" && record.error.trim().length > 0
+          ? record.error
+          : `No source returned (${response.status})`;
+      throw new Error(backendError);
+    })
+  );
+
+  const functionSources: Record<string, string> = {};
+  const functionSourceErrors: Record<string, string> = {};
+
+  results.forEach((result, index) => {
+    const functionName = uniqueNames[index];
+    if (result.status === "fulfilled") {
+      functionSources[functionName] = result.value.code;
+      return;
+    }
+    const reason =
+      result.reason instanceof Error
+        ? result.reason.message
+        : String(result.reason);
+    functionSourceErrors[functionName] = reason;
+  });
+
+  return { functionSources, functionSourceErrors };
 }
 
 export function useFileOperations(
@@ -166,6 +299,11 @@ export function useFileOperations(
   /* ─────────────────────  SAVE FULL FLOW (unchanged)  ─────────────────── */
   const saveFlow = useCallback(() => {
     const nodesWithSteps = hydrateNodesWithScriptSteps(nodes);
+    const groupIds = collectGroupNodeIds(nodesWithSteps);
+    const protocolDiagramLayout = sanitizeProtocolDiagramLayout(
+      importOptions?.getProtocolDiagramLayout?.(),
+      groupIds
+    );
 
     const payload: FlowData = {
       name: `flow-${Date.now()}`,
@@ -182,6 +320,7 @@ export function useFileOperations(
         dragHandle: n.dragHandle,
       })),
       edges: edges.map((e) => ({ ...e })),
+      protocolDiagramLayout,
     };
 
     const json = JSON.stringify(payload, omitUIState, 2);
@@ -272,15 +411,15 @@ export function useFileOperations(
 
           const parsedCandidate = parsedUnknown as FlowFileCandidate;
 
-          // simplified snapshots don't have positions; skip importing them to the canvas
-          const looksSimplified =
+          // simplified/LLM exports don't carry node positions; skip importing them
+          const looksLlmExport =
             parsedCandidate.nodes.length > 0 &&
             parsedCandidate.nodes.every(
               (node) => !isRecord(node) || !isXYPosition(node.position)
             );
-          if (looksSimplified) {
+          if (looksLlmExport) {
             console.warn(
-              "Simplified snapshot detected; skipping canvas import."
+              "LLM export detected; skipping canvas import."
             );
             importOptions?.onError?.(
               "Simplified snapshots omit layout data and can't be loaded into the editor; export a full flow instead."
@@ -315,7 +454,11 @@ export function useFileOperations(
           }
 
           // ① Use collision mode: keep IDs unless they conflict with existing nodes
-          const { nodes: mergedNodes, edges: mergedEdges } = importWithFreshIds<
+          const {
+            nodes: mergedNodes,
+            edges: mergedEdges,
+            idMap,
+          } = importWithFreshIds<
             FlowNode,
             Edge
           >({
@@ -360,6 +503,26 @@ export function useFileOperations(
             type: "add" as const,
             item: { ...e },
           }));
+
+          const importedLayout = sanitizeProtocolDiagramLayout(
+            parsed.protocolDiagramLayout,
+            collectGroupNodeIds(parsed.nodes)
+          );
+          const remappedLayout = remapProtocolDiagramLayout(
+            importedLayout,
+            idMap,
+            collectGroupNodeIds(sanitizedMergedNodes)
+          );
+          const currentLayout = sanitizeProtocolDiagramLayout(
+            importOptions?.getProtocolDiagramLayout?.()
+          );
+          const mergedLayout = mergeProtocolDiagramLayout(
+            currentLayout,
+            remappedLayout
+          );
+          if (!protocolDiagramLayoutEquals(currentLayout, mergedLayout)) {
+            importOptions?.setProtocolDiagramLayout?.(mergedLayout);
+          }
 
           // ⑤ deselect current, then append
           const deselect = nodes
@@ -432,9 +595,7 @@ export function useFileOperations(
     [nodes, edges, onNodesChange, onEdgesChange, importOptions]
   );
 
-  /* ────────────────────  SAVE SIMPLIFIED SNAPSHOT  ──────────────────── */
-
-  const saveSimplifiedFlow = useCallback(() => {
+  const buildSimplifiedSnapshot = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected);
     const nodesToSave = selectedNodes.length > 0 ? selectedNodes : nodes;
     const nodesWithSteps = hydrateNodesWithScriptSteps(nodesToSave);
@@ -455,198 +616,216 @@ export function useFileOperations(
     const groupIds = new Set(
       nodesToSave.filter((n) => n.type === "shadcnGroup").map((n) => n.id)
     );
+    const backendFunctionNames = new Set<string>();
 
-    const slim: SimplifiedExportPayload = {
-      name: `flow-${Date.now()}-simple`,
-      schemaVersion: FLOW_SCHEMA_VERSION,
-      nodes: nodesWithSteps.map((n) => {
-        const data = (n.data ?? {}) as CalculationNodeData &
-          Record<string, unknown>;
-        const fallbackType =
-          typeof n.type === "string" && n.type.trim().length > 0
-            ? n.type
-            : "calculation";
-        const functionName =
-          typeof data.functionName === "string" &&
-          data.functionName.trim().length > 0
-            ? data.functionName
-            : fallbackType;
+    const simplifiedNodes = nodesWithSteps.map((n) => {
+      const data = (n.data ?? {}) as CalculationNodeData &
+        Record<string, unknown>;
+      const fallbackType =
+        typeof n.type === "string" && n.type.trim().length > 0
+          ? n.type
+          : "calculation";
+      const rawFunctionName =
+        typeof data.functionName === "string" && data.functionName.trim().length > 0
+          ? data.functionName.trim()
+          : "";
+      const functionName = rawFunctionName || fallbackType;
 
-        const labelMap: Record<string, string> = {};
-        const addLabel = (index: unknown, label: unknown) => {
-          if (
-            (typeof index !== "number" && typeof index !== "string") ||
-            typeof label !== "string"
-          ) {
-            return;
-          }
-          const trimmed = label.trim();
-          if (!trimmed) return;
-          labelMap[String(index)] = trimmed;
-        };
+      if (rawFunctionName) {
+        backendFunctionNames.add(rawFunctionName);
+      }
 
-        const structure: InputStructure | undefined = data.inputStructure;
+      const labelMap: Record<string, string> = {};
+      const addLabel = (index: unknown, label: unknown) => {
+        if (
+          (typeof index !== "number" && typeof index !== "string") ||
+          typeof label !== "string"
+        ) {
+          return;
+        }
+        const trimmed = label.trim();
+        if (!trimmed) return;
+        labelMap[String(index)] = trimmed;
+      };
 
-        structure?.ungrouped?.forEach((field) =>
-          addLabel(field.index, field.label)
-        );
+      const structure: InputStructure | undefined = data.inputStructure;
 
-        structure?.groups?.forEach((group) => {
-          const instanceKeys = data.groupInstanceKeys?.[group.title] ?? [];
-          instanceKeys.forEach((instanceBaseIndex) => {
-            group.fields.forEach((field) => {
-              const offset =
-                instanceBaseIndex +
-                (typeof field.index === "number" ? field.index : 0);
-              addLabel(offset, field.label);
-            });
+      structure?.ungrouped?.forEach((field) =>
+        addLabel(field.index, field.label)
+      );
+
+      structure?.groups?.forEach((group) => {
+        const instanceKeys = data.groupInstanceKeys?.[group.title] ?? [];
+        instanceKeys.forEach((instanceBaseIndex) => {
+          group.fields.forEach((field) => {
+            const offset =
+              instanceBaseIndex +
+              (typeof field.index === "number" ? field.index : 0);
+            addLabel(offset, field.label);
           });
         });
+      });
 
-        if (structure?.betweenGroups) {
-          Object.values(structure.betweenGroups).forEach((fields) => {
-            fields.forEach((field) => addLabel(field.index, field.label));
-          });
-        }
+      if (structure?.betweenGroups) {
+        Object.values(structure.betweenGroups).forEach((fields) => {
+          fields.forEach((field) => addLabel(field.index, field.label));
+        });
+      }
 
-        structure?.afterGroups?.forEach((field) =>
-          addLabel(field.index, field.label)
+      structure?.afterGroups?.forEach((field) =>
+        addLabel(field.index, field.label)
+      );
+
+      if (structure) {
+        Object.entries(structure as Record<string, unknown>).forEach(
+          ([key, value]) => {
+            if (!key.startsWith("group_") || value === undefined) return;
+            if (Array.isArray(value)) {
+              value.forEach((entry) => {
+                if (isFieldDefinition(entry)) {
+                  addLabel(entry.index, entry.label);
+                }
+              });
+              return;
+            }
+            if (isGroupDefinition(value)) {
+              const baseIndex =
+                typeof value.baseIndex === "number" ? value.baseIndex : 0;
+              value.fields.forEach((field) => {
+                if (!isFieldDefinition(field)) return;
+                const absoluteIndex =
+                  baseIndex +
+                  (typeof field.index === "number" ? field.index : 0);
+                addLabel(absoluteIndex, field.label);
+              });
+            }
+          }
         );
+      }
 
-        if (structure) {
-          Object.entries(structure as Record<string, unknown>).forEach(
-            ([key, value]) => {
-              if (!key.startsWith("group_") || value === undefined) return;
-              if (Array.isArray(value)) {
-                value.forEach((entry) => {
-                  if (isFieldDefinition(entry)) {
-                    addLabel(entry.index, entry.label);
-                  }
-                });
-                return;
-              }
-              if (isGroupDefinition(value)) {
-                const baseIndex =
-                  typeof value.baseIndex === "number" ? value.baseIndex : 0;
-                value.fields.forEach((field) => {
-                  if (!isFieldDefinition(field)) return;
-                  const absoluteIndex =
-                    baseIndex +
-                    (typeof field.index === "number" ? field.index : 0);
-                  addLabel(absoluteIndex, field.label);
-                });
-              }
-            }
-          );
-        }
+      if (data.customFieldLabels) {
+        Object.entries(data.customFieldLabels).forEach(([idx, label]) => {
+          if (typeof label === "string" && label.trim().length > 0) {
+            labelMap[idx] = label;
+          }
+        });
+      }
 
-        if (data.customFieldLabels) {
-          Object.entries(data.customFieldLabels).forEach(([idx, label]) => {
-            if (typeof label === "string" && label.trim().length > 0) {
-              labelMap[idx] = label;
-            }
-          });
-        }
-
-        const rawInputs = data.inputs?.vals as unknown;
-        let labelledInputs: SimplifiedInputs | undefined;
-        if (
-          rawInputs !== undefined &&
-          rawInputs !== null &&
-          typeof rawInputs === "object"
-        ) {
-          const entries = Object.entries(
-            rawInputs as Record<string, unknown>
-          );
-          if (entries.length > 0) {
-            const mapped = entries.reduce<
-              Record<string, SimplifiedInputEntry>
-            >((acc, [idx, val]) => {
+      const rawInputs = data.inputs?.vals as unknown;
+      let labelledInputs: SimplifiedInputs | undefined;
+      if (
+        rawInputs !== undefined &&
+        rawInputs !== null &&
+        typeof rawInputs === "object"
+      ) {
+        const entries = Object.entries(rawInputs as Record<string, unknown>);
+        if (entries.length > 0) {
+          const mapped = entries.reduce<Record<string, SimplifiedInputEntry>>(
+            (acc, [idx, val]) => {
               acc[idx] = {
                 label: labelMap[idx] ?? "",
                 val,
               };
               return acc;
-            }, {});
-            labelledInputs = { vals: mapped };
-          }
+            },
+            {}
+          );
+          labelledInputs = { vals: mapped };
         }
+      }
 
-        const nodePayload: SimplifiedNodePayload = {
-          id: n.id,
-          title:
-            typeof data.title === "string" && data.title.trim().length > 0
-              ? data.title
-              : functionName,
-          functionName,
-        };
+      const nodePayload: SimplifiedNodePayload = {
+        id: n.id,
+        title:
+          typeof data.title === "string" && data.title.trim().length > 0
+            ? data.title
+            : functionName,
+        functionName,
+      };
 
-        if (labelledInputs) nodePayload.inputs = labelledInputs;
+      if (labelledInputs) nodePayload.inputs = labelledInputs;
 
-        if (Object.prototype.hasOwnProperty.call(data, "result")) {
-          nodePayload.result = data.result;
+      if (Object.prototype.hasOwnProperty.call(data, "result")) {
+        nodePayload.result = data.result;
+      }
+
+      const tutorialCandidates = [
+        data.content,
+        data.markdown,
+        (data as { text?: unknown }).text,
+      ];
+      const tutorial = tutorialCandidates.find(
+        (value): value is string =>
+          typeof value === "string" && value.trim().length > 0
+      );
+      if (tutorial) {
+        nodePayload.tutorial = tutorial;
+      }
+
+      if (typeof data.comment === "string" && data.comment.trim()) {
+        nodePayload.comment = data.comment;
+      }
+
+      if (n.parentId && groupIds.has(n.parentId)) {
+        nodePayload.group = n.parentId;
+      }
+
+      const hasError =
+        data.error === true ||
+        data.hasError === true ||
+        data.status === "error" ||
+        (data as { state?: unknown }).state === "error";
+      if (hasError) {
+        nodePayload.error = true;
+        if (
+          typeof data.extendedError === "string" &&
+          data.extendedError.trim()
+        ) {
+          nodePayload.extendedError = data.extendedError;
         }
+      }
 
-        const tutorialCandidates = [
-          data.content,
-          data.markdown,
-          (data as { text?: unknown }).text,
-        ];
-        const tutorial = tutorialCandidates.find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0
-        );
-        if (tutorial) {
-          nodePayload.tutorial = tutorial;
-        }
+      if (data.scriptDebugSteps !== undefined) {
+        nodePayload.scriptDebugSteps = data.scriptDebugSteps ?? null;
+      }
 
-        if (typeof data.comment === "string" && data.comment.trim()) {
-          nodePayload.comment = data.comment;
-        }
+      return nodePayload;
+    });
 
-        if (n.parentId && groupIds.has(n.parentId)) {
-          nodePayload.group = n.parentId;
-        }
+    const simplifiedEdges = edgesToSave.map((e) => {
+      const edgePayload: SimplifiedEdgePayload = {
+        id: e.id,
+        source: e.source,
+        target: e.target,
+      };
+      if (e.sourceHandle) {
+        edgePayload.sourceHandle = e.sourceHandle;
+      }
+      const targets = handleMap.get(e.target);
+      if (e.targetHandle && targets && targets.size > 1) {
+        edgePayload.targetHandle = e.targetHandle;
+      }
+      return edgePayload;
+    });
 
-        const hasError =
-          data.error === true ||
-          data.hasError === true ||
-          data.status === "error" ||
-          (data as { state?: unknown }).state === "error";
-        if (hasError) {
-          nodePayload.error = true;
-          if (
-            typeof data.extendedError === "string" &&
-            data.extendedError.trim()
-          ) {
-            nodePayload.extendedError = data.extendedError;
-          }
-        }
+    return {
+      selectedCount: selectedNodes.length,
+      nodes: simplifiedNodes,
+      edges: simplifiedEdges,
+      functionNames: backendFunctionNames,
+    };
+  }, [nodes, edges]);
 
-        if (data.scriptDebugSteps !== undefined) {
-          nodePayload.scriptDebugSteps = data.scriptDebugSteps ?? null;
-        }
-
-        return nodePayload;
-      }),
-      edges: edgesToSave.map((e) => {
-        const edgePayload: SimplifiedEdgePayload = {
-          id: e.id,
-          source: e.source,
-          target: e.target,
-        };
-        if (e.sourceHandle) {
-          edgePayload.sourceHandle = e.sourceHandle;
-        }
-        const targets = handleMap.get(e.target);
-        if (e.targetHandle && targets && targets.size > 1) {
-          edgePayload.targetHandle = e.targetHandle;
-        }
-        return edgePayload;
-      }),
+  /* ────────────────────  SAVE SIMPLIFIED SNAPSHOT  ──────────────────── */
+  const saveSimplifiedFlow = useCallback(() => {
+    const snapshot = buildSimplifiedSnapshot();
+    const slim: SimplifiedExportPayload = {
+      name: `flow-${Date.now()}-simple`,
+      schemaVersion: FLOW_SCHEMA_VERSION,
+      nodes: snapshot.nodes,
+      edges: snapshot.edges,
     };
 
-    /* 4️⃣  Download */
     const slimJson = JSON.stringify(slim, omitUIState, 2);
     const slimBytes = measureFlowBytes(slimJson);
     if (slimBytes > MAX_FLOW_BYTES) {
@@ -655,6 +834,7 @@ export function useFileOperations(
       importOptions?.onError?.(message);
       return;
     }
+
     const blob = new Blob([slimJson], {
       type: "application/json",
     });
@@ -663,7 +843,7 @@ export function useFileOperations(
     link.href = url;
     const baseTitle = getTabBaseTitle();
     const suffix =
-      selectedNodes.length > 0 ? " - simplified selection" : " - simplified";
+      snapshot.selectedCount > 0 ? " - simplified selection" : " - simplified";
     link.download = nextDownloadName(`${baseTitle}${suffix}`, ".json");
     const parent = document.body ?? document.documentElement;
     const canAppend =
@@ -679,15 +859,85 @@ export function useFileOperations(
 
     log(
       "fileOps",
-      `Simplified flow saved (${
-        selectedNodes.length ? "selection" : "full graph"
-      }; labels inline).`
+      `Simplified flow saved (${snapshot.selectedCount ? "selection" : "full graph"}; labels inline).`
     );
-  }, [nodes, edges, importOptions, getTabBaseTitle, nextDownloadName]);
+  }, [buildSimplifiedSnapshot, importOptions, getTabBaseTitle, nextDownloadName]);
+
+  /* ────────────────────────  SAVE LLM EXPORT  ───────────────────────── */
+  const saveLlmExport = useCallback(async () => {
+    const snapshot = buildSimplifiedSnapshot();
+    const { functionSources, functionSourceErrors } =
+      await fetchFunctionSourcesForNames(snapshot.functionNames);
+    const selectionScope =
+      snapshot.selectedCount > 0 ? "selected nodes only" : "full graph";
+
+    const llmExport: LlmExportPayload = {
+      exportType: "rawbit-llm-export",
+      llmBackground: LLM_EXPORT_BACKGROUND,
+      llmContext: {
+        aboutRawbit: LLM_EXPORT_ABOUT_RAWBIT,
+        whatIsExported: [
+          `Scope: ${selectionScope}.`,
+          "Node data: id, title, functionName, labeled inputs, result, tutorial/comment text, group relation, error state, and script debug steps when present.",
+          "Edge data: source/target links between exported nodes, plus handle metadata where relevant.",
+          "Backend source code: unique Python function implementations for exported node function names (deduplicated).",
+        ],
+      },
+      name: `flow-${Date.now()}-llm`,
+      schemaVersion: FLOW_SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      nodes: snapshot.nodes,
+      edges: snapshot.edges,
+      functionSources,
+    };
+
+    if (Object.keys(functionSourceErrors).length > 0) {
+      llmExport.functionSourceErrors = functionSourceErrors;
+    }
+
+    const llmJson = JSON.stringify(llmExport, omitUIState, 2);
+    const llmBytes = measureFlowBytes(llmJson);
+    if (llmBytes > MAX_FLOW_BYTES) {
+      const message = `LLM export is ${formatBytes(llmBytes)}, over the ${formatBytes(MAX_FLOW_BYTES)} limit.`;
+      console.error(message);
+      importOptions?.onError?.(message);
+      return;
+    }
+
+    const blob = new Blob([llmJson], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const baseTitle = getTabBaseTitle();
+    const suffix =
+      snapshot.selectedCount > 0 ? " - llm export selection" : " - llm export";
+    link.download = nextDownloadName(`${baseTitle}${suffix}`, ".json");
+    const parent = document.body ?? document.documentElement;
+    const canAppend =
+      typeof Node !== "undefined" && parent && link instanceof Node && "appendChild" in parent;
+    if (canAppend) {
+      parent.appendChild(link);
+    }
+    link.click();
+    if (canAppend) {
+      parent.removeChild(link);
+    }
+    URL.revokeObjectURL(url);
+
+    const sourceCount = Object.keys(functionSources).length;
+    const sourceErrorCount = Object.keys(functionSourceErrors).length;
+    log(
+      "fileOps",
+      `LLM export saved (${snapshot.selectedCount ? "selection" : "full graph"}; ${sourceCount} function sources; ${sourceErrorCount} source lookup errors).`
+    );
+  }, [buildSimplifiedSnapshot, importOptions, getTabBaseTitle, nextDownloadName]);
 
   return {
     fileInputRef,
     saveFlow,
+    saveLlmExport,
     openFileDialog,
     handleFileSelect,
     saveSimplifiedFlow,

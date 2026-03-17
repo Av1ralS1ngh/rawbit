@@ -1,4 +1,11 @@
-import React, { Suspense, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Handle, Position } from "@xyflow/react";
 import {
@@ -289,14 +296,31 @@ export function CalculationNodeView({
 }: CalculationNodeViewProps) {
   const [showCode, setShowCode] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
-  const [pathHandleTop, setPathHandleTop] = useState<number | null>(null);
-  const [parityHandleTop, setParityHandleTop] = useState<number | null>(null);
+  const commentEditStartRef = useRef(comment);
+
+  const handleCommentFocus = useCallback((value: string) => {
+    commentEditStartRef.current = value;
+  }, []);
+
+  const handleCommentBlur = useCallback(
+    (value: string) => {
+      mut.commitCommentOnBlur(commentEditStartRef.current, value);
+      commentEditStartRef.current = value;
+    },
+    [mut]
+  );
+  const [anchoredHandleTops, setAnchoredHandleTops] = useState<
+    Record<string, number | null>
+  >({});
+  const [musig2SecnonceCopied, setMusig2SecnonceCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const pathRowRef = useRef<HTMLDivElement | null>(null);
   const pathTriggerRef =
     useRef<React.ElementRef<typeof SelectTrigger> | null>(null);
   const parityRowRef = useRef<HTMLDivElement | null>(null);
   const parityValueRef = useRef<HTMLDivElement | null>(null);
+  const musig2PubnonceRowRef = useRef<HTMLDivElement | null>(null);
+  const musig2SecnonceRowRef = useRef<HTMLDivElement | null>(null);
 
   const highlightStyles =
     data.isHighlighted && !selected
@@ -311,18 +335,17 @@ export function CalculationNodeView({
 
   const showField = singleValue?.showField ?? false;
   const showHandle = singleValue?.showHandle ?? false;
-  const isTaprootTreeBuilder = data.functionName === "taproot_tree_builder";
-  const isTaprootTweakXonly =
-    data.functionName === "taproot_tweak_xonly_pubkey";
-  const outputPorts =
-    Array.isArray(data.outputPorts) && data.outputPorts.length > 0
-      ? data.outputPorts
-      : isTaprootTreeBuilder
-      ? [
-          { label: "root", handleId: "" },
-          { label: "path", handleId: "output-1" },
-        ]
-      : [{ label: "out", handleId: "" }];
+  const outputLayout = data.outputLayout ?? "default";
+  const isTaprootTreeBuilder = outputLayout === "taproot_tree_builder";
+  const isTaprootTweakXonly = outputLayout === "taproot_tweak_xonly_pubkey";
+  const isMusig2NonceGen = outputLayout === "musig2_nonce_gen";
+  const outputPorts = useMemo(
+    () =>
+      Array.isArray(data.outputPorts) && data.outputPorts.length > 0
+        ? data.outputPorts
+        : [{ label: "out", handleId: "" }],
+    [data.outputPorts]
+  );
   const taprootTree = data.taprootTree as
     | {
         leafCount?: number;
@@ -339,6 +362,58 @@ export function CalculationNodeView({
     parityValue === undefined || parityValue === null || parityValue === ""
       ? "--"
       : String(parityValue);
+  const musig2Outputs =
+    data.outputValues && typeof data.outputValues === "object"
+      ? (data.outputValues as Record<string, unknown>)
+      : undefined;
+  const musig2SecnonceValue = musig2Outputs?.["output-1"];
+  const musig2PubnonceDisplay =
+    result === undefined || result === null || result === ""
+      ? "--"
+      : clip.prettyResult;
+  const musig2SecnonceDisplay =
+    musig2SecnonceValue === undefined ||
+    musig2SecnonceValue === null ||
+    musig2SecnonceValue === ""
+      ? "--"
+      : typeof musig2SecnonceValue === "object"
+      ? JSON.stringify(musig2SecnonceValue, null, 2)
+      : String(musig2SecnonceValue);
+
+  const copyMusig2Secnonce = () => {
+    if (musig2SecnonceValue === undefined || musig2SecnonceValue === null) return;
+    const text =
+      typeof musig2SecnonceValue === "object"
+        ? JSON.stringify(musig2SecnonceValue, null, 2)
+        : String(musig2SecnonceValue);
+    if (!text) return;
+
+    const onSuccess = () => {
+      setMusig2SecnonceCopied(true);
+      window.setTimeout(() => setMusig2SecnonceCopied(false), 1000);
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(onSuccess, () => fallback());
+    } else {
+      fallback();
+    }
+
+    function fallback() {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        onSuccess();
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+  };
 
   const handleCopyId = () => {
     clip.copyId();
@@ -570,27 +645,88 @@ export function CalculationNodeView({
     return renderAsciiTree(tree);
   })();
 
+  const anchoredPortSources = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          outputPorts
+            .map((port) => port.handleTopSource)
+            .filter(
+              (source): source is string =>
+                typeof source === "string" && source.trim().length > 0
+            )
+        )
+      ),
+    [outputPorts]
+  );
+
   useLayoutEffect(() => {
-    if (!isTaprootTreeBuilder) return;
+    if (!anchoredPortSources.length) return;
     const cardEl = cardRef.current;
-    const rowEl = pathRowRef.current;
-    const triggerEl = pathTriggerRef.current;
-    const targetEl = triggerEl ?? rowEl;
-    if (!cardEl || !targetEl) return;
+    if (!cardEl) return;
+
+    const getAnchorTarget = (source: string): HTMLElement | null => {
+      if (source === "taproot-path-select") {
+        return pathTriggerRef.current ?? pathRowRef.current;
+      }
+      if (source === "taproot-output-parity") {
+        return parityValueRef.current ?? parityRowRef.current;
+      }
+      if (source === "musig2-pubnonce") {
+        return musig2PubnonceRowRef.current;
+      }
+      if (source === "musig2-secnonce") {
+        return musig2SecnonceRowRef.current;
+      }
+      return null;
+    };
 
     const updatePosition = () => {
       const cardHeight = cardEl.offsetHeight;
       if (!cardHeight) return;
       const cardRect = cardEl.getBoundingClientRect();
-      const targetRect = targetEl.getBoundingClientRect();
-      if (!cardRect.height || !targetRect.height) return;
-      const scaleY = cardRect.height / cardHeight;
-      const rawTop =
-        targetRect.top - cardRect.top + targetRect.height / 2;
-      const nextTop = scaleY ? rawTop / scaleY : rawTop;
-      if (!Number.isFinite(nextTop)) return;
-      const clampedTop = Math.min(Math.max(nextTop, 0), cardHeight);
-      setPathHandleTop(clampedTop);
+      if (!cardRect.height) return;
+      const next: Record<string, number | null> = {};
+
+      anchoredPortSources.forEach((source) => {
+        const targetEl = getAnchorTarget(source);
+        if (!targetEl) {
+          next[source] = null;
+          return;
+        }
+        const targetRect = targetEl.getBoundingClientRect();
+        if (!targetRect.height) {
+          next[source] = null;
+          return;
+        }
+        const scaleY = cardRect.height / cardHeight;
+        const rawTop = targetRect.top - cardRect.top + targetRect.height / 2;
+        const nextTop = scaleY ? rawTop / scaleY : rawTop;
+        if (!Number.isFinite(nextTop)) {
+          next[source] = null;
+          return;
+        }
+        // Normalize to integer pixels to avoid sub-pixel oscillation loops.
+        next[source] = Math.round(Math.min(Math.max(nextTop, 0), cardHeight));
+      });
+
+      setAnchoredHandleTops((prev) => {
+        const merged: Record<string, number | null> = {};
+        let changed = false;
+
+        anchoredPortSources.forEach((source) => {
+          const value = next[source] ?? null;
+          merged[source] = value;
+          if ((prev[source] ?? null) !== value) changed = true;
+        });
+
+        const prevKeys = Object.keys(prev);
+        if (prevKeys.length !== anchoredPortSources.length) {
+          changed = true;
+        }
+
+        return changed ? merged : prev;
+      });
     };
 
     updatePosition();
@@ -611,63 +747,29 @@ export function CalculationNodeView({
     const observer = new ResizeObserver(() => {
       updatePosition();
     });
-    observer.observe(cardEl);
-    observer.observe(targetEl);
-
-    return () => {
-      cancel(rafId as number);
-      observer.disconnect();
-    };
-  }, [isTaprootTreeBuilder, taprootLeafLabels.length, taprootTreeDisplay, showComment]);
-
-  useLayoutEffect(() => {
-    if (!isTaprootTweakXonly) return;
-    const cardEl = cardRef.current;
-    const rowEl = parityRowRef.current;
-    const targetEl = parityValueRef.current ?? rowEl;
-    if (!cardEl || !targetEl) return;
-
-    const updatePosition = () => {
-      const cardHeight = cardEl.offsetHeight;
-      if (!cardHeight) return;
-      const cardRect = cardEl.getBoundingClientRect();
-      const targetRect = targetEl.getBoundingClientRect();
-      if (!cardRect.height || !targetRect.height) return;
-      const scaleY = cardRect.height / cardHeight;
-      const rawTop =
-        targetRect.top - cardRect.top + targetRect.height / 2;
-      const nextTop = scaleY ? rawTop / scaleY : rawTop;
-      if (!Number.isFinite(nextTop)) return;
-      const clampedTop = Math.min(Math.max(nextTop, 0), cardHeight);
-      setParityHandleTop(clampedTop);
-    };
-
-    updatePosition();
-    const schedule =
-      typeof window !== "undefined" && window.requestAnimationFrame
-        ? window.requestAnimationFrame
-        : (cb: () => void) => setTimeout(cb, 0);
-    const cancel =
-      typeof window !== "undefined" && window.cancelAnimationFrame
-        ? window.cancelAnimationFrame
-        : (id: number) => clearTimeout(id);
-    const rafId = schedule(updatePosition);
-
-    if (typeof ResizeObserver === "undefined") {
-      return () => cancel(rafId as number);
-    }
-
-    const observer = new ResizeObserver(() => {
-      updatePosition();
+    anchoredPortSources.forEach((source) => {
+      const targetEl = getAnchorTarget(source);
+      if (targetEl) observer.observe(targetEl);
     });
-    observer.observe(cardEl);
-    observer.observe(targetEl);
 
     return () => {
       cancel(rafId as number);
       observer.disconnect();
     };
-  }, [isTaprootTweakXonly, parityDisplay, showComment]);
+  }, [
+    anchoredPortSources,
+    isTaprootTreeBuilder,
+    taprootLeafLabels.length,
+    taprootTreeDisplay,
+    taprootLeafIndex,
+    isTaprootTweakXonly,
+    parityDisplay,
+    isMusig2NonceGen,
+    musig2PubnonceDisplay,
+    musig2SecnonceDisplay,
+    result,
+    showComment,
+  ]);
 
   return (
     <Card
@@ -921,29 +1023,99 @@ export function CalculationNodeView({
           <div className="mb-2 text-sm text-primary">
             {">"} Calculation Result:
           </div>
-          <div className="flex items-start justify-between gap-2 text-sm">
-            <div className="flex-1 min-w-0" data-testid="node-result">
-              <span className="block whitespace-pre-wrap break-all">
-                {clip.prettyResult}
-              </span>
-            </div>
+          {isMusig2NonceGen ? (
+            <div className="space-y-3 text-sm">
+              <div
+                ref={musig2PubnonceRowRef}
+                className="flex items-start justify-between gap-2"
+              >
+                <div className="flex-1 min-w-0" data-testid="node-result">
+                  <div className="mb-1 text-xs font-medium">Pubnonce:</div>
+                  <span className="block whitespace-pre-wrap break-all">
+                    {musig2PubnonceDisplay}
+                  </span>
+                </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="nodrag shrink-0 self-start"
-              onPointerDownCapture={(event) => event.stopPropagation()}
-              onClick={clip.copyResult}
-              disabled={result === undefined}
-              title={clip.resultCopied ? "Copied!" : "Copy result to clipboard"}
-            >
-              {clip.resultCopied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="nodrag shrink-0 self-start"
+                  onPointerDownCapture={(event) => event.stopPropagation()}
+                  onClick={clip.copyResult}
+                  disabled={result === undefined}
+                  title={
+                    clip.resultCopied ? "Copied!" : "Copy pubnonce to clipboard"
+                  }
+                >
+                  {clip.resultCopied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              <div
+                ref={musig2SecnonceRowRef}
+                className="flex items-start justify-between gap-2"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="mb-1 text-xs font-medium">Secnonce:</div>
+                  <span className="block whitespace-pre-wrap break-all">
+                    {musig2SecnonceDisplay}
+                  </span>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="nodrag shrink-0 self-start"
+                  onPointerDownCapture={(event) => event.stopPropagation()}
+                  onClick={copyMusig2Secnonce}
+                  disabled={
+                    musig2SecnonceValue === undefined ||
+                    musig2SecnonceValue === null ||
+                    musig2SecnonceValue === ""
+                  }
+                  title={
+                    musig2SecnonceCopied
+                      ? "Copied!"
+                      : "Copy secnonce to clipboard"
+                  }
+                >
+                  {musig2SecnonceCopied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start justify-between gap-2 text-sm">
+              <div className="flex-1 min-w-0" data-testid="node-result">
+                <span className="block whitespace-pre-wrap break-all">
+                  {clip.prettyResult}
+                </span>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="nodrag shrink-0 self-start"
+                onPointerDownCapture={(event) => event.stopPropagation()}
+                onClick={clip.copyResult}
+                disabled={result === undefined}
+                title={clip.resultCopied ? "Copied!" : "Copy result to clipboard"}
+              >
+                {clip.resultCopied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          )}
 
           {isTaprootTreeBuilder && taprootLeafLabels.length > 0 ? (
             <div
@@ -1040,61 +1212,31 @@ export function CalculationNodeView({
               placeholder="Enter your notes here..."
               value={comment}
               onChange={mut.handleCommentChange}
+              onFocus={handleCommentFocus}
+              onBlur={handleCommentBlur}
             />
           </div>
         )}
       </CardContent>
 
-      {isTaprootTreeBuilder ? (
-        <>
-          <Handle
-            type="source"
-            position={Position.Right}
-            className="!h-3 !w-3 !border-2 !border-primary !bg-background"
-            style={{ top: "50%", transform: "translate(50%, -50%)" }}
-          />
-          {pathHandleTop !== null && taprootLeafLabels.length > 0 ? (
-            <Handle
-              type="source"
-              id="output-1"
-              position={Position.Right}
-              className="!h-3 !w-3 !border-2 !border-primary !bg-background"
-              style={{
-                top: `${pathHandleTop}px`,
-                transform: "translate(50%, -50%)",
-              }}
-            />
-          ) : null}
-        </>
-      ) : isTaprootTweakXonly ? (
-        <>
-          <Handle
-            type="source"
-            position={Position.Right}
-            className="!h-3 !w-3 !border-2 !border-primary !bg-background"
-            style={{ top: "50%", transform: "translate(50%, -50%)" }}
-          />
-          {parityHandleTop !== null ? (
-            <Handle
-              type="source"
-              id="output-1"
-              position={Position.Right}
-              className="!h-3 !w-3 !border-2 !border-primary !bg-background"
-              style={{
-                top: `${parityHandleTop}px`,
-                transform: "translate(50%, -50%)",
-              }}
-            />
-          ) : null}
-        </>
-      ) : (
-        outputPorts.map((port, index) => {
-          const top = `${((index + 1) / (outputPorts.length + 1)) * 100}%`;
+      {outputPorts
+        .filter((port) => port.showHandle !== false)
+        .map((port, index, visiblePorts) => {
+          const anchoredTop =
+            typeof port.handleTopSource === "string"
+              ? anchoredHandleTops[port.handleTopSource]
+              : null;
+          const top =
+            anchoredTop !== null && anchoredTop !== undefined
+              ? `${anchoredTop}px`
+              : port.handleTop
+              ? port.handleTop
+              : `${((index + 1) / (visiblePorts.length + 1)) * 100}%`;
           const handleId = port.handleId || undefined;
           const showLabel =
-            outputPorts.length > 1 &&
-            !isTaprootTreeBuilder &&
-            !isTaprootTweakXonly;
+            port.showLabel !== undefined
+              ? port.showLabel
+              : visiblePorts.length > 1;
           return (
             <React.Fragment key={`${port.handleId || "out"}-${index}`}>
               {showLabel ? (
@@ -1114,8 +1256,7 @@ export function CalculationNodeView({
               />
             </React.Fragment>
           );
-        })
-      )}
+        })}
 
       <Suspense fallback={null}>
         <ScriptExecutionSteps

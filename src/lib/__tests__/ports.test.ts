@@ -115,4 +115,26 @@ describe("buildPorts", () => {
     expect(handles).toEqual(["input-0", "input-10"]);
     expect(handles).not.toContain("input-1");
   });
+
+  it("omits hidden outputs so connect ports match visible canvas handles", () => {
+    const node = {
+      id: "taproot-tweak",
+      type: "calculation",
+      position: { x: 0, y: 0 },
+      data: {
+        functionName: "taproot_tweak_xonly_pubkey",
+        outputPorts: [
+          { label: "Q (x-only)", handleId: "" },
+          { label: "parity (c0/c1)", handleId: "output-1" },
+          { label: "tweak (32B)", handleId: "output-2", showHandle: false },
+        ],
+      },
+    } as FlowNode;
+
+    const ports = buildPorts(node);
+    expect(ports.outputs).toEqual([
+      { label: "Q (x-only)", handleId: "" },
+      { label: "parity (c0/c1)", handleId: "output-1" },
+    ]);
+  });
 });

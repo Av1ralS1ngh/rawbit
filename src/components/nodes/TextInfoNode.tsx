@@ -32,6 +32,8 @@ const DEFAULT_TEXT = "...";
 const MIN_WIDTH = 360;
 const MIN_HEIGHT = 100;
 const HEADER_HEIGHT = 32; // h-8 in Tailwind = 32px
+const MIN_FONT_SIZE = 8;
+const MAX_FONT_SIZE = 150;
 
 /* -------------------------------------------------------------
  *  Search highlight helpers
@@ -99,6 +101,15 @@ export default function TextInfoNode({
   width: nodeWidth,
   height: nodeHeight,
 }: NodeProps<FlowNode>) {
+  const normalizeFontSize = useCallback(
+    (value: unknown) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return 16;
+      return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, numeric));
+    },
+    []
+  );
+
   /* ───────── hooks & helpers ──────────────────────────────── */
   const rf = useReactFlow<FlowNode>();
   const { pushState } = useUndoRedo();
@@ -114,12 +125,14 @@ export default function TextInfoNode({
       rf.setNodes((nodes) => {
         const idx = nodes.findIndex((n) => n.id === id);
         if (idx === -1) return nodes;
+        const currentNode = nodes[idx];
+        const currentData = (currentNode.data ?? {}) as CalculationNodeData;
+        const nextData = produce(currentData, mutator);
+        if (nextData === currentData) return nodes;
         const next = [...nodes];
-        const currentData = (next[idx].data ??
-          {}) as CalculationNodeData;
         next[idx] = {
-          ...next[idx],
-          data: produce(currentData, mutator),
+          ...currentNode,
+          data: nextData,
         };
         return next;
       });
@@ -129,7 +142,7 @@ export default function TextInfoNode({
 
   /* ───────── node-level data ──────────────────────────────── */
   const content = typeof data.content === "string" ? data.content : "";
-  const fontSize = typeof data.fontSize === "number" ? data.fontSize : 16;
+  const fontSize = normalizeFontSize(data.fontSize);
   const lineHeight = Math.round(fontSize * 1.5); // Use the same calculation as the second file
   const borderStyle = data.borderColor ? { borderColor: data.borderColor } : {};
   const rawTitle = data.title || "Text Node";
@@ -142,6 +155,12 @@ export default function TextInfoNode({
   // Use node dimensions if available, otherwise fall back to data dimensions
   const displayWidth = nodeWidth || data.width || MIN_WIDTH;
   const displayHeight = nodeHeight || data.height || MIN_HEIGHT;
+  const committedSizeRef = useRef({
+    width: Math.round(displayWidth),
+    height: Math.round(displayHeight),
+  });
+  committedSizeRef.current.width = Math.round(displayWidth);
+  committedSizeRef.current.height = Math.round(displayHeight);
 
   /* 🔶 Highlight ring (search / edge-select) */
   const highlightStyles =
@@ -164,7 +183,9 @@ export default function TextInfoNode({
 
   /* keep draft in sync when external content changes */
   useEffect(() => {
-    if (!isEditing) setDraft(content || DEFAULT_TEXT);
+    if (isEditing) return;
+    const nextDraft = content || DEFAULT_TEXT;
+    setDraft((prev) => (prev === nextDraft ? prev : nextDraft));
   }, [content, isEditing]);
 
   /* -----------------------------------------------------------
@@ -179,11 +200,15 @@ export default function TextInfoNode({
   const menuRef = useRef<HTMLDivElement>(null);
 
   /* ───────── textarea height helper ───────────────────────── */
+  // Keep a ref so updateTextareaFit stays stable (no deps that churn on every
+  // resize tick), preventing useEffect / onResize from recreating on each render.
+  const displayHeightRef = useRef(displayHeight);
+  displayHeightRef.current = displayHeight;
+
   const updateTextareaFit = useCallback(() => {
     if (!textareaRef.current) return;
-    const h = displayHeight - HEADER_HEIGHT;
-    textareaRef.current.style.height = `${h}px`;
-  }, [displayHeight]);
+    textareaRef.current.style.height = `${displayHeightRef.current - HEADER_HEIGHT}px`;
+  }, []); // stable – reads height via ref
 
   useEffect(() => {
     if (isEditing) updateTextareaFit();
@@ -222,13 +247,12 @@ export default function TextInfoNode({
   /* ───────── font size controls (commits immediately) ───────── */
   const changeFontSize = useCallback(
     (delta: number) => {
-      const clamp = (v: number) => Math.min(256, Math.max(8, v));
       updateNode((d) => {
-        d.fontSize = clamp((d.fontSize || 16) + delta);
+        d.fontSize = normalizeFontSize((d.fontSize || 16) + delta);
       });
       setTimeout(() => pushState(rf.getNodes(), rf.getEdges(), "Font Size"), 0);
     },
-    [updateNode, pushState, rf]
+    [normalizeFontSize, updateNode, pushState, rf]
   );
 
   /* ───────── editing lifecycle ───────────────────────────── */
@@ -270,13 +294,25 @@ export default function TextInfoNode({
   /* ───────── resize handlers (commit immediately) ───────────── */
   const onResize = useCallback(
     (_: unknown, { width, height }: { width: number; height: number }) => {
+      // Round to integer pixels to prevent sub-pixel oscillation loops
+      // (same fix applied to CalculationNodeView anchored handles).
+      const w = Math.round(width);
+      const h = Math.round(height);
+      const current = committedSizeRef.current;
+      if (current.width === w && current.height === h) {
+        return;
+      }
+      current.width = w;
+      current.height = h;
       updateNode((d) => {
-        d.width = width;
-        d.height = height;
+        d.width = w;
+        d.height = h;
       });
-      if (isEditing) requestAnimationFrame(updateTextareaFit);
+      if (isEditing && textareaRef.current) {
+        textareaRef.current.style.height = `${h - HEADER_HEIGHT}px`;
+      }
     },
-    [updateNode, isEditing, updateTextareaFit]
+    [updateNode, isEditing]
   );
 
   const onResizeEnd = useCallback(
@@ -326,15 +362,23 @@ export default function TextInfoNode({
 
   /* Close menu when clicking outside */
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handlePointerDownOutside = (e: PointerEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setShowMenu(false);
       }
     };
     if (showMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener(
+        "pointerdown",
+        handlePointerDownOutside,
+        true
+      );
       return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener(
+          "pointerdown",
+          handlePointerDownOutside,
+          true
+        );
     }
   }, [showMenu]);
 
@@ -396,7 +440,7 @@ export default function TextInfoNode({
       />
 
       {/* Header – font controls and inline menu */}
-      <div className="flex items-center justify-between h-8 px-2 -mx-px -mt-px bg-primary/10 border-b rounded-t-lg">
+      <div className="flex items-center justify-between h-8 px-2 -mx-px -mt-px bg-primary/10 border-b rounded-t-lg cursor-pointer active:cursor-grabbing">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"

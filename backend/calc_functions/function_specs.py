@@ -108,6 +108,41 @@ FUNCTION_SPECS = {
         }
     },
 
+    "musig2_nonce_gen": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "musig2_nonce_agg": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "musig2_partial_sign": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "musig2_partial_sig_verify": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "musig2_partial_sig_agg": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
     "schnorr_batch_verify_demo": {
         "paramExtraction": "multi_val",
         "params": {

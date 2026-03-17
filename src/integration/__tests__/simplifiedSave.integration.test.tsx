@@ -164,13 +164,13 @@ describe("Simplified save integration", () => {
 
     expect(screen.getByTestId("confirmation-open").textContent).toBe("true");
 
-    await act(async () => {
-      await handlesRef.current!.confirmSave();
+    act(() => {
+      handlesRef.current!.confirmSave();
     });
 
     expect(screen.getByTestId("confirmation-open").textContent).toBe("false");
-    expect(anchorClickSpy).toHaveBeenCalled();
-    expect(payloads).toHaveLength(1);
+    await waitFor(() => expect(anchorClickSpy).toHaveBeenCalled());
+    await waitFor(() => expect(payloads).toHaveLength(1));
     const parsed = payloads[0];
     expect(parsed.schemaVersion).toBeDefined();
     expect(parsed.nodes).toHaveLength(1);
@@ -218,8 +218,8 @@ describe("Simplified save integration", () => {
     });
 
     expect(screen.getByTestId("confirmation-open").textContent).toBe("false");
-    expect(anchorClickSpy).toHaveBeenCalledTimes(1);
-    expect(payloads).toHaveLength(1);
+    await waitFor(() => expect(anchorClickSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(payloads).toHaveLength(1));
     const saved = payloads[0];
     expect(saved.nodes).toHaveLength(2);
     expect(saved.edges).toHaveLength(1);

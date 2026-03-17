@@ -326,6 +326,23 @@ def _negate_point(pt: ellipticcurve.Point) -> ellipticcurve.Point:
     return ellipticcurve.Point(SECP256k1.curve, pt.x(), (-pt.y()) % _CURVE_P)
 
 
+def _point_to_compressed(pt: ellipticcurve.Point) -> bytes:
+    prefix = b"\x02" if (pt.y() & 1) == 0 else b"\x03"
+    return prefix + _int_to_32(pt.x())
+
+
+def _point_from_compressed(comp: bytes) -> ellipticcurve.Point:
+    if len(comp) != 33:
+        raise ValueError("Compressed point must be 33 bytes")
+    prefix = comp[0]
+    if prefix not in (2, 3):
+        raise ValueError("Compressed point must start with 0x02 or 0x03")
+    x = int.from_bytes(comp[1:], "big")
+    pt = _lift_x(x)  # even-Y
+    if (pt.y() & 1) != (prefix & 1):
+        pt = _negate_point(pt)
+    return pt
+
 def _bip340_challenge(r_x: bytes, pub_x: bytes, msg: bytes) -> int:
     return int.from_bytes(
         _tagged_hash_bytes("BIP0340/challenge", r_x + pub_x + msg),
@@ -433,7 +450,9 @@ def taproot_tweak_xonly_pubkey(vals: list[str]) -> str:
 
     internal_pt = _lift_x_from_bytes(xonly)
     tweak_bytes = _tagged_hash_bytes("TapTweak", xonly + merkle_root)
-    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    tweak_int = int.from_bytes(tweak_bytes, "big")
+    if tweak_int >= _CURVE_ORDER:
+        raise ValueError("TapTweak scalar must be less than curve order")
     output_pt = internal_pt + (_CURVE_GEN * tweak_int)
     if output_pt == ellipticcurve.INFINITY:
         raise ValueError("Invalid tweak: resulting point at infinity")
@@ -470,7 +489,9 @@ def taproot_tweaked_privkey(vals: list[str]) -> str:
 
     internal_pt, d_even = _derive_even_pub(d)
     tweak_bytes = _tagged_hash_bytes("TapTweak", _int_to_32(internal_pt.x()) + merkle_root)
-    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    tweak_int = int.from_bytes(tweak_bytes, "big")
+    if tweak_int >= _CURVE_ORDER:
+        raise ValueError("TapTweak scalar must be less than curve order")
     output_sk = (d_even + tweak_int) % _CURVE_ORDER
     if output_sk == 0:
         raise ValueError("Invalid tweak: resulting secret key is zero")
@@ -500,7 +521,9 @@ def taproot_output_pubkey_from_xonly(vals: list[str]) -> str:
 
     internal_pt = _lift_x_from_bytes(xonly)
     tweak_bytes = _tagged_hash_bytes("TapTweak", xonly + merkle_root)
-    tweak_int = int.from_bytes(tweak_bytes, "big") % _CURVE_ORDER
+    tweak_int = int.from_bytes(tweak_bytes, "big")
+    if tweak_int >= _CURVE_ORDER:
+        raise ValueError("TapTweak scalar must be less than curve order")
     output_pt = internal_pt + (_CURVE_GEN * tweak_int)
     if output_pt == ellipticcurve.INFINITY:
         raise ValueError("Invalid tweak: resulting point at infinity")
@@ -879,49 +902,665 @@ def taproot_sighash_default(vals: list[str]) -> str:
         }
     )
 
+def _musig2_is_infinite(pt: Any) -> bool:
+    return pt == ellipticcurve.INFINITY
+
+
+def _point_from_compressed_ext(comp: bytes, *, name: str = "point") -> Any:
+    if len(comp) != 33:
+        raise ValueError(f"{name} must be 33 bytes")
+    if comp == b"\x00" * 33:
+        return ellipticcurve.INFINITY
+    return _point_from_compressed(comp)
+
+
+def _point_to_compressed_ext(pt: Any) -> bytes:
+    if _musig2_is_infinite(pt):
+        return b"\x00" * 33
+    return _point_to_compressed(pt)
+
+
+def _musig2_keyagg_details(pubkeys_hex: list[str]) -> dict:
+    if len(pubkeys_hex) < 1:
+        raise ValueError("Provide at least one compressed pubkey")
+
+    plain_list: list[bytes] = []
+    points: list[Any] = []
+    for i, pk_hex in enumerate(pubkeys_hex):
+        pk = _bytes_from_even_hex(pk_hex, name=f"pubkey[{i}]")
+        if len(pk) != 33:
+            raise ValueError(f"pubkey[{i}] must be 33 bytes (got {len(pk)})")
+        P = _point_from_compressed(pk)
+        plain_list.append(pk)
+        points.append(P)
+
+    u = len(plain_list)
+    L = _tagged_hash_bytes("KeyAgg list", b"".join(plain_list))
+
+    pk2 = b"\x00" * 33
+    for j in range(1, u):
+        if plain_list[j] != plain_list[0]:
+            pk2 = plain_list[j]
+            break
+
+    coeffs_info: list[dict] = []
+    coeffs: list[int] = []
+    agg_pt: Any = ellipticcurve.INFINITY
+
+    for i, (pk_i, P_i) in enumerate(zip(plain_list, points)):
+        if pk_i == pk2:
+            a_i = 1
+            is_second = True
+        else:
+            a_i = int.from_bytes(
+                _tagged_hash_bytes("KeyAgg coefficient", L + pk_i), "big"
+            ) % _CURVE_ORDER
+            is_second = False
+
+        agg_pt = agg_pt + (P_i * a_i)
+        coeffs.append(a_i)
+        coeffs_info.append(
+            {
+                "pubkey_compressed": pk_i.hex(),
+                "pubkey_xonly": _int_to_32(P_i.x()).hex(),
+                "coefficient": hex(a_i),
+                "is_second_key": is_second,
+            }
+        )
+
+    if _musig2_is_infinite(agg_pt):
+        raise ValueError("Key aggregation resulted in point at infinity")
+
+    return {
+        "plain_list": plain_list,
+        "points": points,
+        "coeffs": coeffs,
+        "coeffs_info": coeffs_info,
+        "agg_pt": agg_pt,
+        "L": L,
+        "pk2": pk2,
+        "num_pubkeys": u,
+    }
+
+
+def _musig2_coeff_for_pubkey(details: dict, signer_pk: bytes) -> int:
+    for i, pk in enumerate(details["plain_list"]):
+        if pk == signer_pk:
+            return details["coeffs"][i]
+    raise ValueError("Signer pubkey not found in pubkeys list")
+
 
 def musig2_aggregate_pubkeys(vals: list[str]) -> str:
     """
-    Lightweight MuSig2-style key aggregation (coefficients + x-only result).
+    BIP327 KeyAgg for compressed pubkeys.
 
-    vals: list of x-only pubkeys (hex). Requires at least two.
+    Inputs: list of 33-byte compressed pubkeys (hex).
+    Returns JSON with aggregate x-only pubkey and debugging details.
     """
-    pubkeys = [str(v).strip() for v in vals if str(v).strip()]
-    if len(pubkeys) < 2:
-        raise ValueError("Provide at least two x-only pubkeys")
+    pubkeys_hex = [str(v).strip() for v in vals if str(v).strip()]
+    details = _musig2_keyagg_details(pubkeys_hex)
 
-    pk_bytes = []
-    for i, pk in enumerate(pubkeys):
-        b = _bytes_from_even_hex(pk, name=f"pubkey[{i}]")
-        if len(b) != 32:
-            raise ValueError(f"pubkey[{i}] must be 32 bytes")
-        pk_bytes.append(b)
-
-    L = _tagged_hash_bytes("KeyAgg list", b"".join(pk_bytes))
-
-    coeffs = []
-    agg_pt: ellipticcurve.Point | None = None
-    for b in pk_bytes:
-        a = int.from_bytes(_tagged_hash_bytes("KeyAgg coefficient", L + b), "big") % _CURVE_ORDER
-        if a == 0:
-            a = 1
-        pt = _lift_x(int.from_bytes(b, "big"))
-        term = pt * a
-        agg_pt = term if agg_pt is None else agg_pt + term
-        coeffs.append({"pubkey": b.hex(), "coefficient": hex(a)})
-
-    if agg_pt is None:
-        raise ValueError("Aggregation failed")
-
-    agg_parity = agg_pt.y() & 1
+    agg_pt = details["agg_pt"]
+    agg_parity = 0 if agg_pt.y() % 2 == 0 else 1
     agg_xonly = _int_to_32(agg_pt.x()).hex()
+
+    return json.dumps({
+        "aggregated_pubkey": agg_xonly,
+        "parity":            agg_parity,
+        "gacc":              "01",
+        "tacc":              "00" * 32,
+        "coefficients":      details["coeffs_info"],
+        "L":                 details["L"].hex(),
+        "second_key":        details["pk2"].hex() if details["pk2"] != b"\x00" * 33 else "none",
+        "num_pubkeys":       details["num_pubkeys"],
+    })
+
+
+def _musig2_apply_tweak_to_point(
+    agg_pt: ellipticcurve.Point, tweak_bytes: bytes
+) -> tuple[ellipticcurve.Point, int, int]:
+    """
+    BIP327 ApplyTweak for a single Taproot x-only tweak.
+
+    Returns (Q, gacc, tacc), where Q keeps its actual parity.
+    """
+    gacc = 1
+    tacc = 0
+    Q = agg_pt
+
+    if not tweak_bytes:
+        return Q, gacc, tacc
+    if len(tweak_bytes) != 32:
+        raise ValueError("Taproot tweak must be 32 bytes")
+
+    t = int.from_bytes(tweak_bytes, "big")
+    if t >= _CURVE_ORDER:
+        raise ValueError("Taproot tweak must be less than curve order")
+
+    g = 1 if (Q.y() & 1) == 0 else (_CURVE_ORDER - 1)
+    gQ = Q if g == 1 else _negate_point(Q)
+    Q_prime = gQ + (_CURVE_GEN * t)
+    if _musig2_is_infinite(Q_prime):
+        raise ValueError("Tweaked key is point at infinity")
+
+    gacc = (g * gacc) % _CURVE_ORDER
+    tacc = (t + (g * tacc)) % _CURVE_ORDER
+    return Q_prime, gacc, tacc
+
+
+def _musig2_nonce_coeff(aggnonce: bytes, agg_xonly: bytes, msg: bytes) -> int:
+    return int.from_bytes(
+        _tagged_hash_bytes("MuSig/noncecoef", aggnonce + agg_xonly + msg),
+        "big",
+    ) % _CURVE_ORDER
+
+
+def _musig2_get_session_values(
+    aggnonce: bytes,
+    msg: bytes,
+    details: dict,
+    tweak_bytes: bytes,
+) -> dict:
+    if len(aggnonce) != 66:
+        raise ValueError("Aggnonce must be 66 bytes")
+
+    Q, gacc, tacc = _musig2_apply_tweak_to_point(details["agg_pt"], tweak_bytes)
+    agg_xonly = _int_to_32(Q.x())
+
+    b = _musig2_nonce_coeff(aggnonce, agg_xonly, msg)
+    R1 = _point_from_compressed_ext(aggnonce[:33], name="aggnonce R1")
+    R2 = _point_from_compressed_ext(aggnonce[33:], name="aggnonce R2")
+    R_prime = R1 + (R2 * b)
+    R = _CURVE_GEN if _musig2_is_infinite(R_prime) else R_prime
+
+    e = _bip340_challenge(_int_to_32(R.x()), agg_xonly, msg)
+    return {
+        "Q": Q,
+        "gacc": gacc,
+        "tacc": tacc,
+        "b": b,
+        "R": R,
+        "e": e,
+        "agg_xonly": agg_xonly,
+    }
+
+
+def _musig2_partial_sig_verify_internal(
+    partial_sig: int,
+    signer_pubnonce: bytes,
+    signer_pubkey: bytes,
+    details: dict,
+    session: dict,
+) -> bool:
+    if len(signer_pubnonce) != 66:
+        raise ValueError("Signer pubnonce must be 66 bytes")
+    if len(signer_pubkey) != 33:
+        raise ValueError("Signer pubkey must be 33 bytes")
+    if partial_sig >= _CURVE_ORDER:
+        return False
+
+    b = session["b"]
+    R = session["R"]
+    Q = session["Q"]
+    e = session["e"]
+    gacc = session["gacc"]
+
+    R1_i = _point_from_compressed(signer_pubnonce[:33])
+    R2_i = _point_from_compressed(signer_pubnonce[33:])
+    R_i = R1_i + (R2_i * b)
+    Re_i = R_i if (R.y() & 1) == 0 else _negate_point(R_i)
+
+    P_i = _point_from_compressed(signer_pubkey)
+    a_i = _musig2_coeff_for_pubkey(details, signer_pubkey)
+    g = 1 if (Q.y() & 1) == 0 else (_CURVE_ORDER - 1)
+
+    lhs = _CURVE_GEN * partial_sig
+    rhs = Re_i + (P_i * ((e * a_i * g * gacc) % _CURVE_ORDER))
+    return lhs == rhs
+
+
+def musig2_nonce_gen(vals: list[str]) -> str:
+    """
+    Generate MuSig2 nonces (BIP327 NonceGen).
+
+    Accepted call layouts:
+      - Flow layout: [sk, aggpk, msg, rand, pk, extra_in?]
+      - Spec-like:   [sk?, pk, aggpk?, msg?, rand, extra_in?]
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [secretKey?, signerPubKey, aggpk?, msg?, rand?, extra_in?]")
+
+    def _parse_optional_hex(raw: Any, *, name: str) -> bytes | None:
+        if raw is None:
+            return None
+        if isinstance(raw, str):
+            candidate = raw.strip()
+            if candidate == "":
+                return None
+            return _bytes_from_even_hex(candidate, name=name)
+        return _bytes_from_even_hex(str(raw), name=name)
+
+    def _looks_like_compressed_pubkey(raw: Any) -> bool:
+        b = _parse_optional_hex(raw, name="pubkey")
+        return b is not None and len(b) == 33 and b[0] in (2, 3)
+
+    spec_order = _looks_like_compressed_pubkey(vals[1])
+    if spec_order:
+        sk_raw = vals[0] if len(vals) > 0 else None
+        pk_raw = vals[1] if len(vals) > 1 else None
+        aggpk_raw = vals[2] if len(vals) > 2 else None
+        msg_raw = vals[3] if len(vals) > 3 else None
+        rand_raw = vals[4] if len(vals) > 4 else None
+        extra_in_raw = vals[5] if len(vals) > 5 else None
+    else:
+        sk_raw = vals[0] if len(vals) > 0 else None
+        aggpk_raw = vals[1] if len(vals) > 1 else None
+        msg_raw = vals[2] if len(vals) > 2 else None
+        rand_raw = vals[3] if len(vals) > 3 else None
+        pk_raw = vals[4] if len(vals) > 4 else None
+        extra_in_raw = vals[5] if len(vals) > 5 else None
+
+    seckey = _parse_optional_hex(sk_raw, name="secret key")
+    d: int | None = None
+    if seckey is not None:
+        if len(seckey) != 32:
+            raise ValueError("Secret key must be 32 bytes")
+        d = int.from_bytes(seckey, "big")
+        if not 1 <= d < _CURVE_ORDER:
+            raise ValueError("Secret key integer must be in the range [1, n-1]")
+
+    pk_bytes = _parse_optional_hex(pk_raw, name="signer pubkey")
+    if pk_bytes is None and d is not None:
+        pk_bytes = _point_to_compressed(_CURVE_GEN * d)
+    if pk_bytes is None:
+        raise ValueError("Signer pubkey is required")
+    if len(pk_bytes) != 33:
+        raise ValueError("Signer pubkey must be 33 bytes")
+    _point_from_compressed(pk_bytes)
+
+    if d is not None:
+        signer_from_sk = _CURVE_GEN * d
+        if _point_to_compressed(signer_from_sk) != pk_bytes:
+            raise ValueError("Signer pubkey does not match secret key")
+
+    aggpk = _parse_optional_hex(aggpk_raw, name="aggregate pubkey")
+    if aggpk is not None and len(aggpk) != 32:
+        raise ValueError("Aggregate pubkey must be 32 bytes")
+    aggpk_bytes = aggpk if aggpk is not None else b""
+
+    has_msg = msg_raw is not None
+    msg = b""
+    if has_msg:
+        if isinstance(msg_raw, str):
+            msg = _bytes_from_even_hex(msg_raw, name="message")
+        else:
+            msg = _bytes_from_even_hex(str(msg_raw), name="message")
+    msg_prefixed = (
+        b"\x01" + len(msg).to_bytes(8, "big") + msg if has_msg else b"\x00"
+    )
+
+    extra_in = _parse_optional_hex(extra_in_raw, name="extra input")
+    extra_bytes = extra_in if extra_in is not None else b""
+    if len(extra_bytes) > 0xFFFFFFFF:
+        raise ValueError("extra input cannot exceed 2^32-1 bytes")
+
+    rand_input = _parse_optional_hex(rand_raw, name="rand")
+    if rand_input is None:
+        raise ValueError("rand input is required")
+    rand_prime = rand_input
+    if len(rand_prime) != 32:
+        raise ValueError("rand must be 32 bytes")
+
+    if seckey is not None:
+        rand = bytes(a ^ b for a, b in zip(seckey, _tagged_hash_bytes("MuSig/aux", rand_prime)))
+    else:
+        rand = rand_prime
+
+    seed = (
+        rand
+        + bytes([len(pk_bytes)])
+        + pk_bytes
+        + bytes([len(aggpk_bytes)])
+        + aggpk_bytes
+        + msg_prefixed
+        + len(extra_bytes).to_bytes(4, "big")
+        + extra_bytes
+    )
+
+    k1 = int.from_bytes(_tagged_hash_bytes("MuSig/nonce", seed + b"\x00"), "big") % _CURVE_ORDER
+    k2 = int.from_bytes(_tagged_hash_bytes("MuSig/nonce", seed + b"\x01"), "big") % _CURVE_ORDER
+    if k1 == 0 or k2 == 0:
+        raise ValueError("Nonce generation failed (k == 0)")
+
+    R1 = _CURVE_GEN * k1
+    R2 = _CURVE_GEN * k2
+
+    pubnonce = _point_to_compressed(R1) + _point_to_compressed(R2)
+    secnonce = _int_to_32(k1) + _int_to_32(k2) + pk_bytes
+
     return json.dumps(
         {
-            "aggregated_pubkey": agg_xonly,
-            "parity": agg_parity,
-            "coefficients": coeffs,
+            "pubnonce": pubnonce.hex(),
+            "secnonce": secnonce.hex(),
         }
     )
+
+
+def musig2_nonce_agg(vals: list[str]) -> str:
+    """
+    Aggregate MuSig2 pubnonces.
+
+    vals: list of pubnonces (66B hex each)
+    Returns: aggnonce (66B hex)
+    """
+    pubnonces_hex = [str(v).strip() for v in vals if str(v).strip()]
+    if len(pubnonces_hex) < 1:
+        raise ValueError("Provide at least one pubnonce")
+
+    agg_R1: Any = ellipticcurve.INFINITY
+    agg_R2: Any = ellipticcurve.INFINITY
+
+    for i, pn_hex in enumerate(pubnonces_hex):
+        pn = _bytes_from_even_hex(pn_hex, name=f"pubnonce[{i}]")
+        if len(pn) != 66:
+            raise ValueError(f"pubnonce[{i}] must be 66 bytes")
+        R1 = _point_from_compressed(pn[:33])
+        R2 = _point_from_compressed(pn[33:])
+        agg_R1 = agg_R1 + R1
+        agg_R2 = agg_R2 + R2
+
+    aggnonce = _point_to_compressed_ext(agg_R1) + _point_to_compressed_ext(agg_R2)
+    return aggnonce.hex()
+
+
+def musig2_partial_sign(vals: list[str]) -> str:
+    """
+    Create a MuSig2 partial signature.
+
+    Inputs:
+      vals[0]: secret key (32B hex)
+      vals[1]: secnonce (97B hex)
+      vals[2]: aggnonce (66B hex)
+      vals[3]: message (hex)
+      vals[4]: taproot tweak (32B hex, optional)
+      vals[5:]: compressed pubkeys list (33B hex each)
+
+    Returns: partial_sig (32B hex)
+    """
+    if len(vals) < 5:
+        raise ValueError("Need [secretKey, secnonce, aggnonce, msg, tweak?, pubkeys...]")
+
+    seckey = _bytes_from_even_hex(vals[0], name="secret key")
+    secnonce = _bytes_from_even_hex(vals[1], name="secnonce")
+    aggnonce = _bytes_from_even_hex(vals[2], name="aggnonce")
+    msg = _bytes_from_even_hex(vals[3], name="message")
+    if len(seckey) != 32:
+        raise ValueError("Secret key must be 32 bytes")
+    if len(secnonce) != 97:
+        raise ValueError("Secnonce must be 97 bytes")
+    if len(aggnonce) != 66:
+        raise ValueError("Aggnonce must be 66 bytes")
+
+    tweak_bytes = b""
+    if len(vals) > 4 and str(vals[4]).strip():
+        tweak_bytes = _bytes_from_even_hex(vals[4], name="taproot tweak")
+
+    pubkeys_hex = [
+        str(v).strip().lower() for v in vals[5:] if str(v).strip()
+    ]
+    details = _musig2_keyagg_details(pubkeys_hex)
+
+    d_prime = int.from_bytes(seckey, "big")
+    if not 1 <= d_prime < _CURVE_ORDER:
+        raise ValueError("Secret key integer must be in the range [1, n-1]")
+
+    signer_pt = _CURVE_GEN * d_prime
+    signer_pk = _point_to_compressed(signer_pt)
+    if signer_pk != secnonce[64:97]:
+        raise ValueError("Secnonce does not match secret key pubkey")
+
+    k1_prime = int.from_bytes(secnonce[:32], "big")
+    k2_prime = int.from_bytes(secnonce[32:64], "big")
+    if not (1 <= k1_prime < _CURVE_ORDER) or not (1 <= k2_prime < _CURVE_ORDER):
+        raise ValueError("Secnonce contains invalid scalar")
+
+    sess = _musig2_get_session_values(aggnonce, msg, details, tweak_bytes)
+    R = sess["R"]
+    Q = sess["Q"]
+    b = sess["b"]
+    e = sess["e"]
+    gacc = sess["gacc"]
+
+    if (R.y() & 1) == 0:
+        k1 = k1_prime
+        k2 = k2_prime
+    else:
+        k1 = (_CURVE_ORDER - k1_prime) % _CURVE_ORDER
+        k2 = (_CURVE_ORDER - k2_prime) % _CURVE_ORDER
+
+    a_i = _musig2_coeff_for_pubkey(details, signer_pk)
+    g = 1 if (Q.y() & 1) == 0 else (_CURVE_ORDER - 1)
+    d = (g * gacc * d_prime) % _CURVE_ORDER
+    s_i = (k1 + (b * k2) + (e * a_i * d)) % _CURVE_ORDER
+
+    signer_pubnonce = _point_to_compressed(_CURVE_GEN * k1_prime) + _point_to_compressed(
+        _CURVE_GEN * k2_prime
+    )
+    if not _musig2_partial_sig_verify_internal(
+        s_i, signer_pubnonce, signer_pk, details, sess
+    ):
+        raise ValueError("Internal partial signature verification failed")
+
+    return _int_to_32(s_i).hex()
+
+
+def musig2_partial_sig_verify(vals: list[str]) -> str:
+    """
+    Verify one MuSig2 partial signature.
+
+    Inputs:
+      vals[0]: partial sig (32B hex)
+      vals[1]: signer pubnonce (66B hex)
+      vals[2]: signer compressed pubkey (33B hex)
+      vals[3]: aggnonce (66B hex)
+      vals[4]: message (hex)
+      vals[5]: taproot tweak (32B hex, optional)
+      vals[6:]: compressed pubkeys list (33B hex each, KeyAgg order)
+
+    Returns: "true" or "false"
+    """
+    if len(vals) < 7:
+        raise ValueError(
+            "Need [partialSig, signerPubnonce, signerPubKey, aggnonce, msg, tweak?, pubkeys...]"
+        )
+
+    partial_sig_bytes = _bytes_from_even_hex(vals[0], name="partial signature")
+    if len(partial_sig_bytes) != 32:
+        raise ValueError("Partial signature must be 32 bytes")
+    partial_sig = int.from_bytes(partial_sig_bytes, "big")
+
+    signer_pubnonce = _bytes_from_even_hex(vals[1], name="signer pubnonce")
+    if len(signer_pubnonce) != 66:
+        raise ValueError("Signer pubnonce must be 66 bytes")
+
+    signer_pubkey = _bytes_from_even_hex(vals[2], name="signer pubkey")
+    if len(signer_pubkey) != 33:
+        raise ValueError("Signer pubkey must be 33 bytes")
+    _point_from_compressed(signer_pubkey)
+
+    aggnonce = _bytes_from_even_hex(vals[3], name="aggnonce")
+    if len(aggnonce) != 66:
+        raise ValueError("Aggnonce must be 66 bytes")
+
+    msg = _bytes_from_even_hex(vals[4], name="message")
+
+    tweak_bytes = b""
+    if len(vals) > 5 and str(vals[5]).strip():
+        tweak_bytes = _bytes_from_even_hex(vals[5], name="taproot tweak")
+
+    pubkeys_hex = [
+        str(v).strip().lower() for v in vals[6:] if str(v).strip()
+    ]
+    if len(pubkeys_hex) < 1:
+        raise ValueError("Provide at least one compressed pubkey")
+
+    details = _musig2_keyagg_details(pubkeys_hex)
+
+    # Wiring mistake if signer key is not included in the same ordered key list.
+    _musig2_coeff_for_pubkey(details, signer_pubkey)
+
+    sess = _musig2_get_session_values(aggnonce, msg, details, tweak_bytes)
+    ok = _musig2_partial_sig_verify_internal(
+        partial_sig, signer_pubnonce, signer_pubkey, details, sess
+    )
+    return "true" if ok else "false"
+
+
+def musig2_partial_sig_agg(vals: list[str]) -> str:
+    """
+    Aggregate MuSig2 partial signatures into a final Schnorr signature.
+
+    Inputs:
+      vals[0]: aggnonce (66B hex)
+      vals[1]: message (hex)
+      vals[2]: taproot tweak (32B hex, optional)
+      vals[3:]: first half = compressed pubkeys, second half = partial sigs
+
+    Returns: signature (64B hex)
+    """
+    if len(vals) < 5:
+        raise ValueError("Need [aggnonce, msg, tweak?, pubkeys..., partialSigs...]")
+
+    aggnonce = _bytes_from_even_hex(vals[0], name="aggnonce")
+    msg = _bytes_from_even_hex(vals[1], name="message")
+    if len(aggnonce) != 66:
+        raise ValueError("Aggnonce must be 66 bytes")
+
+    tweak_bytes = b""
+    if len(vals) > 2 and str(vals[2]).strip():
+        tweak_bytes = _bytes_from_even_hex(vals[2], name="taproot tweak")
+
+    remaining = [str(v).strip() for v in vals[3:]]
+    if len(remaining) % 2 != 0:
+        raise ValueError("Pubkeys and partial sigs must be provided in equal counts")
+    half = len(remaining) // 2
+    pubkeys_hex = [v.lower() for v in remaining[:half]]
+    sigs_hex = remaining[half:]
+
+    if len(pubkeys_hex) < 1:
+        raise ValueError("Provide at least one pubkey and partial sig")
+    if any(not v for v in pubkeys_hex) or any(not v for v in sigs_hex):
+        raise ValueError("Pubkeys and partial sigs cannot be empty")
+
+    details = _musig2_keyagg_details(pubkeys_hex)
+    sess = _musig2_get_session_values(aggnonce, msg, details, tweak_bytes)
+    Q = sess["Q"]
+    tacc = sess["tacc"]
+    R = sess["R"]
+    e = sess["e"]
+
+    s = 0
+    for i, sig_hex in enumerate(sigs_hex):
+        sb = _bytes_from_even_hex(sig_hex, name=f"partial_sig[{i}]")
+        if len(sb) != 32:
+            raise ValueError(f"partial_sig[{i}] must be 32 bytes")
+        s_i = int.from_bytes(sb, "big")
+        if s_i >= _CURVE_ORDER:
+            raise ValueError(f"partial_sig[{i}] must be less than curve order")
+        s = (s + s_i) % _CURVE_ORDER
+
+    g = 1 if (Q.y() & 1) == 0 else (_CURVE_ORDER - 1)
+    s = (s + (e * g * tacc)) % _CURVE_ORDER
+
+    return (_int_to_32(R.x()) + _int_to_32(s)).hex()
+
+
+def musig2_apply_tweak(vals: list[str]) -> str:
+    """
+    BIP327 ApplyTweak — update a key_agg_ctx with a tweak.
+
+    vals[0]: key_agg_ctx JSON (output of musig2_aggregate_pubkeys)
+    vals[1]: tweak (32-byte hex — from taproot_tweak_xonly_pubkey .tweak)
+    vals[2]: is_xonly ("true" for Taproot x-only tweak, "false" for plain)
+
+    BIP327 algorithm:
+      if is_xonly and Q has odd Y:  g = −1 mod n
+      else:                         g =  1
+      Q' = g·Q + t·G
+      gacc' = g · gacc  mod n
+      tacc' = t + g·tacc mod n          ← NOTE: g, NOT gacc
+
+    Returns updated key_agg_ctx JSON with all original fields preserved
+    plus new debug fields (pre_tweak_pubkey, g_value, etc.).
+
+    On canvas, Sign and SigAgg nodes recompute this internally
+    from the tweak bytes and pubkey list. This function is mainly for demonstration and testing of the BIP327 formulas.
+    """
+    if len(vals) < 3:
+        raise ValueError("Need [key_agg_ctx_json, tweak_hex, is_xonly]")
+
+    ctx = json.loads(str(vals[0]).strip())
+    tweak_bytes = _bytes_from_even_hex(vals[1], name="tweak")
+    if len(tweak_bytes) != 32:
+        raise ValueError("Tweak must be 32 bytes")
+    is_xonly = str(vals[2]).strip().lower() in ("true", "1", "yes")
+
+    t = int.from_bytes(tweak_bytes, "big")
+    if t >= _CURVE_ORDER:
+        raise ValueError("Tweak is not a valid scalar (≥ curve order)")
+
+    # ── Recover current aggregate point Q ─────────────────────────────
+    Q_xonly = bytes.fromhex(ctx["aggregated_pubkey"])
+    Q = _lift_x_from_bytes(Q_xonly)          # always even Y
+    if ctx["parity"] == 1:
+        Q = _negate_point(Q)                 # restore actual parity
+
+    # ── Parse accumulators ────────────────────────────────────────────
+    gacc_raw = ctx["gacc"]
+    # gacc is stored compactly: "01" for 1, or full 32-byte hex
+    if len(gacc_raw) <= 2:
+        gacc = int(gacc_raw, 16)
+    else:
+        gacc = int.from_bytes(bytes.fromhex(gacc_raw), "big")
+    gacc = gacc % _CURVE_ORDER
+
+    tacc = int.from_bytes(bytes.fromhex(ctx["tacc"]), "big") % _CURVE_ORDER
+
+    # ── BIP327 ApplyTweak ─────────────────────────────────────────────
+    Q_has_even_y = (Q.y() % 2 == 0)
+    if is_xonly and not Q_has_even_y:
+        g = _CURVE_ORDER - 1                # −1 mod n
+    else:
+        g = 1
+
+    # Q' = g·Q + t·G
+    gQ = Q if g == 1 else _negate_point(Q)
+    Q_prime = gQ + (_CURVE_GEN * t)
+    if Q_prime == ellipticcurve.INFINITY:
+        raise ValueError("Tweaked key is point at infinity")
+
+    # Update accumulators (BIP327 formulas)
+    gacc_new = (g * gacc) % _CURVE_ORDER
+    tacc_new = (t + g * tacc) % _CURVE_ORDER
+
+    parity_new = 0 if Q_prime.y() % 2 == 0 else 1
+
+    # ── Build output ──────────────────────────────────────────────────
+    result = dict(ctx)                       # preserve original fields
+    result.update({
+        "aggregated_pubkey": _int_to_32(Q_prime.x()).hex(),
+        "parity":            parity_new,
+        "gacc":              _int_to_32(gacc_new).hex(),
+        "tacc":              _int_to_32(tacc_new).hex(),
+        # ── debug fields ──
+        "tweak_applied": tweak_bytes.hex(),
+        "tweak_mode":    "xonly" if is_xonly else "plain",
+        "pre_tweak_pubkey": Q_xonly.hex(),
+        "pre_tweak_parity": ctx["parity"],
+        "g_value":       "1" if g == 1 else "-1",
+    })
+    return json.dumps(result)
+
 
 
 def schnorr_batch_verify_demo(vals: list[str]) -> str:

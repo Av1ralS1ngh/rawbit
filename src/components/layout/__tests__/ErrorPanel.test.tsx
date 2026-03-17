@@ -85,4 +85,12 @@ describe("ErrorPanel", () => {
       Reflect.deleteProperty(window.navigator, "clipboard");
     }
   });
+
+  it("prevents text selection within the panel surface", () => {
+    render(
+      <ErrorPanel isOpen errors={errors} nodes={nodes} onSelect={vi.fn()} hasVisibleTabs />
+    );
+
+    expect(screen.getByTestId("error-panel").className).toContain("select-none");
+  });
 });

@@ -37,11 +37,23 @@ import {
 } from "@xyflow/react";
 
 import { defaultNodes, defaultEdges } from "@/components/initial-nodes";
-import type { FlowNode, FlowData, CalculationNodeData } from "@/types";
+import type {
+  FlowNode,
+  FlowData,
+  CalculationNodeData,
+  ProtocolDiagramLayout,
+} from "@/types";
 import { log } from "@/lib/logConfig";
 import { importWithFreshIds } from "@/lib/idUtils";
 import { ingestScriptSteps, removeScriptSteps } from "@/lib/share/scriptStepsCache";
 import { isFlowFileCandidate, isRecord } from "@/lib/flow/guards";
+import {
+  collectGroupNodeIds,
+  mergeProtocolDiagramLayout,
+  protocolDiagramLayoutEquals,
+  remapProtocolDiagramLayout,
+  sanitizeProtocolDiagramLayout,
+} from "@/lib/protocolDiagram/layoutPersistence";
 
 /* ------------------------------------------------------------------ */
 /*  Types & tiny utils                                                */
@@ -181,7 +193,14 @@ function fitGroupToChildren(
 /* ------------------------------------------------------------------ */
 /*  Main hook                                                         */
 /* ------------------------------------------------------------------ */
-export function useNodeOperations() {
+interface UseNodeOperationsOptions {
+  getProtocolDiagramLayout?: () => ProtocolDiagramLayout | undefined;
+  setProtocolDiagramLayout?: (layout: ProtocolDiagramLayout | undefined) => void;
+}
+
+export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
+  const { getProtocolDiagramLayout, setProtocolDiagramLayout } = options;
+
   /* ─ State / refs ──────────────────────────────────────────────── */
   const initialNodes = useMemo(
     () =>
@@ -448,7 +467,11 @@ export function useNodeOperations() {
         const sanitizedTranslatedNodes = ingestScriptSteps(translated.nodes);
 
         // ② run the stable-id merge (only rename on conflicts)
-        const { nodes: sub, edges: subE } = importWithFreshIds<FlowNode, Edge>({
+        const {
+          nodes: sub,
+          edges: subE,
+          idMap,
+        } = importWithFreshIds<FlowNode, Edge>({
           currentNodes: rf.getNodes(),
           currentEdges: rf.getEdges(),
           importNodes: sanitizedTranslatedNodes,
@@ -458,6 +481,29 @@ export function useNodeOperations() {
         });
 
         const sanitizedSub = ingestScriptSteps(sub);
+
+        const currentNodes = rf.getNodes() as FlowNode[];
+        const nextNodes = [...currentNodes, ...sanitizedSub];
+        const importedLayout = sanitizeProtocolDiagramLayout(
+          (maybeFlowData as FlowData).protocolDiagramLayout,
+          collectGroupNodeIds((maybeFlowData as FlowData).nodes)
+        );
+        const remappedLayout = remapProtocolDiagramLayout(
+          importedLayout,
+          idMap,
+          collectGroupNodeIds(nextNodes)
+        );
+        const currentLayout = sanitizeProtocolDiagramLayout(
+          getProtocolDiagramLayout?.(),
+          collectGroupNodeIds(currentNodes)
+        );
+        const mergedLayout = mergeProtocolDiagramLayout(
+          currentLayout,
+          remappedLayout
+        );
+        if (!protocolDiagramLayoutEquals(currentLayout, mergedLayout)) {
+          setProtocolDiagramLayout?.(mergedLayout);
+        }
 
         // ③ append to canvas
         setNodes((nds) => [...nds, ...sanitizedSub]);
@@ -488,7 +534,14 @@ export function useNodeOperations() {
         createNode(data.type, data, pos);
       }
     },
-    [rf, createNode, setNodes, setEdges]
+    [
+      rf,
+      createNode,
+      setNodes,
+      setEdges,
+      getProtocolDiagramLayout,
+      setProtocolDiagramLayout,
+    ]
   );
 
   // While dragging nodes inside a group, re-evaluate parent adoption
@@ -654,14 +707,12 @@ export function useNodeOperations() {
     const all = rf.getNodes() as FlowNode[];
     const selected = all.filter((n) => n.selected);
 
-    /* ① Whole-group ungroup (can handle multiple groups at once) */
-    const selectedGroups = selected.filter((n) => n.type === "shadcnGroup");
-    if (selectedGroups.length) {
-      const gidSet = new Set(selectedGroups.map((g) => g.id));
+    const ungroupGroups = (groups: FlowNode[]) => {
+      const gidSet = new Set(groups.map((g) => g.id));
 
       log(
         "nodeOperations",
-        `Ungrouping ${selectedGroups.length} selected groups`,
+        `Ungrouping ${groups.length} groups`,
         { groupIds: Array.from(gidSet) }
       );
 
@@ -696,55 +747,92 @@ export function useNodeOperations() {
       );
 
       return true;
+    };
+
+    /* ① Whole-group ungroup for explicitly selected groups */
+    const selectedGroups = selected.filter((n) => n.type === "shadcnGroup");
+    if (selectedGroups.length) {
+      return ungroupGroups(selectedGroups);
     }
 
     /* ② Partial ungroup – only selected children leave their parent */
     const childrenToUngroup = selected.filter((n) => n.parentId);
-    if (!childrenToUngroup.length) return false;
-
-    // Track parent groups that may need resizing after ungrouping
-    const parentsToResize = new Set<string>();
-    childrenToUngroup.forEach((n) => {
-      if (n.parentId) parentsToResize.add(n.parentId);
-    });
-
-    log(
-      "nodeOperations",
-      `Partial ungroup: removing ${childrenToUngroup.length} children from their parents`,
-      { parentIds: Array.from(parentsToResize) }
-    );
-
-    setNodes((nds) =>
-      nds.map((n) => {
-        if (!n.selected || !n.parentId) return n;
-
-        const parent = all.find((p) => p.id === n.parentId);
-        const absPos = parent
-          ? {
-              x: parent.position.x + n.position.x,
-              y: parent.position.y + n.position.y,
-            }
-          : n.position;
-
-        return {
-          ...n,
-          parentId: undefined,
-          extent: undefined,
-          position: absPos,
-          selected: true,
-        };
-      })
-    );
-
-    // Optionally resize parent groups if they still have children
-    // (Though with only-expand logic, this won't shrink them)
-    requestAnimationFrame(() => {
-      parentsToResize.forEach((parentId) => {
-        fitGroupToChildren(parentId, rf, setNodes);
+    if (childrenToUngroup.length) {
+      // Track parent groups that may need resizing after ungrouping
+      const parentsToResize = new Set<string>();
+      childrenToUngroup.forEach((n) => {
+        if (n.parentId) parentsToResize.add(n.parentId);
       });
-    });
 
-    return true;
+      log(
+        "nodeOperations",
+        `Partial ungroup: removing ${childrenToUngroup.length} children from their parents`,
+        { parentIds: Array.from(parentsToResize) }
+      );
+
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (!n.selected || !n.parentId) return n;
+
+          const parent = all.find((p) => p.id === n.parentId);
+          const absPos = parent
+            ? {
+                x: parent.position.x + n.position.x,
+                y: parent.position.y + n.position.y,
+              }
+            : n.position;
+
+          return {
+            ...n,
+            parentId: undefined,
+            extent: undefined,
+            position: absPos,
+            selected: true,
+          };
+        })
+      );
+
+      // Optionally resize parent groups if they still have children
+      // (Though with only-expand logic, this won't shrink them)
+      requestAnimationFrame(() => {
+        parentsToResize.forEach((parentId) => {
+          fitGroupToChildren(parentId, rf, setNodes);
+        });
+      });
+
+      return true;
+    }
+
+    /* ③ Fallback whole-group ungroup when no explicit selection is present */
+    let fallbackGroups: FlowNode[] = [];
+    const activeEl =
+      typeof document !== "undefined"
+        ? (document.activeElement as HTMLElement | null)
+        : null;
+    const focusedGroupId =
+      activeEl?.closest(".react-flow__node-shadcnGroup")?.getAttribute("data-id") ??
+      null;
+    if (focusedGroupId) {
+      const focusedGroup = all.find(
+        (node) => node.id === focusedGroupId && node.type === "shadcnGroup"
+      );
+      if (focusedGroup) {
+        fallbackGroups = [focusedGroup];
+      }
+    }
+
+    if (!fallbackGroups.length) {
+      const allGroups = all.filter((node) => node.type === "shadcnGroup");
+      if (allGroups.length === 1) {
+        fallbackGroups = [allGroups[0]];
+      }
+    }
+
+    if (fallbackGroups.length) {
+      return ungroupGroups(fallbackGroups);
+    }
+
+    return false;
   }, [rf, setNodes]);
 
   /* ─────────────────────────────────────────────────────────────── */
@@ -842,6 +930,7 @@ export function useNodeOperations() {
               (n) =>
                 n.selected && (n.type === "shadcnGroup" || Boolean(n.parentId))
             )
+          || rf.getNodes().filter((n) => n.type === "shadcnGroup").length === 1
         : false,
   };
 }

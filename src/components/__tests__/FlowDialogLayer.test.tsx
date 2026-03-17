@@ -75,6 +75,10 @@ const baseProps = {
   saveConfirmationMessage: "",
   onConfirmSave: vi.fn(),
   onCancelSave: vi.fn(),
+  showLlmSaveConfirmation: false,
+  llmSaveConfirmationMessage: "",
+  onConfirmLlmSave: vi.fn(),
+  onCancelLlmSave: vi.fn(),
   infoDialog: { open: false, message: "" },
   closeInfoDialog: vi.fn(),
   connectOpen: false,
@@ -101,12 +105,15 @@ describe("FlowDialogLayer", () => {
         closeDialog={{ open: true, tabId: "tab-1" }}
         showSaveConfirmation
         saveConfirmationMessage="Save it?"
+        showLlmSaveConfirmation
+        llmSaveConfirmationMessage="Save llm?"
         infoDialog={{ open: true, message: "Info" }}
       />
     );
 
     expect(screen.getByTestId("dialog-Close Tab")).toBeInTheDocument();
     expect(screen.getByTestId("dialog-Save Simplified Flow")).toHaveTextContent("Save it?");
+    expect(screen.getByTestId("dialog-Save LLM Export")).toHaveTextContent("Save llm?");
     expect(screen.getByTestId("dialog-Information")).toHaveTextContent("Info");
   });
 

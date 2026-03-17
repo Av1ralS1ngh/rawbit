@@ -3,7 +3,7 @@ import type { FlowNode } from "@/types";
 
 interface UseSimplifiedSaveOptions {
   nodes: FlowNode[];
-  saveSimplifiedFlow: () => void;
+  saveSimplifiedFlow: () => void | Promise<void>;
 }
 
 export function useSimplifiedSave({
@@ -23,11 +23,11 @@ export function useSimplifiedSave({
       return;
     }
 
-    saveSimplifiedFlow();
+    void saveSimplifiedFlow();
   }, [nodes, saveSimplifiedFlow]);
 
   const confirmSave = useCallback(() => {
-    saveSimplifiedFlow();
+    void saveSimplifiedFlow();
     setShowConfirmation(false);
   }, [saveSimplifiedFlow]);
 

@@ -13,6 +13,10 @@ interface FlowDialogLayerProps {
   saveConfirmationMessage: string;
   onConfirmSave: () => void;
   onCancelSave: () => void;
+  showLlmSaveConfirmation: boolean;
+  llmSaveConfirmationMessage: string;
+  onConfirmLlmSave: () => void;
+  onCancelLlmSave: () => void;
 
   infoDialog: { open: boolean; message: string };
   closeInfoDialog: () => void;
@@ -54,6 +58,10 @@ export function FlowDialogLayer({
   saveConfirmationMessage,
   onConfirmSave,
   onCancelSave,
+  showLlmSaveConfirmation,
+  llmSaveConfirmationMessage,
+  onConfirmLlmSave,
+  onCancelLlmSave,
   infoDialog,
   closeInfoDialog,
   connectOpen,
@@ -91,6 +99,16 @@ export function FlowDialogLayer({
         cancelText="Cancel"
         onConfirm={onConfirmSave}
         onClose={onCancelSave}
+      />
+
+      <ConfirmationDialog
+        isOpen={showLlmSaveConfirmation}
+        title="Save LLM Export"
+        description={llmSaveConfirmationMessage}
+        confirmText="Save"
+        cancelText="Cancel"
+        onConfirm={onConfirmLlmSave}
+        onClose={onCancelLlmSave}
       />
 
       <ConfirmationDialog

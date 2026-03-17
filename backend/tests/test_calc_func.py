@@ -255,6 +255,19 @@ def test_taproot_tweak_xonly_matches_private_version():
     assert calc.taproot_tweaked_privkey([SAMPLE_PRIV_KEY, ""])
 
 
+def test_taproot_tweak_helpers_reject_tweak_scalar_ge_curve_order(monkeypatch):
+    n_bytes = calc._CURVE_ORDER.to_bytes(32, "big")
+    monkeypatch.setattr(calc, "_tagged_hash_bytes", lambda _tag, _data: n_bytes)
+
+    xonly = "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    with pytest.raises(ValueError, match="TapTweak scalar must be less than curve order"):
+        calc.taproot_tweak_xonly_pubkey([xonly, ""])
+    with pytest.raises(ValueError, match="TapTweak scalar must be less than curve order"):
+        calc.taproot_output_pubkey_from_xonly([xonly, ""])
+    with pytest.raises(ValueError, match="TapTweak scalar must be less than curve order"):
+        calc.taproot_tweaked_privkey([SAMPLE_PRIV_KEY, ""])
+
+
 def test_schnorr_sign_and_verify_roundtrip():
     msg = "00" * 32
     sig = calc.schnorr_sign_bip340([SAMPLE_PRIV_KEY, msg, "00" * 32])
@@ -299,11 +312,369 @@ def test_taproot_tree_builder_paths_and_root():
 
 
 def test_musig2_aggregate_pubkeys():
-    pk1 = json.loads(calc.xonly_pubkey_from_private_key(SAMPLE_PRIV_KEY))["xonly_pubkey"]
-    pk2 = json.loads(calc.xonly_pubkey_from_private_key("02".rjust(64, "0")))["xonly_pubkey"]
+    pk1 = calc.public_key_from_private_key(SAMPLE_PRIV_KEY)
+    pk2 = calc.public_key_from_private_key("02".rjust(64, "0"))
     res = json.loads(calc.musig2_aggregate_pubkeys([pk1, pk2]))
     assert len(res["aggregated_pubkey"]) == 64
     assert len(res["coefficients"]) == 2
+
+
+def _musig2_signer_set():
+    privkeys = [
+        SAMPLE_PRIV_KEY,
+        "02".rjust(64, "0"),
+        "03".rjust(64, "0"),
+    ]
+    pubkeys = [
+        calc.public_key_from_private_key(sk)
+        for sk in privkeys
+    ]
+    return privkeys, pubkeys
+
+
+def _musig2_tweaked_context(pubkeys: list[str]) -> tuple[dict, str]:
+    ctx = json.loads(calc.musig2_aggregate_pubkeys(pubkeys))
+    tweak_info = json.loads(
+        calc.taproot_tweak_xonly_pubkey([ctx["aggregated_pubkey"], ""])
+    )
+    tweak = tweak_info["tweak"]
+    tweaked_ctx = json.loads(
+        calc.musig2_apply_tweak([json.dumps(ctx), tweak, "true"])
+    )
+    return tweaked_ctx, tweak
+
+
+def _musig2_build_signature(
+    privkeys: list[str],
+    pubkeys: list[str],
+    msg: str,
+    q_xonly: str,
+    tweak: str,
+) -> str:
+    nonces = []
+    for i, (sk, pk) in enumerate(zip(privkeys, pubkeys)):
+        aux = f"{i + 1:02x}" * 32
+        nonces.append(json.loads(calc.musig2_nonce_gen([sk, pk, q_xonly, msg, aux])))
+
+    aggnonce = calc.musig2_nonce_agg([n["pubnonce"] for n in nonces])
+    partial_sigs = []
+    for sk, nonce in zip(privkeys, nonces):
+        partial_sigs.append(
+            calc.musig2_partial_sign(
+                [sk, nonce["secnonce"], aggnonce, msg, tweak, *pubkeys]
+            )
+        )
+
+    return calc.musig2_partial_sig_agg(
+        [aggnonce, msg, tweak, *pubkeys, *partial_sigs]
+    )
+
+
+def test_musig2_keyagg_and_tweak_helpers():
+    _, pubkeys = _musig2_signer_set()
+
+    one_key_details = calc._musig2_keyagg_details(pubkeys[:1])
+    assert one_key_details["num_pubkeys"] == 1
+    assert len(one_key_details["L"]) == 32
+    assert len(one_key_details["coeffs"]) == 1
+
+    details = calc._musig2_keyagg_details(pubkeys[:2])
+    assert details["num_pubkeys"] == 2
+    assert len(details["L"]) == 32
+    assert len(details["coeffs"]) == 2
+    assert len(details["coeffs_info"]) == 2
+    assert details["pk2"] in details["plain_list"]
+
+    Q, gacc, tacc = calc._musig2_apply_tweak_to_point(details["agg_pt"], b"")
+    assert Q != calc.ellipticcurve.INFINITY
+    assert gacc in (1, calc._CURVE_ORDER - 1)
+    assert tacc == 0
+
+    with pytest.raises(ValueError, match="32 bytes"):
+        calc._musig2_apply_tweak_to_point(details["agg_pt"], b"\x01")
+
+
+def test_musig2_nonce_coeff_zero_fallback(monkeypatch):
+    monkeypatch.setattr(calc, "_tagged_hash_bytes", lambda _tag, _data: b"\x00" * 32)
+    assert calc._musig2_nonce_coeff(b"\x02" * 66, b"\x03" * 32, b"\x04" * 32) == 0
+
+
+def test_musig2_apply_tweak_updates_context_and_validates_inputs():
+    _, pubkeys = _musig2_signer_set()
+    ctx = json.loads(calc.musig2_aggregate_pubkeys(pubkeys[:2]))
+    tweak = json.loads(
+        calc.taproot_tweak_xonly_pubkey([ctx["aggregated_pubkey"], ""])
+    )["tweak"]
+
+    res = json.loads(calc.musig2_apply_tweak([json.dumps(ctx), tweak, "true"]))
+    assert len(res["aggregated_pubkey"]) == 64
+    assert res["pre_tweak_pubkey"] == ctx["aggregated_pubkey"]
+    assert res["tweak_mode"] == "xonly"
+    assert len(res["gacc"]) == 64
+    assert len(res["tacc"]) == 64
+
+    with pytest.raises(ValueError, match="Tweak must be 32 bytes"):
+        calc.musig2_apply_tweak([json.dumps(ctx), "aa", "true"])
+    with pytest.raises(ValueError, match="valid scalar"):
+        calc.musig2_apply_tweak([json.dumps(ctx), "ff" * 32, "true"])
+
+
+def test_musig2_nonce_gen_and_nonce_agg():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, _tweak = _musig2_tweaked_context(pubkeys)
+    Q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "42" * 32
+
+    nonce_a = json.loads(
+        calc.musig2_nonce_gen([privkeys[0], pubkeys[0], Q_xonly, msg, "11" * 32])
+    )
+    nonce_b = json.loads(
+        calc.musig2_nonce_gen([privkeys[1], pubkeys[1], Q_xonly, msg, "22" * 32])
+    )
+    assert len(nonce_a["pubnonce"]) == 132
+    assert len(nonce_a["secnonce"]) == 194
+    assert len(nonce_b["pubnonce"]) == 132
+    assert len(nonce_b["secnonce"]) == 194
+
+    aggnonce = calc.musig2_nonce_agg([nonce_a["pubnonce"], nonce_b["pubnonce"]])
+    assert len(aggnonce) == 132
+
+    one_aggnonce = calc.musig2_nonce_agg([nonce_a["pubnonce"]])
+    assert one_aggnonce == nonce_a["pubnonce"]
+    with pytest.raises(ValueError, match="66 bytes"):
+        calc.musig2_nonce_agg(["00", "00"])
+
+
+def test_musig2_partial_sign_and_agg_roundtrip():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    Q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "ab" * 32
+
+    nonces = []
+    for i, (sk, pk) in enumerate(zip(privkeys, pubkeys)):
+        aux = f"{i + 1:02x}" * 32
+        nonces.append(json.loads(calc.musig2_nonce_gen([sk, pk, Q_xonly, msg, aux])))
+
+    aggnonce = calc.musig2_nonce_agg([n["pubnonce"] for n in nonces])
+    partial_sigs = []
+    for sk, nonce in zip(privkeys, nonces):
+        partial_sigs.append(
+            calc.musig2_partial_sign(
+                [sk, nonce["secnonce"], aggnonce, msg, tweak, *pubkeys]
+            )
+        )
+
+    assert all(len(sig) == 64 for sig in partial_sigs)
+
+    final_sig = calc.musig2_partial_sig_agg(
+        [aggnonce, msg, tweak, *pubkeys, *partial_sigs]
+    )
+    assert len(final_sig) == 128
+    assert calc.schnorr_verify_bip340([Q_xonly, msg, final_sig]) == "true"
+
+    with pytest.raises(ValueError, match="Signer pubkey not found"):
+        calc.musig2_partial_sign(
+            [
+                privkeys[0],
+                nonces[0]["secnonce"],
+                aggnonce,
+                msg,
+                tweak,
+                *pubkeys[1:],
+            ]
+        )
+
+    with pytest.raises(ValueError, match="equal counts"):
+        calc.musig2_partial_sig_agg(
+            [aggnonce, msg, tweak, *pubkeys, *partial_sigs, "00" * 32]
+        )
+
+
+def test_musig2_partial_sig_verify_roundtrip_and_tamper_detection():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "ab" * 32
+
+    nonces = []
+    for i, (sk, pk) in enumerate(zip(privkeys, pubkeys)):
+        aux = f"{i + 1:02x}" * 32
+        nonces.append(json.loads(calc.musig2_nonce_gen([sk, pk, q_xonly, msg, aux])))
+
+    aggnonce = calc.musig2_nonce_agg([n["pubnonce"] for n in nonces])
+    partial_sigs = []
+    for sk, nonce in zip(privkeys, nonces):
+        partial_sigs.append(
+            calc.musig2_partial_sign(
+                [sk, nonce["secnonce"], aggnonce, msg, tweak, *pubkeys]
+            )
+        )
+
+    for i in range(len(pubkeys)):
+        ok = calc.musig2_partial_sig_verify(
+            [
+                partial_sigs[i],
+                nonces[i]["pubnonce"],
+                pubkeys[i],
+                aggnonce,
+                msg,
+                tweak,
+                *pubkeys,
+            ]
+        )
+        assert ok == "true"
+
+    bad_sig = partial_sigs[1]
+    bad_last = "0" if bad_sig[-1] != "0" else "1"
+    tampered = bad_sig[:-1] + bad_last
+    assert (
+        calc.musig2_partial_sig_verify(
+            [
+                tampered,
+                nonces[1]["pubnonce"],
+                pubkeys[1],
+                aggnonce,
+                msg,
+                tweak,
+                *pubkeys,
+            ]
+        )
+        == "false"
+    )
+
+
+def test_musig2_partial_sign_performs_internal_self_check(monkeypatch):
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys[:2])
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "11" * 32
+
+    nonce_a = json.loads(
+        calc.musig2_nonce_gen([privkeys[0], pubkeys[0], q_xonly, msg, "aa" * 32])
+    )
+    nonce_b = json.loads(
+        calc.musig2_nonce_gen([privkeys[1], pubkeys[1], q_xonly, msg, "bb" * 32])
+    )
+    aggnonce = calc.musig2_nonce_agg([nonce_a["pubnonce"], nonce_b["pubnonce"]])
+
+    monkeypatch.setattr(calc, "_musig2_partial_sig_verify_internal", lambda *args: False)
+    with pytest.raises(ValueError, match="Internal partial signature verification failed"):
+        calc.musig2_partial_sign(
+            [privkeys[0], nonce_a["secnonce"], aggnonce, msg, tweak, *pubkeys[:2]]
+        )
+
+
+def test_musig2_roundtrip_wrong_message_fails():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "ab" * 32
+
+    final_sig = _musig2_build_signature(privkeys, pubkeys, msg, q_xonly, tweak)
+    assert calc.schnorr_verify_bip340([q_xonly, msg, final_sig]) == "true"
+    assert calc.schnorr_verify_bip340([q_xonly, "cd" * 32, final_sig]) == "false"
+
+
+def test_musig2_roundtrip_wrong_key_fails():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "ab" * 32
+
+    final_sig = _musig2_build_signature(privkeys, pubkeys, msg, q_xonly, tweak)
+    wrong_key = json.loads(
+        calc.xonly_pubkey_from_private_key("04".rjust(64, "0"))
+    )["xonly_pubkey"]
+    assert calc.schnorr_verify_bip340([wrong_key, msg, final_sig]) == "false"
+
+
+def test_musig2_roundtrip_no_tweak_verifies():
+    privkeys, pubkeys = _musig2_signer_set()
+    agg_ctx = json.loads(calc.musig2_aggregate_pubkeys(pubkeys))
+    p_xonly = agg_ctx["aggregated_pubkey"]
+    msg = "7f" * 32
+
+    final_sig = _musig2_build_signature(privkeys, pubkeys, msg, p_xonly, "")
+    assert calc.schnorr_verify_bip340([p_xonly, msg, final_sig]) == "true"
+
+
+def test_musig2_roundtrip_two_signers_verifies():
+    privkeys, pubkeys = _musig2_signer_set()
+    privkeys = privkeys[:2]
+    pubkeys = pubkeys[:2]
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "9a" * 32
+
+    final_sig = _musig2_build_signature(privkeys, pubkeys, msg, q_xonly, tweak)
+    assert calc.schnorr_verify_bip340([q_xonly, msg, final_sig]) == "true"
+
+
+def test_musig2_roundtrip_single_signer_verifies():
+    privkeys, pubkeys = _musig2_signer_set()
+    privkeys = privkeys[:1]
+    pubkeys = pubkeys[:1]
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "5c" * 32
+
+    final_sig = _musig2_build_signature(privkeys, pubkeys, msg, q_xonly, tweak)
+    assert calc.schnorr_verify_bip340([q_xonly, msg, final_sig]) == "true"
+
+
+def test_musig2_public_apis_reject_additional_malformed_inputs():
+    privkeys, pubkeys = _musig2_signer_set()
+    tweaked_ctx, tweak = _musig2_tweaked_context(pubkeys)
+    q_xonly = tweaked_ctx["aggregated_pubkey"]
+    msg = "ab" * 32
+
+    nonce_a = json.loads(calc.musig2_nonce_gen([privkeys[0], pubkeys[0], q_xonly, msg, "11" * 32]))
+    nonce_b = json.loads(calc.musig2_nonce_gen([privkeys[1], pubkeys[1], q_xonly, msg, "22" * 32]))
+    aggnonce = calc.musig2_nonce_agg([nonce_a["pubnonce"], nonce_b["pubnonce"]])
+
+    with pytest.raises(ValueError, match="hexadecimal"):
+        calc.musig2_aggregate_pubkeys(["zz", "11" * 32])
+    with pytest.raises(ValueError, match="Need \\[key_agg_ctx_json, tweak_hex, is_xonly\\]"):
+        calc.musig2_apply_tweak(["{}"])
+    with pytest.raises(ValueError, match="Aggregate pubkey must be 32 bytes"):
+        calc.musig2_nonce_gen([privkeys[0], pubkeys[0], "aa", msg, "11" * 32])
+    with pytest.raises(ValueError, match="rand input is required"):
+        calc.musig2_nonce_gen([privkeys[0], pubkeys[0], q_xonly, msg])
+    with pytest.raises(ValueError):
+        calc.musig2_nonce_agg(
+            ["00" + "11" * 32 + "00" + "22" * 32, "00" + "33" * 32 + "00" + "44" * 32]
+        )
+    with pytest.raises(ValueError, match="Secnonce must be 97 bytes"):
+        calc.musig2_partial_sign([privkeys[0], "00" * 96, aggnonce, msg, tweak, *pubkeys])
+    with pytest.raises(ValueError, match="Partial signature must be 32 bytes"):
+        calc.musig2_partial_sig_verify(
+            [
+                "11" * 31,
+                nonce_a["pubnonce"],
+                pubkeys[0],
+                aggnonce,
+                msg,
+                tweak,
+                *pubkeys,
+            ]
+        )
+    with pytest.raises(ValueError, match="Signer pubkey not found"):
+        calc.musig2_partial_sig_verify(
+            [
+                "11" * 32,
+                nonce_a["pubnonce"],
+                pubkeys[0],
+                aggnonce,
+                msg,
+                tweak,
+                *pubkeys[1:],
+            ]
+        )
+    with pytest.raises(ValueError, match="partial_sig\\[0\\] must be 32 bytes"):
+        calc.musig2_partial_sig_agg(
+            [aggnonce, msg, tweak, *pubkeys[:2], "11" * 31, "22" * 32]
+        )
 
 
 def test_schnorr_batch_verify_demo_single_entry():

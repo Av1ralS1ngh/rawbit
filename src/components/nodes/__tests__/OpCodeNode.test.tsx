@@ -238,4 +238,64 @@ describe("OpCodeNode", () => {
       { refresh: true }
     );
   });
+
+  it("captures a snapshot when comment editing is committed on blur", async () => {
+    nodesState[0].data.showComment = true;
+    nodesState[0].data.comment = "Old note";
+
+    const clipboardMock = {
+      prettyResult: "",
+      copyResult: vi.fn(),
+      copyError: vi.fn(),
+      copyId: vi.fn(),
+      resultCopied: false,
+      errorCopied: false,
+      idCopied: false,
+    };
+    clipboardHook.mockReturnValue(clipboardMock);
+
+    const user = userEvent.setup();
+
+    const view = renderWithProviders(
+      <OpCodeNode
+        id="node-1"
+        data={nodesState[0].data as FlowNode["data"]}
+        selected={false}
+        type="calculation"
+        dragging={false}
+        zIndex={0}
+        isConnectable={true}
+        positionAbsoluteX={0}
+        positionAbsoluteY={0}
+      />,
+      { snapshotScheduler: scheduler }
+    );
+
+    let commentArea = screen.getByPlaceholderText(/enter your notes here/i);
+    await user.click(commentArea);
+    await user.clear(commentArea);
+    await user.type(commentArea, "New note");
+
+    view.rerender(
+      <OpCodeNode
+        id="node-1"
+        data={nodesState[0].data as FlowNode["data"]}
+        selected={false}
+        type="calculation"
+        dragging={false}
+        zIndex={0}
+        isConnectable={true}
+        positionAbsoluteX={0}
+        positionAbsoluteY={0}
+      />
+    );
+
+    commentArea = screen.getByPlaceholderText(/enter your notes here/i);
+    await user.click(commentArea);
+    await user.tab();
+
+    expect(scheduler.scheduleSnapshot).toHaveBeenCalledWith(
+      "Update Node Comment"
+    );
+  });
 });

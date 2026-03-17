@@ -1,13 +1,13 @@
 {
-  "name": "flow-1770024968414",
+  "name": "flow-1772463013362",
   "schemaVersion": 1,
   "nodes": [
     {
       "id": "node_9PbQ7IpU",
       "type": "calculation",
       "position": {
-        "x": 6762.23711086921,
-        "y": 1197.510265675981
+        "x": -197.76288913079043,
+        "y": 3162.510265675981
       },
       "data": {
         "functionName": "random_256",
@@ -25,8 +25,8 @@
       "id": "node_KAZyd8uI",
       "type": "calculation",
       "position": {
-        "x": 7169.15130805724,
-        "y": 1136.774367478116
+        "x": 209.15130805724039,
+        "y": 3101.774367478116
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -58,8 +58,8 @@
       "id": "node_w95i7cWf",
       "type": "calculation",
       "position": {
-        "x": 7566.507043485442,
-        "y": 985.1086508215842
+        "x": 606.5070434854424,
+        "y": 2950.108650821584
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -86,67 +86,11 @@
       }
     },
     {
-      "id": "node_BGLLJF5z",
-      "type": "calculation",
-      "position": {
-        "x": 15373.886160196598,
-        "y": 1497.355303879678
-      },
-      "data": {
-        "functionName": "identity",
-        "showField": true,
-        "numInputs": 0,
-        "value": "2",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "2"
-        },
-        "result": "2",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "INPUT VALUE:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#eab308",
-        "title": "Transaction Version",
-        "error": false
-      }
-    },
-    {
-      "id": "node_mU27U3ww",
-      "type": "calculation",
-      "position": {
-        "x": 15856.016480810584,
-        "y": 1512.9386307077475
-      },
-      "data": {
-        "functionName": "uint32_to_little_endian_4_bytes",
-        "title": "Uint32 → LE-4",
-        "numInputs": 1,
-        "showField": false,
-        "value": "2",
-        "dirty": false,
-        "groupInstances": {},
-        "inputs": {
-          "val": 2
-        },
-        "result": "02000000",
-        "borderColor": "#eab308",
-        "error": false
-      }
-    },
-    {
       "id": "node_qYXmMlZ7",
       "type": "calculation",
       "position": {
-        "x": 8494.731938561366,
-        "y": 6576.50841124384
+        "x": 1534.7319385613664,
+        "y": 8541.50841124384
       },
       "data": {
         "functionName": "identity",
@@ -180,8 +124,8 @@
       "id": "node_9kxF1WuT",
       "type": "calculation",
       "position": {
-        "x": 8990.30844994932,
-        "y": 6626.605046976632
+        "x": 2030.3084499493198,
+        "y": 8591.605046976632
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -213,8 +157,8 @@
       "id": "node_oUqqMLh1",
       "type": "calculation",
       "position": {
-        "x": 8947.00888645256,
-        "y": 3161.150652733384
+        "x": 1987.0088864525605,
+        "y": 5126.150652733384
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -236,8 +180,8 @@
       "id": "node_FZ9oWjOJ",
       "type": "calculation",
       "position": {
-        "x": 8161.121261236767,
-        "y": 3981.5004757685656
+        "x": 1201.1212612367672,
+        "y": 5946.500475768566
       },
       "data": {
         "functionName": "identity",
@@ -271,8 +215,8 @@
       "id": "node_A7m1VurO",
       "type": "calculation",
       "position": {
-        "x": 8480.390272927114,
-        "y": 4139.099721236837
+        "x": 1520.390272927114,
+        "y": 6104.099721236837
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -294,8 +238,8 @@
       "id": "node_VnwVYVNv",
       "type": "calculation",
       "position": {
-        "x": 1978.5398348941962,
-        "y": 6190.459659894668
+        "x": -4981.460165105804,
+        "y": 8155.459659894668
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -327,8 +271,8 @@
       "id": "node_LLO15hMt",
       "type": "calculation",
       "position": {
-        "x": 8594.593080520754,
-        "y": 7132.414863873187
+        "x": 1634.5930805207536,
+        "y": 9097.414863873186
       },
       "data": {
         "functionName": "identity",
@@ -362,8 +306,8 @@
       "id": "node_gdG32TV6",
       "type": "calculation",
       "position": {
-        "x": 14074.082195026349,
-        "y": 2866.871881377592
+        "x": 7114.082195026349,
+        "y": 4831.871881377592
       },
       "data": {
         "functionName": "identity",
@@ -395,8 +339,8 @@
       "id": "node_Y8ygxDnf",
       "type": "calculation",
       "position": {
-        "x": 14111.495338552173,
-        "y": 3211.1602502674577
+        "x": 7151.495338552173,
+        "y": 5176.160250267458
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -417,8 +361,8 @@
       "id": "node_Zz1yl2TN",
       "type": "calculation",
       "position": {
-        "x": 15824.278403676704,
-        "y": 1860.8145701559115
+        "x": 8864.278403676704,
+        "y": 3825.8145701559115
       },
       "data": {
         "functionName": "identity",
@@ -450,8 +394,8 @@
       "id": "node_kPprEMFT",
       "type": "calculation",
       "position": {
-        "x": 15899.73602118493,
-        "y": 1902.4724897148262
+        "x": 8939.73602118493,
+        "y": 3867.472489714826
       },
       "data": {
         "functionName": "identity",
@@ -483,8 +427,8 @@
       "id": "node_sohn5esk",
       "type": "calculation",
       "position": {
-        "x": 15513.017979161094,
-        "y": 2162.396125755222
+        "x": 8553.017979161094,
+        "y": 4127.396125755222
       },
       "data": {
         "functionName": "identity",
@@ -519,8 +463,8 @@
       "id": "node_BW7DCs2L",
       "type": "calculation",
       "position": {
-        "x": 15875.170542584005,
-        "y": 2214.892938684541
+        "x": 8915.170542584005,
+        "y": 4179.892938684541
       },
       "data": {
         "functionName": "encode_varint",
@@ -541,8 +485,8 @@
       "id": "node_X75bgQmU",
       "type": "calculation",
       "position": {
-        "x": 15556.671113732118,
-        "y": 3345.5825093682506
+        "x": 8596.671113732118,
+        "y": 5310.582509368251
       },
       "data": {
         "functionName": "identity",
@@ -574,8 +518,8 @@
       "id": "node_32UX22QJ",
       "type": "calculation",
       "position": {
-        "x": 15946.726281149728,
-        "y": 3429.0760305453878
+        "x": 8986.726281149728,
+        "y": 5394.076030545388
       },
       "data": {
         "functionName": "encode_varint",
@@ -596,8 +540,8 @@
       "id": "node_0d7XluIl",
       "type": "calculation",
       "position": {
-        "x": 18011.002167019542,
-        "y": 4296.749805804355
+        "x": 11051.002167019542,
+        "y": 6261.749805804355
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -628,8 +572,8 @@
       "id": "node_869ITUOa",
       "type": "calculation",
       "position": {
-        "x": 18505.22815770426,
-        "y": 4326.054255874975
+        "x": 11545.22815770426,
+        "y": 6291.054255874975
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -650,8 +594,8 @@
       "id": "node_B1r8Otnt",
       "type": "calculation",
       "position": {
-        "x": 9775.980934623556,
-        "y": 1833.805438012343
+        "x": 2815.980934623556,
+        "y": 3798.805438012343
       },
       "data": {
         "functionName": "concat_all",
@@ -714,8 +658,8 @@
       "id": "node_Th2BmmVn",
       "type": "calculation",
       "position": {
-        "x": 9773.633601959402,
-        "y": 3362.83979450112
+        "x": 2813.633601959402,
+        "y": 5327.83979450112
       },
       "data": {
         "functionName": "concat_all",
@@ -770,8 +714,8 @@
       "id": "node_ynwHfJSf",
       "type": "calculation",
       "position": {
-        "x": 9766.525246598161,
-        "y": 3804.9985530130652
+        "x": 2806.525246598161,
+        "y": 5769.998553013065
       },
       "data": {
         "functionName": "concat_all",
@@ -843,8 +787,8 @@
       "id": "node_Dvdngj38",
       "type": "calculation",
       "position": {
-        "x": 16964.347406970926,
-        "y": 2241.3723752807855
+        "x": 10004.347406970926,
+        "y": 4206.3723752807855
       },
       "data": {
         "functionName": "concat_all",
@@ -1044,8 +988,8 @@
       "id": "node_xnLAVgZ6",
       "type": "calculation",
       "position": {
-        "x": 8433.686535071385,
-        "y": 5970.983885976586
+        "x": 1473.6865350713852,
+        "y": 7935.983885976586
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -1066,8 +1010,8 @@
       "id": "node_IsdiIfIS",
       "type": "calculation",
       "position": {
-        "x": 6718.823027250051,
-        "y": 1772.353734087298
+        "x": -241.17697274994862,
+        "y": 3737.353734087298
       },
       "data": {
         "functionName": "identity",
@@ -1101,8 +1045,8 @@
       "id": "node_z4WNy5po",
       "type": "calculation",
       "position": {
-        "x": 6701.581803332534,
-        "y": 2316.5882380449693
+        "x": -258.41819666746596,
+        "y": 4281.588238044969
       },
       "data": {
         "functionName": "identity",
@@ -1134,8 +1078,8 @@
       "id": "node_Rm5CoGRm",
       "type": "calculation",
       "position": {
-        "x": 6697.891809673212,
-        "y": 2718.8922171298545
+        "x": -262.10819032678774,
+        "y": 4683.8922171298545
       },
       "data": {
         "functionName": "identity",
@@ -1169,8 +1113,8 @@
       "id": "node_741JmRNv",
       "type": "calculation",
       "position": {
-        "x": 957.0282192415325,
-        "y": 5957.7065226269715
+        "x": -6002.9717807584675,
+        "y": 7922.7065226269715
       },
       "data": {
         "functionName": "random_256",
@@ -1188,8 +1132,8 @@
       "id": "node_pGJHBh2x",
       "type": "calculation",
       "position": {
-        "x": 1274.2593232927902,
-        "y": 5959.946894473752
+        "x": -5685.74067670721,
+        "y": 7924.946894473752
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -1221,8 +1165,8 @@
       "id": "node_LEYodLx2",
       "type": "calculation",
       "position": {
-        "x": 1578.311484275,
-        "y": 5956.095448281979
+        "x": -5381.688515725,
+        "y": 7921.095448281979
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -1254,8 +1198,8 @@
       "id": "node_En17Foy0",
       "type": "calculation",
       "position": {
-        "x": 7148.093805493329,
-        "y": 1955.1436701662788
+        "x": 188.09380549332855,
+        "y": 3920.1436701662788
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -1276,8 +1220,8 @@
       "id": "node_8SURSnfL",
       "type": "calculation",
       "position": {
-        "x": 6681.681362976735,
-        "y": 3265.5250063913827
+        "x": -278.3186370232652,
+        "y": 5230.525006391383
       },
       "data": {
         "functionName": "identity",
@@ -1311,8 +1255,8 @@
       "id": "node_XmVXwCTQ",
       "type": "calculation",
       "position": {
-        "x": 7210.625114823342,
-        "y": 3340.016770383416
+        "x": 250.6251148233423,
+        "y": 5305.016770383416
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -1334,8 +1278,8 @@
       "id": "node_R09gIYuG",
       "type": "calculation",
       "position": {
-        "x": 10463.096453714206,
-        "y": 1549.8343097032484
+        "x": 3241.5486613627727,
+        "y": 3147.66847383383
       },
       "data": {
         "functionName": "identity",
@@ -1367,8 +1311,8 @@
       "id": "node_GY91Ehdp",
       "type": "calculation",
       "position": {
-        "x": 10526.586547121784,
-        "y": 1646.233306956823
+        "x": 3365.20590616299,
+        "y": 3258.817185278934
       },
       "data": {
         "functionName": "identity",
@@ -1397,44 +1341,11 @@
       }
     },
     {
-      "id": "node_Ea876vwz",
-      "type": "calculation",
-      "position": {
-        "x": 10588.465926742472,
-        "y": 1724.516426550901
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "Version",
-        "showField": true,
-        "numInputs": 0,
-        "value": "02000000",
-        "version": 0,
-        "inputs": {
-          "val": "02000000"
-        },
-        "result": "02000000",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "INPUT VALUE:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "dirty": false,
-        "error": false,
-        "borderColor": "#22c55e"
-      }
-    },
-    {
       "id": "node_xfB4ufhP",
       "type": "calculation",
       "position": {
-        "x": 10279.199711200316,
-        "y": 2021.064486850075
+        "x": 3319.1997112003155,
+        "y": 3986.064486850075
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1464,8 +1375,8 @@
       "id": "node_4oJVTb66",
       "type": "calculation",
       "position": {
-        "x": 9783.9894549585,
-        "y": 2342.070718133087
+        "x": 2823.9894549585006,
+        "y": 4307.070718133087
       },
       "data": {
         "functionName": "concat_all",
@@ -1519,8 +1430,8 @@
       "id": "node_QudowjmH",
       "type": "calculation",
       "position": {
-        "x": 10293.356930011723,
-        "y": 2374.005002213642
+        "x": 3333.3569300117233,
+        "y": 4339.005002213642
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1550,8 +1461,8 @@
       "id": "node_6y911m30",
       "type": "calculation",
       "position": {
-        "x": 10300.923156963101,
-        "y": 2798.47411169354
+        "x": 3340.923156963101,
+        "y": 4763.47411169354
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1581,8 +1492,8 @@
       "id": "node_fg750uW1",
       "type": "calculation",
       "position": {
-        "x": 10303.941892626688,
-        "y": 3358.9210955249437
+        "x": 3343.941892626688,
+        "y": 5323.921095524944
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1612,8 +1523,8 @@
       "id": "node_8aTeSnaz",
       "type": "calculation",
       "position": {
-        "x": 10377.490073877823,
-        "y": 4022.3949611943026
+        "x": 3417.4900738778233,
+        "y": 5987.394961194303
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1643,8 +1554,8 @@
       "id": "node_D1fzjbDk",
       "type": "calculation",
       "position": {
-        "x": 10641.530265665759,
-        "y": 4489.494793556432
+        "x": 3681.5302656657586,
+        "y": 6454.494793556432
       },
       "data": {
         "functionName": "identity",
@@ -1678,8 +1589,8 @@
       "id": "node_65Dc6Vnc",
       "type": "calculation",
       "position": {
-        "x": 11901.21396502036,
-        "y": 1771.8976885939373
+        "x": 4941.213965020361,
+        "y": 3736.8976885939373
       },
       "data": {
         "functionName": "identity",
@@ -1711,8 +1622,8 @@
       "id": "node_1TiPfKlO",
       "type": "calculation",
       "position": {
-        "x": 12487.29117973648,
-        "y": 1784.0365817605089
+        "x": 5527.2911797364795,
+        "y": 3749.036581760509
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1742,8 +1653,8 @@
       "id": "node_Mx4nbigd",
       "type": "calculation",
       "position": {
-        "x": 12187.975844794164,
-        "y": 1759.2901008140834
+        "x": 5227.975844794164,
+        "y": 3724.2901008140834
       },
       "data": {
         "functionName": "text_to_hex",
@@ -1774,8 +1685,8 @@
       "id": "node_NWo4jqOn",
       "type": "calculation",
       "position": {
-        "x": 13332.828983151645,
-        "y": 2240.192158830978
+        "x": 6372.828983151645,
+        "y": 4205.192158830978
       },
       "data": {
         "functionName": "sha256_hex",
@@ -1805,8 +1716,8 @@
       "id": "node_KlkyBptz",
       "type": "calculation",
       "position": {
-        "x": 13826.39971704119,
-        "y": 1768.404454372554
+        "x": 6866.399717041189,
+        "y": 3733.404454372554
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -1860,8 +1771,8 @@
       "id": "node_Xhq5lC7C",
       "type": "calculation",
       "position": {
-        "x": 14740.457856108158,
-        "y": 3036.152125747576
+        "x": 7780.457856108158,
+        "y": 5001.152125747576
       },
       "data": {
         "functionName": "concat_all",
@@ -1913,8 +1824,8 @@
       "id": "node_TO9tpFgF",
       "type": "calculation",
       "position": {
-        "x": 17604.768964445684,
-        "y": 2768.396622907152
+        "x": 10644.768964445684,
+        "y": 4733.396622907152
       },
       "data": {
         "functionName": "script_verification",
@@ -2108,8 +2019,8 @@
       "id": "node_ZvH9ZZuw",
       "type": "calculation",
       "position": {
-        "x": 8589.82858122843,
-        "y": 899.1474116078327
+        "x": 1629.8285812284303,
+        "y": 2864.1474116078325
       },
       "data": {
         "functionName": "p2tr_address_from_xonly",
@@ -2136,7 +2047,7 @@
         "dirty": false,
         "error": false,
         "showComment": true,
-        "comment": "Fund this testnet address  https://coinfaucet.eu/en/btc-testnet/",
+        "comment": "Fund this testnet address https://coinfaucet.eu/en/btc-testnet/",
         "borderColor": "#22c55e"
       }
     },
@@ -2144,8 +2055,8 @@
       "id": "node_Ah3CUObm",
       "type": "calculation",
       "position": {
-        "x": 12807.359846770276,
-        "y": 1997.412900692314
+        "x": 5847.359846770276,
+        "y": 3962.412900692314
       },
       "data": {
         "functionName": "concat_all",
@@ -2201,8 +2112,8 @@
       "id": "node_nxuzlwvO",
       "type": "calculation",
       "position": {
-        "x": 10615.29657409896,
-        "y": 3569.792134029969
+        "x": 3655.2965740989603,
+        "y": 5534.792134029969
       },
       "data": {
         "functionName": "identity",
@@ -2236,8 +2147,8 @@
       "id": "node_cEuWrsla",
       "type": "calculation",
       "position": {
-        "x": 10972.42001527414,
-        "y": 3517.635842838201
+        "x": 4012.4200152741396,
+        "y": 5482.635842838201
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2258,8 +2169,8 @@
       "id": "node_AqYAQEk5",
       "type": "calculation",
       "position": {
-        "x": 11221.111043811528,
-        "y": 1806.3585592495765
+        "x": 4261.111043811528,
+        "y": 3771.3585592495765
       },
       "data": {
         "functionName": "concat_all",
@@ -2379,8 +2290,8 @@
       "id": "node_hrk9TW7D",
       "type": "calculation",
       "position": {
-        "x": 9335.483660451893,
-        "y": 2963.997384423059
+        "x": 2375.4836604518932,
+        "y": 4928.997384423059
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2400,8 +2311,8 @@
       "id": "node_Lg7qaF1w",
       "type": "opCodeNode",
       "position": {
-        "x": 1947.2831039501543,
-        "y": 6435.813376887667
+        "x": -5012.716896049846,
+        "y": 8400.813376887667
       },
       "data": {
         "functionName": "op_code_select",
@@ -2424,8 +2335,8 @@
       "id": "node_QDQ24k0S",
       "type": "calculation",
       "position": {
-        "x": 3883.9959793744893,
-        "y": 5799.472991405527
+        "x": -3076.0040206255107,
+        "y": 7764.472991405527
       },
       "data": {
         "functionName": "tagged_hash",
@@ -2467,8 +2378,8 @@
       "id": "node_AWGkoehc",
       "type": "calculation",
       "position": {
-        "x": 3355.723793041623,
-        "y": 5861.081262167179
+        "x": -3604.276206958377,
+        "y": 7826.081262167179
       },
       "data": {
         "functionName": "concat_all",
@@ -2524,8 +2435,8 @@
       "id": "node_2HN9AFgD",
       "type": "calculation",
       "position": {
-        "x": 3021.9607904439326,
-        "y": 5784.31783633076
+        "x": -3938.0392095560674,
+        "y": 7749.31783633076
       },
       "data": {
         "functionName": "identity",
@@ -2557,8 +2468,8 @@
       "id": "node_wgIqkewV",
       "type": "calculation",
       "position": {
-        "x": 2975.4661172136293,
-        "y": 6218.497736320333
+        "x": -3984.5338827863707,
+        "y": 8183.497736320333
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2578,8 +2489,8 @@
       "id": "node_2Pb9acyz",
       "type": "calculation",
       "position": {
-        "x": 3457.6039513969517,
-        "y": 5515.753926346729
+        "x": -3502.3960486030483,
+        "y": 7480.753926346729
       },
       "data": {
         "functionName": "identity",
@@ -2611,8 +2522,8 @@
       "id": "node_uky7xL1V",
       "type": "calculation",
       "position": {
-        "x": 4426.443776714976,
-        "y": 5676.038056761907
+        "x": -2533.5562232850243,
+        "y": 7641.038056761907
       },
       "data": {
         "functionName": "taproot_tree_builder",
@@ -2628,11 +2539,15 @@
         "outputPorts": [
           {
             "label": "root",
-            "handleId": ""
+            "handleId": "",
+            "handleTop": "50%",
+            "showLabel": false
           },
           {
             "label": "path",
-            "handleId": "output-1"
+            "handleId": "output-1",
+            "handleTopSource": "taproot-path-select",
+            "showLabel": false
           }
         ],
         "inputStructure": {
@@ -2691,15 +2606,16 @@
           "output-1": ""
         },
         "showComment": false,
-        "borderColor": "#22c55e"
+        "borderColor": "#22c55e",
+        "outputLayout": "taproot_tree_builder"
       }
     },
     {
       "id": "node_0wPq7MDB",
       "type": "opCodeNode",
       "position": {
-        "x": 6848.2215231868395,
-        "y": 5816.544993799025
+        "x": -111.77847681316052,
+        "y": 7781.544993799025
       },
       "data": {
         "functionName": "op_code_select",
@@ -2722,8 +2638,8 @@
       "id": "node_e8zSmKXN",
       "type": "calculation",
       "position": {
-        "x": 7409.900788410436,
-        "y": 5893.360236858129
+        "x": 449.9007884104358,
+        "y": 7858.360236858129
       },
       "data": {
         "functionName": "concat_all",
@@ -2781,8 +2697,8 @@
       "id": "node_MQYSaoPp",
       "type": "calculation",
       "position": {
-        "x": 6973.08239061552,
-        "y": 6269.585045316298
+        "x": 13.082390615520126,
+        "y": 8234.585045316298
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2814,8 +2730,8 @@
       "id": "node_HgQ5X6jS",
       "type": "calculation",
       "position": {
-        "x": 18960.23911653296,
-        "y": 2694.160660057254
+        "x": 12000.23911653296,
+        "y": 4659.160660057254
       },
       "data": {
         "functionName": "concat_all",
@@ -3015,8 +2931,8 @@
       "id": "node_VAFbclYv",
       "type": "calculation",
       "position": {
-        "x": 19536.93487812666,
-        "y": 3750.189231609136
+        "x": 12576.93487812666,
+        "y": 5715.189231609136
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -3047,8 +2963,8 @@
       "id": "node_eQmsFLeo",
       "type": "calculation",
       "position": {
-        "x": 19908.63388632732,
-        "y": 3638.6414216432313
+        "x": 12948.63388632732,
+        "y": 5603.641421643231
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -3069,8 +2985,8 @@
       "id": "node_1OYoX3dF",
       "type": "calculation",
       "position": {
-        "x": 6317.605353418308,
-        "y": 5964.218854262193
+        "x": -642.3946465816916,
+        "y": 7929.218854262193
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -3086,11 +3002,21 @@
         "outputPorts": [
           {
             "label": "Q (x-only)",
-            "handleId": ""
+            "handleId": "",
+            "handleTop": "50%",
+            "showLabel": false
           },
           {
             "label": "parity (c0/c1)",
-            "handleId": "output-1"
+            "handleId": "output-1",
+            "handleTopSource": "taproot-output-parity",
+            "showLabel": false
+          },
+          {
+            "label": "tweak (32B)",
+            "handleId": "output-2",
+            "showHandle": false,
+            "showLabel": false
           }
         ],
         "inputStructure": {
@@ -3117,17 +3043,19 @@
         "dirty": false,
         "error": false,
         "outputValues": {
-          "output-1": "c0"
+          "output-1": "c0",
+          "output-2": "c67621fc694d3f2de07ac35e66337b11c33498eb1185fa9f3c837773db5f25fc"
         },
-        "borderColor": "#22c55e"
+        "borderColor": "#22c55e",
+        "outputLayout": "taproot_tweak_xonly_pubkey"
       }
     },
     {
       "id": "node_7xNvgOA9",
       "type": "calculation",
       "position": {
-        "x": 9745.528589791444,
-        "y": 2797.3760106883847
+        "x": 2785.5285897914437,
+        "y": 4762.376010688385
       },
       "data": {
         "functionName": "concat_all",
@@ -3189,8 +3117,8 @@
       "id": "node_w2uwASAC",
       "type": "calculation",
       "position": {
-        "x": 8016.509732881561,
-        "y": 836.3502017953642
+        "x": 1056.509732881561,
+        "y": 2801.3502017953642
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -3206,11 +3134,21 @@
         "outputPorts": [
           {
             "label": "Q (x-only)",
-            "handleId": ""
+            "handleId": "",
+            "handleTop": "50%",
+            "showLabel": false
           },
           {
             "label": "parity (c0/c1)",
-            "handleId": "output-1"
+            "handleId": "output-1",
+            "handleTopSource": "taproot-output-parity",
+            "showLabel": false
+          },
+          {
+            "label": "tweak (32B)",
+            "handleId": "output-2",
+            "showHandle": false,
+            "showLabel": false
           }
         ],
         "inputStructure": {
@@ -3239,15 +3177,16 @@
           "output-1": "c1"
         },
         "error": false,
-        "borderColor": "#22c55e"
+        "borderColor": "#22c55e",
+        "outputLayout": "taproot_tweak_xonly_pubkey"
       }
     },
     {
       "id": "node_02wNQ9BN",
       "type": "calculation",
       "position": {
-        "x": 7840.336329175712,
-        "y": 1522.6372771050665
+        "x": 880.3363291757123,
+        "y": 3487.6372771050665
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -3290,8 +3229,8 @@
       "id": "node_JsPROnIF",
       "type": "calculation",
       "position": {
-        "x": 2475.3459818061747,
-        "y": 6104.460050220653
+        "x": -4484.654018193825,
+        "y": 8069.460050220653
       },
       "data": {
         "functionName": "concat_all",
@@ -3355,8 +3294,8 @@
       "id": "node_Fze0PM8E",
       "type": "calculation",
       "position": {
-        "x": 1949.0101631832476,
-        "y": 6811.026280874493
+        "x": -5010.989836816752,
+        "y": 8776.026280874492
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3388,8 +3327,8 @@
       "id": "node_jZs4oXnR",
       "type": "calculation",
       "position": {
-        "x": 946.8777825589677,
-        "y": 6639.392269465552
+        "x": -6013.122217441032,
+        "y": 8604.392269465552
       },
       "data": {
         "functionName": "random_256",
@@ -3407,8 +3346,8 @@
       "id": "node_sX9fRynx",
       "type": "calculation",
       "position": {
-        "x": 1264.108886610229,
-        "y": 6641.632641312332
+        "x": -5695.891113389771,
+        "y": 8606.632641312332
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -3440,8 +3379,8 @@
       "id": "node_LHhLlB5R",
       "type": "calculation",
       "position": {
-        "x": 1601.3333602443126,
-        "y": 6616.456136987207
+        "x": -5358.666639755687,
+        "y": 8581.456136987206
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -3473,8 +3412,8 @@
       "id": "node_w9vzSvQB",
       "type": "opCodeNode",
       "position": {
-        "x": 1895.379717640768,
-        "y": 7054.0538528937295
+        "x": -5064.620282359232,
+        "y": 9019.053852893729
       },
       "data": {
         "functionName": "op_code_select",
@@ -3497,8 +3436,8 @@
       "id": "node_k9Lcn0Q7",
       "type": "calculation",
       "position": {
-        "x": 1908.6932667817564,
-        "y": 7534.123248934584
+        "x": -5051.306733218244,
+        "y": 9499.123248934584
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3530,8 +3469,8 @@
       "id": "node_VB7d03j6",
       "type": "calculation",
       "position": {
-        "x": 959.2300810799716,
-        "y": 7422.961276140357
+        "x": -6000.769918920028,
+        "y": 9387.961276140357
       },
       "data": {
         "functionName": "random_256",
@@ -3549,8 +3488,8 @@
       "id": "node_576IsLEv",
       "type": "calculation",
       "position": {
-        "x": 1276.4611851312293,
-        "y": 7425.201647987137
+        "x": -5683.538814868771,
+        "y": 9390.201647987138
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -3582,8 +3521,8 @@
       "id": "node_mxaV6It4",
       "type": "calculation",
       "position": {
-        "x": 1580.513346113432,
-        "y": 7421.350201795364
+        "x": -5379.486653886568,
+        "y": 9386.350201795365
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -3615,8 +3554,8 @@
       "id": "node_XceXEPeA",
       "type": "opCodeNode",
       "position": {
-        "x": 1862.3235123726845,
-        "y": 7807.350523709143
+        "x": -5097.6764876273155,
+        "y": 9772.350523709143
       },
       "data": {
         "functionName": "op_code_select",
@@ -3639,8 +3578,8 @@
       "id": "node_DRkax0Qc",
       "type": "calculation",
       "position": {
-        "x": 5838.174957423107,
-        "y": 5560.871134696543
+        "x": -1121.8250425768929,
+        "y": 7525.871134696543
       },
       "data": {
         "functionName": "identity",
@@ -3673,8 +3612,8 @@
       "id": "node_3qD3e7Hv",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 1823.0144317050836,
-        "y": 203.06168359414346
+        "x": -5136.985568294916,
+        "y": 2168.0616835941437
       },
       "data": {
         "content": "# Lesson 13: Taproot Multisig\n\n## The Challenge\n\nIn Taproot, the internal key holder can always spend via key-path — bypassing any script conditions.\n\nIf Alice is internal key + multisig in leaves → Alice can spend alone. Not true multisig.\n\n## The Solution: NUMS + CHECKSIGADD\n\n| Component | Purpose |\n|-----------|---------|\n| **NUMS internal key** | Disables key-path (unspendable) |\n| **OP_CHECKSIGADD** | Counts valid signatures for threshold |\n\nAlternative approach (MuSig2 key aggregation) covered in the next flow.\n\n## What We'll Build\n\n**Flow 1:** Lock coins to 2-of-3 multisig address\n\n**Flow 2:** Spend with Bob + Charlie (Alice absent)\n\n## New Concepts\n\n| Concept | What It Does |\n|---------|--------------|\n| NUMS Point | Disables key-path (no known private key) |\n| OP_CHECKSIGADD | Counts valid signatures for threshold |\n| Witness Order | Signatures in REVERSE order of pubkeys |",
@@ -3689,8 +3628,8 @@
       "id": "node_34WKpbiE",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 315,
-        "y": 180
+        "x": -6645,
+        "y": 2145
       },
       "data": {
         "content": "# Lesson 13: Taproot Multisig\n\n## What We Built\n\n**Flow 1** — Locked coins to a 2-of-3 multisig address using:\n- NUMS internal key (disables key-path — nobody can bypass the script)\n- OP_CHECKSIGADD threshold script (any 2 of 3 signers)\n\n**Flow 2** — Spent with Bob + Charlie (Alice absent):\n- Signatures in REVERSE order of pubkeys in script\n- Missing signer = empty byte vector (not OP_0)\n- Witness: 271 bytes (2 sigs + empty + script + control block)\n\n## Key Takeaway\n\nThe internal key is a spending condition, not just metadata. Whoever controls it can bypass all scripts. NUMS ensures nobody has that power.\n\n## What's Different from Legacy Multisig\n\nOP_CHECKSIGADD replaces OP_CHECKMULTISIG — each signature maps to exactly one pubkey. No dummy element bug, no guessing which sig matches which key.\n\n",
@@ -3705,8 +3644,8 @@
       "id": "node_h8ekIPj3",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 5090.042983119431,
-        "y": 1165.0340678962125
+        "x": -1869.9570168805694,
+        "y": 3130.0340678962125
       },
       "data": {
         "content": "# Flow 1: Lock Coins to 2-of-3 Multisig\n\nP2TR output with NUMS internal key + 2-of-3 CHECKSIGADD script.\n\n## Structure\n```\nInternal key P = NUMS (unspendable)\n\n      root\n       |\n    leaf A\n    (2-of-3)\n```\n\n## Why NUMS?\n\nInternal key holder can always spend via key-path — bypassing any scripts.\n\nFor true shared control, we use a NUMS (Nothing Up My Sleeve) point:\n```\n50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0\n```\n\nDerived as `lift_x(SHA256(uncompressed_G))`. No known private key exists — finding it would require solving the discrete logarithm problem (ECDLP).\n\nResult: key-path disabled → all spends go through script → 2-of-3 enforced.\n\n## Why One Leaf?\n\nSingle leaf keeps it simple. All three 2-of-3 combinations (Alice+Bob, Alice+Charlie, Bob+Charlie) work with the same script — just different signatures.\n\nAlternative design: three separate 2-of-2 leaves. You reveal fewer keys, but you pay extra Merkle-path bytes in the control block. We'll compare in exercises.\n\n## Script Encoding (104 bytes)\n```\n<alice> OP_CHECKSIG <bob> OP_CHECKSIGADD <charlie> OP_CHECKSIGADD 2 OP_NUMEQUAL\n```\n\n`20 <32B> ac 20 <32B> ba 20 <32B> ba 52 9c`\n\n## Output\n\nFund the resulting `tb1p...` address. Flow 2 spends with Bob + Charlie.",
@@ -3721,8 +3660,8 @@
       "id": "node_B5jWn1Wy",
       "type": "calculation",
       "position": {
-        "x": 9920.829997520792,
-        "y": 11891.816633841116
+        "x": 2960.829997520792,
+        "y": 13856.816633841116
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3744,8 +3683,8 @@
       "id": "node_Vym8uL5C",
       "type": "calculation",
       "position": {
-        "x": 9353.283273661844,
-        "y": 15998.574410025867
+        "x": 2393.283273661844,
+        "y": 17963.574410025867
       },
       "data": {
         "functionName": "identity",
@@ -3779,8 +3718,8 @@
       "id": "node_SHgIWa4Y",
       "type": "calculation",
       "position": {
-        "x": 9739.72247503123,
-        "y": 16134.679194796845
+        "x": 2779.7224750312307,
+        "y": 18099.679194796845
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -3802,8 +3741,8 @@
       "id": "node_AntDxwp1",
       "type": "opCodeNode",
       "position": {
-        "x": 8093.818257072358,
-        "y": 15342.947623825643
+        "x": 1133.8182570723584,
+        "y": 17307.947623825643
       },
       "data": {
         "functionName": "op_code_select",
@@ -3826,8 +3765,8 @@
       "id": "node_6g7sVO0a",
       "type": "calculation",
       "position": {
-        "x": 8655.497522295955,
-        "y": 15419.762866884746
+        "x": 1695.4975222959547,
+        "y": 17384.762866884746
       },
       "data": {
         "functionName": "concat_all",
@@ -3885,8 +3824,8 @@
       "id": "node_j0gOIO3c",
       "type": "calculation",
       "position": {
-        "x": 8218.679124501039,
-        "y": 15795.987675342916
+        "x": 1258.679124501039,
+        "y": 17760.987675342916
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3918,8 +3857,8 @@
       "id": "node_uSiz3sJA",
       "type": "calculation",
       "position": {
-        "x": 10975.875908038404,
-        "y": 17007.151358632313
+        "x": 4015.8759080384043,
+        "y": 18972.151358632313
       },
       "data": {
         "functionName": "identity",
@@ -3953,8 +3892,8 @@
       "id": "node_IQlRKIFx",
       "type": "calculation",
       "position": {
-        "x": 10464.268489583337,
-        "y": 11677.032242584257
+        "x": 3504.268489583337,
+        "y": 13642.032242584257
       },
       "data": {
         "functionName": "concat_all",
@@ -4017,8 +3956,8 @@
       "id": "node_jqmLWMVE",
       "type": "calculation",
       "position": {
-        "x": 10870.190558273767,
-        "y": 13680.134202847743
+        "x": 3910.1905582737672,
+        "y": 15645.134202847743
       },
       "data": {
         "functionName": "concat_all",
@@ -4073,8 +4012,8 @@
       "id": "node_RjzaI05F",
       "type": "calculation",
       "position": {
-        "x": 10858.896453577137,
-        "y": 14224.991699188397
+        "x": 3898.8964535771374,
+        "y": 16189.991699188397
       },
       "data": {
         "functionName": "concat_all",
@@ -4146,8 +4085,8 @@
       "id": "node_DrHA0ACG",
       "type": "calculation",
       "position": {
-        "x": 9400.495507119165,
-        "y": 15397.473753235434
+        "x": 2440.4955071191653,
+        "y": 17362.473753235434
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4168,8 +4107,8 @@
       "id": "node_2KemooX4",
       "type": "calculation",
       "position": {
-        "x": 9610.019997936499,
-        "y": 11539.08641972832
+        "x": 2650.019997936499,
+        "y": 13504.08641972832
       },
       "data": {
         "functionName": "identity",
@@ -4201,8 +4140,8 @@
       "id": "node_IlvZXl8V",
       "type": "calculation",
       "position": {
-        "x": 6525,
-        "y": 15140.369011101287
+        "x": -435,
+        "y": 17105.369011101287
       },
       "data": {
         "functionName": "random_256",
@@ -4220,8 +4159,8 @@
       "id": "node_KSUcPBjL",
       "type": "calculation",
       "position": {
-        "x": 6820.1975298869365,
-        "y": 15130.992675245765
+        "x": -139.80247011306346,
+        "y": 17095.992675245765
       },
       "data": {
         "functionName": "even_y_private_key",
@@ -4253,8 +4192,8 @@
       "id": "node_g7Ow0MfU",
       "type": "calculation",
       "position": {
-        "x": 7235.567485868363,
-        "y": 15237.790661740368
+        "x": 275.5674858683633,
+        "y": 17202.790661740368
       },
       "data": {
         "functionName": "xonly_pubkey",
@@ -4284,8 +4223,8 @@
       "id": "node_AyChytW7",
       "type": "calculation",
       "position": {
-        "x": 10399.054203190171,
-        "y": 12665.744404951854
+        "x": 3439.0542031901714,
+        "y": 14630.744404951854
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -4307,8 +4246,8 @@
       "id": "node_FwHuFA1H",
       "type": "calculation",
       "position": {
-        "x": 11563.25969484153,
-        "y": 11988.333536980903
+        "x": 4410.825149251054,
+        "y": 13772.741117272919
       },
       "data": {
         "functionName": "identity",
@@ -4340,8 +4279,8 @@
       "id": "node_d5IlolZw",
       "type": "calculation",
       "position": {
-        "x": 11631.619809591823,
-        "y": 12070.122470206326
+        "x": 4476.2247325307235,
+        "y": 13887.095896675191
       },
       "data": {
         "functionName": "identity",
@@ -4370,44 +4309,11 @@
       }
     },
     {
-      "id": "node_EwcL1c5Y",
-      "type": "calculation",
-      "position": {
-        "x": 11713.698479228711,
-        "y": 12142.823110505733
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "Version",
-        "showField": true,
-        "numInputs": 0,
-        "value": "02000000",
-        "version": 0,
-        "inputs": {
-          "val": "02000000"
-        },
-        "result": "02000000",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "INPUT VALUE:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "dirty": false,
-        "error": false,
-        "borderColor": "#22c55e"
-      }
-    },
-    {
       "id": "node_HxFw6WnV",
       "type": "calculation",
       "position": {
-        "x": 11371.570918179292,
-        "y": 12441.057633025406
+        "x": 4411.570918179292,
+        "y": 14406.057633025406
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4437,8 +4343,8 @@
       "id": "node_910QTAk6",
       "type": "calculation",
       "position": {
-        "x": 10774.084923563496,
-        "y": 12650.66369179198
+        "x": 3814.084923563496,
+        "y": 14615.66369179198
       },
       "data": {
         "functionName": "concat_all",
@@ -4492,8 +4398,8 @@
       "id": "node_IlNt7e2B",
       "type": "calculation",
       "position": {
-        "x": 11385.7281369907,
-        "y": 12793.998148388973
+        "x": 4425.7281369907,
+        "y": 14758.998148388973
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4523,8 +4429,8 @@
       "id": "node_4EqAFknw",
       "type": "calculation",
       "position": {
-        "x": 11393.294363942077,
-        "y": 13218.467257868871
+        "x": 4433.294363942077,
+        "y": 15183.467257868871
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4554,8 +4460,8 @@
       "id": "node_faqfHJUB",
       "type": "calculation",
       "position": {
-        "x": 11396.313099605664,
-        "y": 13778.914241700275
+        "x": 4436.313099605664,
+        "y": 15743.914241700275
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4585,8 +4491,8 @@
       "id": "node_bbO5eq6v",
       "type": "calculation",
       "position": {
-        "x": 11469.861280856807,
-        "y": 14442.388107369632
+        "x": 4509.861280856807,
+        "y": 16407.388107369632
       },
       "data": {
         "functionName": "sha256_hex",
@@ -4616,8 +4522,8 @@
       "id": "node_66Lm9bdq",
       "type": "calculation",
       "position": {
-        "x": 11067.29588802188,
-        "y": 15527.189196069823
+        "x": 4107.295888021879,
+        "y": 17492.189196069823
       },
       "data": {
         "functionName": "identity",
@@ -4651,8 +4557,8 @@
       "id": "node_MDbhd185",
       "type": "calculation",
       "position": {
-        "x": 11707.667781077937,
-        "y": 13989.7852802053
+        "x": 4747.6677810779365,
+        "y": 15954.7852802053
       },
       "data": {
         "functionName": "identity",
@@ -4686,8 +4592,8 @@
       "id": "node_SyHd55X0",
       "type": "calculation",
       "position": {
-        "x": 12064.791222253123,
-        "y": 13937.628989013532
+        "x": 5104.791222253123,
+        "y": 15902.628989013532
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4708,8 +4614,8 @@
       "id": "node_KytevzLt",
       "type": "calculation",
       "position": {
-        "x": 12390.516687803603,
-        "y": 12264.864062995624
+        "x": 5430.516687803603,
+        "y": 14229.864062995624
       },
       "data": {
         "functionName": "concat_all",
@@ -4829,8 +4735,8 @@
       "id": "node_SEmdeWlM",
       "type": "calculation",
       "position": {
-        "x": 9838.00278592771,
-        "y": 13343.799717387823
+        "x": 2878.0027859277106,
+        "y": 15308.799717387823
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4850,8 +4756,8 @@
       "id": "node_F0NFkA1T",
       "type": "calculation",
       "position": {
-        "x": 7318.629034769361,
-        "y": 16083.071086722302
+        "x": 358.62903476936117,
+        "y": 18048.071086722302
       },
       "data": {
         "functionName": "taproot_tweaked_privkey",
@@ -4894,8 +4800,8 @@
       "id": "node_cdGqKV9K",
       "type": "calculation",
       "position": {
-        "x": 16703.41679882453,
-        "y": 13024.158528904483
+        "x": 9743.416798824532,
+        "y": 14989.158528904483
       },
       "data": {
         "functionName": "identity",
@@ -4927,8 +4833,8 @@
       "id": "node_vejzTaS3",
       "type": "calculation",
       "position": {
-        "x": 17172.608317195234,
-        "y": 13902.539836610165
+        "x": 10212.608317195234,
+        "y": 15867.539836610165
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4949,8 +4855,8 @@
       "id": "node_VY9qlZm2",
       "type": "calculation",
       "position": {
-        "x": 13118.889773588366,
-        "y": 12213.120384557364
+        "x": 6158.889773588366,
+        "y": 14178.120384557364
       },
       "data": {
         "functionName": "identity",
@@ -4982,8 +4888,8 @@
       "id": "node_6Q1PowCl",
       "type": "calculation",
       "position": {
-        "x": 13704.966988304484,
-        "y": 12225.259277723935
+        "x": 6744.966988304484,
+        "y": 14190.259277723935
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5013,8 +4919,8 @@
       "id": "node_63AXgZP2",
       "type": "calculation",
       "position": {
-        "x": 13405.651653362169,
-        "y": 12200.51279677751
+        "x": 6445.651653362169,
+        "y": 14165.51279677751
       },
       "data": {
         "functionName": "text_to_hex",
@@ -5045,8 +4951,8 @@
       "id": "node_MWPGW7Ft",
       "type": "calculation",
       "position": {
-        "x": 14550.50479171965,
-        "y": 12681.414854794404
+        "x": 7590.50479171965,
+        "y": 14646.414854794404
       },
       "data": {
         "functionName": "sha256_hex",
@@ -5076,8 +4982,8 @@
       "id": "node_bX4dnmgp",
       "type": "calculation",
       "position": {
-        "x": 15044.075525609187,
-        "y": 12209.62715033598
+        "x": 8084.075525609187,
+        "y": 14174.62715033598
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -5131,8 +5037,8 @@
       "id": "node_EuSwoIna",
       "type": "calculation",
       "position": {
-        "x": 14025.035655338274,
-        "y": 12438.63559665574
+        "x": 7065.0356553382735,
+        "y": 14403.63559665574
       },
       "data": {
         "functionName": "concat_all",
@@ -5185,67 +5091,11 @@
       }
     },
     {
-      "id": "node_KTwijGJP",
-      "type": "calculation",
-      "position": {
-        "x": 18833.889773588366,
-        "y": 12755.51279677751
-      },
-      "data": {
-        "functionName": "identity",
-        "showField": true,
-        "numInputs": 0,
-        "value": "2",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "2"
-        },
-        "result": "2",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "INPUT VALUE:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#eab308",
-        "title": "Transaction Version",
-        "error": false
-      }
-    },
-    {
-      "id": "node_M1lFcZk0",
-      "type": "calculation",
-      "position": {
-        "x": 19316.02009420235,
-        "y": 12771.09612360558
-      },
-      "data": {
-        "functionName": "uint32_to_little_endian_4_bytes",
-        "title": "Uint32 → LE-4",
-        "numInputs": 1,
-        "showField": false,
-        "value": "2",
-        "dirty": false,
-        "groupInstances": {},
-        "inputs": {
-          "val": 2
-        },
-        "result": "02000000",
-        "borderColor": "#eab308",
-        "error": false
-      }
-    },
-    {
       "id": "node_r2k4MWaS",
       "type": "calculation",
       "position": {
-        "x": 19284.28201706847,
-        "y": 13118.972063053743
+        "x": 12324.282017068472,
+        "y": 15083.972063053743
       },
       "data": {
         "functionName": "identity",
@@ -5277,8 +5127,8 @@
       "id": "node_XDWprwqF",
       "type": "calculation",
       "position": {
-        "x": 19359.739634576697,
-        "y": 13160.629982612658
+        "x": 12399.739634576697,
+        "y": 15125.629982612658
       },
       "data": {
         "functionName": "identity",
@@ -5310,8 +5160,8 @@
       "id": "node_d5T5Abke",
       "type": "calculation",
       "position": {
-        "x": 18973.02159255286,
-        "y": 13420.553618653053
+        "x": 12013.021592552861,
+        "y": 15385.553618653053
       },
       "data": {
         "functionName": "identity",
@@ -5346,8 +5196,8 @@
       "id": "node_2FGSKbIy",
       "type": "calculation",
       "position": {
-        "x": 19335.174155975765,
-        "y": 13473.050431582373
+        "x": 12375.174155975765,
+        "y": 15438.050431582373
       },
       "data": {
         "functionName": "encode_varint",
@@ -5368,8 +5218,8 @@
       "id": "node_olxBc6l2",
       "type": "calculation",
       "position": {
-        "x": 19267.376080065398,
-        "y": 14410.892807695685
+        "x": 12307.376080065398,
+        "y": 16375.892807695685
       },
       "data": {
         "functionName": "identity",
@@ -5401,8 +5251,8 @@
       "id": "node_hMETq847",
       "type": "calculation",
       "position": {
-        "x": 19648.682628008457,
-        "y": 14471.931072595387
+        "x": 12688.682628008457,
+        "y": 16436.931072595387
       },
       "data": {
         "functionName": "encode_varint",
@@ -5423,8 +5273,8 @@
       "id": "node_j8KiY1og",
       "type": "calculation",
       "position": {
-        "x": 21570.248584624496,
-        "y": 15171.168455744511
+        "x": 14610.248584624496,
+        "y": 17136.16845574451
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -5455,8 +5305,8 @@
       "id": "node_wixzkbXl",
       "type": "calculation",
       "position": {
-        "x": 22064.47457530922,
-        "y": 15200.472905815132
+        "x": 15104.474575309221,
+        "y": 17165.47290581513
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -5477,8 +5327,8 @@
       "id": "node_z2iEYScl",
       "type": "calculation",
       "position": {
-        "x": 20426.12882740012,
-        "y": 13499.529868178617
+        "x": 13466.12882740012,
+        "y": 15464.529868178617
       },
       "data": {
         "functionName": "concat_all",
@@ -5678,8 +5528,8 @@
       "id": "node_KfX3PTyG",
       "type": "calculation",
       "position": {
-        "x": 21388.636636138704,
-        "y": 13584.985073923555
+        "x": 14428.636636138704,
+        "y": 15549.985073923555
       },
       "data": {
         "functionName": "script_verification",
@@ -6002,8 +5852,8 @@
       "id": "node_LPweDTUs",
       "type": "calculation",
       "position": {
-        "x": 23035.725552133634,
-        "y": 16212.247789033318
+        "x": 16075.725552133634,
+        "y": 18177.247789033318
       },
       "data": {
         "functionName": "concat_all",
@@ -6203,8 +6053,8 @@
       "id": "node_5raHz9NC",
       "type": "calculation",
       "position": {
-        "x": 23708.947745096215,
-        "y": 17457.247789033318
+        "x": 16748.947745096215,
+        "y": 19422.247789033318
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -6235,8 +6085,8 @@
       "id": "node_ycGhD5fO",
       "type": "calculation",
       "position": {
-        "x": 24042.595918775885,
-        "y": 17540.52025181485
+        "x": 17082.595918775885,
+        "y": 19505.52025181485
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -6257,8 +6107,8 @@
       "id": "node_F0t3pUUa",
       "type": "calculation",
       "position": {
-        "x": 13256.239918259394,
-        "y": 13062.407137002467
+        "x": 6296.2399182593945,
+        "y": 15027.407137002467
       },
       "data": {
         "functionName": "concat_all",
@@ -6315,8 +6165,8 @@
       "id": "node_eH6YZN8q",
       "type": "calculation",
       "position": {
-        "x": 17021.369430748367,
-        "y": 13202.082637804622
+        "x": 10061.369430748367,
+        "y": 15167.082637804622
       },
       "data": {
         "functionName": "encode_varint",
@@ -6335,8 +6185,8 @@
       "id": "node_CK6P3qUd",
       "type": "calculation",
       "position": {
-        "x": 17169.6496619405,
-        "y": 13579.566551639937
+        "x": 10209.6496619405,
+        "y": 15544.566551639937
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6357,8 +6207,8 @@
       "id": "node_31y19IxN",
       "type": "calculation",
       "position": {
-        "x": 17130.302591446583,
-        "y": 14516.089158677607
+        "x": 10170.302591446583,
+        "y": 16481.089158677605
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6379,8 +6229,8 @@
       "id": "node_Taou4jEb",
       "type": "calculation",
       "position": {
-        "x": 16477.315336447275,
-        "y": 14429.86412766904
+        "x": 9517.315336447275,
+        "y": 16394.86412766904
       },
       "data": {
         "functionName": "concat_all",
@@ -6432,8 +6282,8 @@
       "id": "node_lpzJ7dS4",
       "type": "calculation",
       "position": {
-        "x": 10432.876779095823,
-        "y": 13227.953273245776
+        "x": 3472.8767790958227,
+        "y": 15192.953273245776
       },
       "data": {
         "functionName": "concat_all",
@@ -6494,8 +6344,8 @@
       "id": "node_efiszUYK",
       "type": "calculation",
       "position": {
-        "x": 7600.216259778565,
-        "y": 15507.235758299936
+        "x": 640.2162597785646,
+        "y": 17472.235758299936
       },
       "data": {
         "functionName": "taproot_tweak_xonly_pubkey",
@@ -6511,11 +6361,21 @@
         "outputPorts": [
           {
             "label": "Q (x-only)",
-            "handleId": ""
+            "handleId": "",
+            "handleTop": "50%",
+            "showLabel": false
           },
           {
             "label": "parity (c0/c1)",
-            "handleId": "output-1"
+            "handleId": "output-1",
+            "handleTopSource": "taproot-output-parity",
+            "showLabel": false
+          },
+          {
+            "label": "tweak (32B)",
+            "handleId": "output-2",
+            "showHandle": false,
+            "showLabel": false
           }
         ],
         "inputStructure": {
@@ -6542,17 +6402,19 @@
         "dirty": false,
         "error": false,
         "outputValues": {
-          "output-1": "c1"
+          "output-1": "c1",
+          "output-2": "3b6c7396c37b9130013b7abe654bb36f5b4269dcd90dd43938b0272f5c6f88c8"
         },
-        "borderColor": "#22c55e"
+        "borderColor": "#22c55e",
+        "outputLayout": "taproot_tweak_xonly_pubkey"
       }
     },
     {
       "id": "node_daA7PjdS",
       "type": "calculation",
       "position": {
-        "x": 10149.954180287095,
-        "y": 16437.68715610277
+        "x": 3189.9541802870954,
+        "y": 18402.68715610277
       },
       "data": {
         "functionName": "identity",
@@ -6586,8 +6448,8 @@
       "id": "node_CnnOyZrS",
       "type": "calculation",
       "position": {
-        "x": 10495.255510199073,
-        "y": 16426.244301765066
+        "x": 3535.255510199073,
+        "y": 18391.244301765066
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -6619,8 +6481,8 @@
       "id": "node_62Xr0tlN",
       "type": "calculation",
       "position": {
-        "x": 15375,
-        "y": 13050
+        "x": 8415,
+        "y": 15015
       },
       "data": {
         "functionName": "schnorr_sign_bip340",
@@ -6674,8 +6536,8 @@
       "id": "node_mrZsNWfJ",
       "type": "calculation",
       "position": {
-        "x": 17172.464832074715,
-        "y": 14124.570489715808
+        "x": 10212.464832074715,
+        "y": 16089.570489715808
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6696,8 +6558,8 @@
       "id": "node_X34deIHS",
       "type": "calculation",
       "position": {
-        "x": 16755.131105179513,
-        "y": 13997.003775109815
+        "x": 9795.131105179513,
+        "y": 15962.003775109815
       },
       "data": {
         "functionName": "identity",
@@ -6728,8 +6590,8 @@
       "id": "node_7vfTGeer",
       "type": "calculation",
       "position": {
-        "x": 17146.88237543562,
-        "y": 14273.769962628703
+        "x": 10186.88237543562,
+        "y": 16238.769962628703
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -6750,8 +6612,8 @@
       "id": "node_2kSz1lBt",
       "type": "calculation",
       "position": {
-        "x": 17933.063440097845,
-        "y": 13720.519616119944
+        "x": 10973.063440097845,
+        "y": 15685.519616119944
       },
       "data": {
         "functionName": "concat_all",
@@ -6854,8 +6716,8 @@
       "id": "node_8vsply5",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 7900.803562577479,
-        "y": 11616.69094515193
+        "x": 940.8035625774792,
+        "y": 13581.69094515193
       },
       "data": {
         "content": "# Flow 2: Spend with Bob + Charlie\n\nAlice is unavailable. Bob and Charlie cooperate to spend the 2-of-3 multisig.\n\n## Script-Path Spend\n\nSince the internal key is NUMS (unspendable), all spends go through script-path. The witness must include:\n\n1. **Signatures** — in REVERSE order of pubkeys in the script\n2. **The script** — revealed on-chain\n3. **Control block** — proves the script belongs to this output\n\n## Witness Stack\n```\nsig_charlie     ← checked last by script, pushed first\nsig_bob         ← checked second\n(empty)         ← Alice is absent (zero-length, not OP_0)\nscript          ← the 104-byte 2-of-3 script\ncontrol_block   ← c0 + NUMS (33 bytes, no merkle path)\n```\n\n## Why Reverse Order?\n\nThe script checks pubkeys left-to-right: Alice → Bob → Charlie.\nEach CHECKSIG/CHECKSIGADD consumes a signature from the top of the stack.\n\nWitness serialization order = bottom-of-stack first:\n\nsig_charlie     ← deepest (consumed last by script)\nsig_bob         ← middle\n(empty)         ← top of stack (consumed first by CHECKSIG)\nscript\ncontrol_block\n \n\n## Empty Signature Rule\n\nA missing signer provides an **empty byte vector** (length 0).\nNon-empty invalid signatures cause immediate script failure.",
@@ -6870,8 +6732,8 @@
       "id": "node_e2nrsog",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 5365.393021099696,
-        "y": 12646.839332393643
+        "x": -1594.606978900304,
+        "y": 14611.839332393643
       },
       "data": {
         "content": "# From OP_CHECKMULTISIG to OP_CHECKSIGADD\n\n## Why the Change?\n\nLegacy OP_CHECKMULTISIG (used in P2SH/P2WSH) had problems:\n\n1. **Dummy element bug** — requires an extra unused OP_0 on the stack (a consensus bug kept for backward compatibility)\n2. **O(n×m) validation** — verifier must try each signature against multiple pubkeys to find a match\n3. **Incompatible with Schnorr batch validation** — the verifier doesn't know which pubkey matches which signature upfront\n\nTapscript (BIP342) disabled OP_CHECKMULTISIG entirely and introduced **OP_CHECKSIGADD**.\n\n## How OP_CHECKSIGADD Works\n\nTakes 3 inputs from stack: `sig`, `counter`, `pubkey`\n\n- Valid signature → pushes `counter + 1`\n- Empty signature (length 0) → pushes `counter` unchanged\n- Non-empty invalid signature → **script fails immediately**\n\nEach pubkey is checked against exactly one signature slot. The verifier always knows which signature belongs to which pubkey — enabling **batch validation**.\n\n## Execution Trace (Bob + Charlie sign, Alice absent)\n\n| Step | Operation | Stack (top→right) |\n|------|-----------|-------------------|\n| 0 | Start | sig_c, sig_b, \"\" |\n| 1 | PUSH alice_pk | sig_c, sig_b, \"\", alice_pk |\n| 2 | CHECKSIG | sig_c, sig_b, **0** (empty → no match) |\n| 3 | PUSH bob_pk | sig_c, sig_b, 0, bob_pk |\n| 4 | CHECKSIGADD | sig_c, **1** (0+1, valid) |\n| 5 | PUSH charlie_pk | sig_c, 1, charlie_pk |\n| 6 | CHECKSIGADD | **2** (1+1, valid) |\n| 7 | OP_2 | 2, 2 |\n| 8 | NUMEQUAL | **1** (TRUE)  |\n\n##  Exactly 2, Not \"At Least 2\"\n\nOur script ends with `2 OP_NUMEQUAL` — this enforces an **exact** count.\n\nIf all three signers provide valid signatures, the counter reaches 3 and `3 == 2` **fails**.\n\nThis is intentional — wallets provide exactly the threshold number of signatures and leave the rest empty.\n\nWant \"at least 2 of 3\"? Replace with `2 OP_GREATERTHANOREQUAL`.\n\n## Comparison\n\n| - | OP_CHECKMULTISIG | OP_CHECKSIGADD |\n|---|---|---|\n| Dummy element | Required (bug) | Not needed |\n| Sig↔Pubkey matching | Verifier guesses | 1-to-1, explicit |\n| Batch validation | No | Yes |\n| Invalid non-empty sig | Fails (NULLFAIL, BIP146) | Fails (built-in) |\n| Available in | P2SH, P2WSH | Tapscript only |",
@@ -6886,8 +6748,8 @@
       "id": "node_kbjqa7q",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 21433.835870664978,
-        "y": 18649.90635205281
+        "x": 14473.835870664978,
+        "y": 20614.90635205281
       },
       "data": {
         "content": "# Exercises\n\n## Exercise 1: The Internal Key Backdoor\n\nReplace the NUMS point with Alice's pubkey as internal key.\n\nNow try to spend via **key-path** — just Alice, no script, no other signatures.\n\nSteps:\n1. In Flow 1, swap NUMS for Alice's x-only pubkey in the Taproot Tweak node\n2. Fund the new address\n3. Build a key-path spend (spend type `00`, tweaked privkey, single signature)\n\nDoes it work? Alice just bypassed the 2-of-3 policy entirely.\n\nThis is why NUMS exists.\n\n\n## Exercise 2: All Three Sign\n\nProvide valid signatures from Alice, Bob, AND Charlie. No empty slots.\n\nWhat happens? The counter reaches 3 but the script checks `3 == 2` → **FAIL**.\n\nNow change the script ending from `OP_2 OP_NUMEQUAL` to `OP_2 OP_GREATERTHANOREQUAL`.\n\nDoes it pass? What are the tradeoffs of \"exactly k\" vs \"at least k\" threshold?\n\n## Exercise 3: Three 2-of-2 Leaves vs One 2-of-3 Leaf\n\nRedesign the tree with three separate leaves:\n```\n         root\n        /    \\\n      AB     branch\n    (2/2)    /    \\\n           AC     BC\n          (2/2)  (2/2)\n```\n\nEach leaf script (70 bytes):\n`<pk1> OP_CHECKSIG <pk2> OP_CHECKSIGADD 2 OP_NUMEQUAL`\n\nWhich design leaks less information to a blockchain observer?\nWhich is simpler to build and maintain?",
@@ -6896,6 +6758,118 @@
         "height": 1747,
         "title": "Text Info Node",
         "dirty": false
+      }
+    },
+    {
+      "id": "node_t1Yy2yZP",
+      "type": "calculation",
+      "position": {
+        "x": 3471.328322209281,
+        "y": 3643.8786457106207
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "2",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "2"
+        },
+        "result": "2",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "title": "Transaction Version",
+        "error": false
+      }
+    },
+    {
+      "id": "node_tmiAcVLz",
+      "type": "calculation",
+      "position": {
+        "x": 3785.1755761456393,
+        "y": 3876.458558517736
+      },
+      "data": {
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "title": "Uint32 → LE-4",
+        "numInputs": 1,
+        "showField": false,
+        "value": "2",
+        "dirty": false,
+        "groupInstances": {},
+        "inputs": {
+          "val": 2
+        },
+        "result": "02000000",
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "node_1alUQLR0",
+      "type": "calculation",
+      "position": {
+        "x": 4701.99155244946,
+        "y": 14209.322425272732
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "2",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "2"
+        },
+        "result": "2",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "title": "Transaction Version",
+        "error": false
+      }
+    },
+    {
+      "id": "node_aajsH5pq",
+      "type": "calculation",
+      "position": {
+        "x": 5000.857278414794,
+        "y": 14382.971464985261
+      },
+      "data": {
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "title": "Uint32 → LE-4",
+        "numInputs": 1,
+        "showField": false,
+        "value": "2",
+        "dirty": false,
+        "groupInstances": {},
+        "inputs": {
+          "val": 2
+        },
+        "result": "02000000",
+        "borderColor": "#14b8a6",
+        "error": false
       }
     }
   ],
@@ -6913,13 +6887,6 @@
       "target": "node_w95i7cWf",
       "targetHandle": "input-0",
       "selected": false
-    },
-    {
-      "source": "node_BGLLJF5z",
-      "target": "node_mU27U3ww",
-      "targetHandle": "input-0",
-      "selected": false,
-      "id": "edge_vOz0sPZ2"
     },
     {
       "id": "edge_lHvJwB51",
@@ -6974,13 +6941,6 @@
       "id": "edge_lN8MCo1I",
       "source": "node_9kxF1WuT",
       "target": "node_Th2BmmVn",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "edge_fJUiLZ37",
-      "source": "node_mU27U3ww",
-      "target": "node_Dvdngj38",
       "targetHandle": "input-0",
       "selected": false
     },
@@ -7265,13 +7225,6 @@
       "selected": false
     },
     {
-      "id": "edge_UT7UT8Ly",
-      "source": "node_Ea876vwz",
-      "target": "node_AqYAQEk5",
-      "targetHandle": "input-2",
-      "selected": false
-    },
-    {
       "id": "edge_g95OwI70",
       "source": "node_LLO15hMt",
       "target": "node_AqYAQEk5",
@@ -7416,13 +7369,6 @@
       "source": "node_e8zSmKXN",
       "target": "node_Dvdngj38",
       "targetHandle": "input-3020",
-      "selected": false
-    },
-    {
-      "id": "edge_Y83iISaD",
-      "source": "node_mU27U3ww",
-      "target": "node_HgQ5X6jS",
-      "targetHandle": "input-0",
       "selected": false
     },
     {
@@ -7839,13 +7785,6 @@
       "selected": false
     },
     {
-      "id": "edge_4i12td7k",
-      "source": "node_EwcL1c5Y",
-      "target": "node_KytevzLt",
-      "targetHandle": "input-2",
-      "selected": false
-    },
-    {
       "id": "edge_dRiAz1Dw",
       "source": "node_uSiz3sJA",
       "target": "node_KytevzLt",
@@ -7965,13 +7904,6 @@
       "selected": false
     },
     {
-      "source": "node_KTwijGJP",
-      "target": "node_M1lFcZk0",
-      "targetHandle": "input-0",
-      "selected": false,
-      "id": "edge_37EvMs7Q"
-    },
-    {
       "source": "node_d5T5Abke",
       "target": "node_2FGSKbIy",
       "targetHandle": "input-0",
@@ -7989,13 +7921,6 @@
       "id": "edge_CjHU9dBN",
       "source": "node_j8KiY1og",
       "target": "node_wixzkbXl",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "edge_gPC3wp6w",
-      "source": "node_M1lFcZk0",
-      "target": "node_z2iEYScl",
       "targetHandle": "input-0",
       "selected": false
     },
@@ -8074,13 +7999,6 @@
       "source": "node_z2iEYScl",
       "target": "node_KfX3PTyG",
       "targetHandle": "input-2",
-      "selected": false
-    },
-    {
-      "id": "edge_XBERByhl",
-      "source": "node_M1lFcZk0",
-      "target": "node_LPweDTUs",
-      "targetHandle": "input-0",
       "selected": false
     },
     {
@@ -8476,6 +8394,68 @@
       "target": "node_KfX3PTyG",
       "targetHandle": "input-100",
       "selected": false
+    },
+    {
+      "source": "node_t1Yy2yZP",
+      "target": "node_tmiAcVLz",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "edge_P25XhyNM"
+    },
+    {
+      "source": "node_tmiAcVLz",
+      "target": "node_AqYAQEk5",
+      "targetHandle": "input-2",
+      "selected": false,
+      "id": "xy-edge__node_tmiAcVLz-node_AqYAQEk5input-2",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_tmiAcVLz",
+      "target": "node_HgQ5X6jS",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_tmiAcVLz-node_HgQ5X6jSinput-0",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_tmiAcVLz",
+      "target": "node_Dvdngj38",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_tmiAcVLz-node_Dvdngj38input-0",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_1alUQLR0",
+      "target": "node_aajsH5pq",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "edge_AeE23hPm"
+    },
+    {
+      "source": "node_aajsH5pq",
+      "target": "node_KytevzLt",
+      "targetHandle": "input-2",
+      "selected": false,
+      "id": "xy-edge__node_aajsH5pq-node_KytevzLtinput-2",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_aajsH5pq",
+      "target": "node_LPweDTUs",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_aajsH5pq-node_LPweDTUsinput-0",
+      "sourceHandle": null
+    },
+    {
+      "source": "node_aajsH5pq",
+      "target": "node_z2iEYScl",
+      "targetHandle": "input-0",
+      "selected": false,
+      "id": "xy-edge__node_aajsH5pq-node_z2iEYSclinput-0",
+      "sourceHandle": null
     }
   ]
 }

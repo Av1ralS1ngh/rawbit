@@ -39,6 +39,7 @@ function createMut() {
     handleRegenerate: vi.fn(),
     toggleComment: vi.fn(),
     handleCommentChange: vi.fn(),
+    commitCommentOnBlur: vi.fn(),
     deleteNode: vi.fn(),
   } as const;
 }
@@ -163,6 +164,11 @@ describe("CalculationNodeView", () => {
     await user.type(commentArea, " updated");
     expect(mut.handleCommentChange).toHaveBeenCalled();
     expect(mut.handleCommentChange.mock.calls.at(-1)?.[0]).not.toBe("Remember");
+    await user.tab();
+    expect(mut.commitCommentOnBlur).toHaveBeenCalledWith(
+      "Remember",
+      "Remember"
+    );
   });
 
   it("respects clipboard id feedback state", async () => {

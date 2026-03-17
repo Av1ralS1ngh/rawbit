@@ -92,4 +92,13 @@ describe("SearchPanel", () => {
       Reflect.deleteProperty(window.navigator, "clipboard");
     }
   });
+
+  it("prevents panel text selection while keeping input selectable", () => {
+    renderPanel();
+
+    expect(screen.getByTestId("search-panel").className).toContain("select-none");
+    expect(
+      screen.getByPlaceholderText("Search node id, name, text").className
+    ).toContain("select-text");
+  });
 });

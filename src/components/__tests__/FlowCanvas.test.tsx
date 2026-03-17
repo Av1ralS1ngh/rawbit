@@ -77,6 +77,28 @@ describe("FlowCanvas", () => {
     expect(reactFlowSpy.props.panOnDrag).toEqual([1]);
   });
 
+  it("disables edge selectability while drag-selection mode is active", () => {
+    render(
+      <FlowCanvas
+        {...baseProps}
+        isSelectionModeActive
+        edges={[
+          {
+            id: "edge-1",
+            source: "node-a",
+            target: "node-b",
+            selected: true,
+          } as Edge,
+        ]}
+      />
+    );
+
+    const passedEdges = reactFlowSpy.props.edges as Edge[];
+    expect(passedEdges).toHaveLength(1);
+    expect(passedEdges[0]?.selectable).toBe(false);
+    expect(passedEdges[0]?.selected).toBe(false);
+  });
+
   it("renders minimap with provided sizing and offset", () => {
     render(<FlowCanvas {...baseProps} />);
 

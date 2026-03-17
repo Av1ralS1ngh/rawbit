@@ -39,13 +39,16 @@ import {
   Github,
   Twitter,
   Mail,
+  Network,
+  Paintbrush,
+  Check,
 } from "lucide-react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useTheme } from "@/hooks/useTheme";
+import type { Skin } from "@/contexts/theme";
 import { cn } from "@/lib/utils";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import type { CalcStatus, CalculationState } from "@/types";
@@ -97,7 +100,8 @@ export interface TopBarProps {
 /* -------------------------------------------------------------------------- */
 
 export type ExtraTopBarProps = {
-  onSaveSimplified: () => void;
+  onSaveSimplified: () => void | Promise<void>;
+  onSaveLlmExport: () => void | Promise<void>;
   onShare?: () => void;
   shareDisabled?: boolean;
 
@@ -123,12 +127,17 @@ export type ExtraTopBarProps = {
   /* Search panel toggle */
   onSearchClick?: () => void;
   setShowSearchPanel?: (open: boolean) => void;
+  showProtocolDiagramPanel?: boolean;
+  setShowProtocolDiagramPanel?: (open: boolean) => void;
+  hasProtocolDiagram?: boolean;
+  protocolDiagramDisabledTooltip?: string;
 
   /* mini-map toggle */
   showMiniMap?: boolean;
   onToggleMiniMap?: () => void;
   isSelectionModeActive?: boolean;
   onToggleSelectionMode?: () => void;
+  tabBarRightInset?: number;
 };
 
 type TopBarIconButtonProps = ButtonProps & {
@@ -136,7 +145,10 @@ type TopBarIconButtonProps = ButtonProps & {
 };
 
 const TopBarIconButton = forwardRef<HTMLButtonElement, TopBarIconButtonProps>(
-  ({ tooltip, disabled, className, children, ...props }, ref) => {
+  (
+    { tooltip, disabled, className, children, onPointerDown, ...props },
+    ref
+  ) => {
     const ariaLabel = props["aria-label"] ?? tooltip;
     const button = (
       <Button
@@ -146,6 +158,13 @@ const TopBarIconButton = forwardRef<HTMLButtonElement, TopBarIconButtonProps>(
         aria-label={ariaLabel}
         title={disabled ? undefined : tooltip}
         className={className}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          if (event.defaultPrevented) return;
+          if (event.pointerType === "mouse" || event.pointerType === "pen" || event.pointerType === "touch") {
+            event.preventDefault();
+          }
+        }}
       >
         {children}
       </Button>
@@ -175,6 +194,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
     onToggle,
     onSave,
     onSaveSimplified,
+    onSaveLlmExport,
     onShare,
     shareDisabled,
     onLoad,
@@ -223,20 +243,27 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
     /* search panel */
     onSearchClick,
     setShowSearchPanel,
+    showProtocolDiagramPanel = false,
+    setShowProtocolDiagramPanel,
+    hasProtocolDiagram = false,
+    protocolDiagramDisabledTooltip = "Add groups to enable diagram view",
     showMiniMap = true,
     onToggleMiniMap,
     isSelectionModeActive = false,
     onToggleSelectionMode,
+    tabBarRightInset = 0,
   } = props;
 
   /* ---------------------------------------------------------------------- */
 
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, skin, setSkin } = useTheme();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const saveSimplifiedHotKeyRef = useRef(false);
+  const saveLlmHotKeyRef = useRef(false);
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const renameInputRef = useRef<HTMLInputElement | null>(null);
+  const skinTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!renamingTabId) return;
@@ -285,21 +312,27 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
     if (typeof window === "undefined") return;
 
     const isKeyS = (event: KeyboardEvent) => event.key?.toLowerCase() === "s";
+    const isKeyL = (event: KeyboardEvent) => event.key?.toLowerCase() === "l";
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isKeyS(event)) {
         saveSimplifiedHotKeyRef.current = true;
+      } else if (isKeyL(event)) {
+        saveLlmHotKeyRef.current = true;
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (isKeyS(event)) {
         saveSimplifiedHotKeyRef.current = false;
+      } else if (isKeyL(event)) {
+        saveLlmHotKeyRef.current = false;
       }
     };
 
     const handleWindowBlur = () => {
       saveSimplifiedHotKeyRef.current = false;
+      saveLlmHotKeyRef.current = false;
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -314,13 +347,18 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
   }, []);
 
   const handleSaveClick = useCallback(() => {
+    if (saveLlmHotKeyRef.current) {
+      void onSaveLlmExport();
+      return;
+    }
+
     if (saveSimplifiedHotKeyRef.current) {
-      onSaveSimplified();
+      void onSaveSimplified();
       return;
     }
 
     onSave();
-  }, [onSave, onSaveSimplified]);
+  }, [onSave, onSaveSimplified, onSaveLlmExport]);
 
   /** small banner left of the error-button */
   const statusText = calcStatus === "CALC" ? "calc" : "";
@@ -375,7 +413,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
             onClick={handleSaveClick}
             tooltip="Save (hold S for simplified)"
             aria-label="Save"
-            aria-description="Hold S while clicking to download a simplified flow export"
+            aria-description="Hold S while clicking to download a simplified export, or hold L to include backend function sources for LLM export"
           >
             <Save className="h-7 w-7" />
           </TopBarIconButton>
@@ -457,6 +495,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
               /* always close the ErrorPanel and SearchPanel when opening History */
               setShowErrorPanel?.(false);
               setShowSearchPanel?.(false);
+              setShowProtocolDiagramPanel?.(false);
               setShowUndoRedoPanel?.(!showUndoRedoPanel);
             }}
             tooltip="History"
@@ -501,6 +540,31 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
           >
             <MapPinned className="h-7 w-7" />
           </TopBarIconButton>
+          <TopBarIconButton
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setShowUndoRedoPanel?.(false);
+              setShowErrorPanel?.(false);
+              setShowSearchPanel?.(false);
+              setShowProtocolDiagramPanel?.(!showProtocolDiagramPanel);
+            }}
+            disabled={!hasProtocolDiagram}
+            tooltip={
+              hasProtocolDiagram
+                ? showProtocolDiagramPanel
+                  ? "Hide flow map"
+                  : "Show flow map"
+                : protocolDiagramDisabledTooltip
+            }
+            aria-label="Flow map"
+            className={cn(
+              showProtocolDiagramPanel &&
+                "bg-secondary text-secondary-foreground hover:bg-secondary"
+            )}
+          >
+            <Network className="h-7 w-7" />
+          </TopBarIconButton>
           <Separator orientation="vertical" className="mx-2 h-8 w-px" />{" "}
           {/* Search shortcut */}
           <TopBarIconButton
@@ -509,6 +573,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
             onClick={() => {
               setShowUndoRedoPanel?.(false);
               setShowErrorPanel?.(false);
+              setShowProtocolDiagramPanel?.(false);
               onSearchClick?.();
             }}
             tooltip="Search nodes"
@@ -536,6 +601,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
               onClick={() => {
                 setShowUndoRedoPanel?.(false);
                 setShowSearchPanel?.(false);
+                setShowProtocolDiagramPanel?.(false);
                 onRetryAll?.();
               }}
               title="Retry all nodes in this tab"
@@ -551,7 +617,8 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
               size="sm"
               onClick={() => {
                 setShowUndoRedoPanel?.(false);
-                setShowSearchPanel?.(false); // ★ ADD this line
+                setShowSearchPanel?.(false);
+                setShowProtocolDiagramPanel?.(false);
                 setShowErrorPanel?.(!showErrorPanel);
               }}
               title="Show errors"
@@ -636,6 +703,50 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
 
           <Separator orientation="vertical" className="mx-1 h-6 w-px" />
 
+          {/* skin switch */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <TopBarIconButton
+                ref={skinTriggerRef}
+                variant="ghost"
+                size="icon"
+                tooltip={`Skin: ${skin}`}
+              >
+                <Paintbrush className={cn("h-5 w-5 transition-colors", skin !== "shadcn" && "text-primary")} />
+              </TopBarIconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="bottom"
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                skinTriggerRef.current?.blur();
+              }}
+            >
+              {(
+                [
+                  ["shadcn", "Shadcn"],
+                  ["paper", "Paper Ledger"],
+                  ["midnight", "Midnight Signal"],
+                ] as const
+              ).map(([key, label]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setSkin(key as Skin)}
+                  className="flex items-center gap-2"
+                >
+                  <Check
+                    className={cn(
+                      "h-4 w-4",
+                      skin === key ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span>{label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* theme switch */}
           <TopBarIconButton
             variant="ghost"
@@ -663,16 +774,13 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
         <div
           className={cn(
             // ⬇︎  just add this utility class
-            "fixed top-14 right-0 z-10 h-10 border-b bg-background/80 backdrop-blur-sm select-none",
+            "fixed top-14 z-10 h-10 border-b bg-background/80 backdrop-blur-sm select-none transition-[right] duration-300",
             isSidebarOpen ? "left-64" : "left-0"
           )}
+          style={{ right: tabBarRightInset }}
         >
-          <ScrollArea
-            className="h-full w-full"
-            type="hover"
-            hideVerticalScrollbar
-          >
-            <div className="flex h-full items-center px-1">
+          <div className="tab-strip-scroll h-full w-full overflow-x-auto overflow-y-hidden">
+            <div className="flex h-full min-w-max items-center px-1">
               <Tabs value={activeTabId} onValueChange={onTabSelect}>
                 <TabsList className="h-full gap-0.5 bg-transparent p-0">
                   {tabs.map((t) => {
@@ -736,8 +844,7 @@ export function TopBar(props: TopBarProps & ExtraTopBarProps) {
                 </TabsList>
               </Tabs>
             </div>
-            <ScrollBar orientation="horizontal" className="h-1.5" />
-          </ScrollArea>
+          </div>
         </div>
       )}
     </>

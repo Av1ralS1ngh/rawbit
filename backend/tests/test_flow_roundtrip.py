@@ -202,6 +202,19 @@ FLOW_SCENARIOS = [
         "txid_node": "node_XMEEqBNt",
         "script_node": "node_xlsj74j",
     },
+    {
+        "name": "p14_MuSig2.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p14_MuSig2.json",
+        "node_changes": {
+            "node_FZ9oWjOJ": "191100",
+        },
+        "txid_node": "node_0d7XluIl",
+        "script_node": "node_pjhk3m9",
+        "expected_results": {
+            "txid": "b2fc92ef391d5dd8b0e01c1167f10d8c22b44c8aae4358cbd3aacffc2e92b496",
+            "script": "48c39cd760a6bc86a269cee513e5d685f8b423250bf95b7641cba61b092035c52104c972a095fd8ae2e23ff240fa1c89b9265e1758214496949206b19f783716",
+        },
+    },
 ]
 
 

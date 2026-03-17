@@ -143,3 +143,46 @@ The internal key is a spending condition, not just metadata. Whoever controls it
 ## What's Different from Legacy Multisig
 
 OP_CHECKSIGADD replaces OP_CHECKMULTISIG — each signature maps to exactly one pubkey. No dummy element bug, no guessing which sig matches which key.
+
+# Lesson 14: MuSig2 Key-Path Multisig (BIP327)
+
+## N-of-N: When Everyone Must Agree
+
+Some Bitcoin setups require all parties to sign every spend:
+joint custody between partners, corporate treasury, or
+Lightning channels where both sides agree on every state update.
+
+For these n-of-n cases, Taproot offers something powerful:
+aggregate all keys into one output key with MuSig2, spend via
+key-path. One signature, 64 bytes, nothing revealed on-chain.
+Indistinguishable from a single-signer spend — compared to
+~271 bytes and full policy disclosure with CHECKSIGADD (L13).
+
+For fallback — someone unavailable — define script leaves with
+smaller quorums, timelocks, or recovery keys (see previous flow examples).
+None visible unless used.
+
+## Why It Works
+
+Schnorr signatures have a property called linearity: partial
+signatures from multiple signers can be summed into one valid
+signature for the aggregate key — without anyone ever knowing
+that key's private key. Each signer uses only their own secret.
+
+ECDSA doesn't have this property — which is why MuSig2
+requires Schnorr (BIP340) and wasn't possible before Taproot.
+
+## Drawbacks
+
+All signers must be online together for two interactive rounds.
+If anyone drops out mid-session, it restarts. CHECKSIGADD
+signers act independently — no coordination needed.
+
+Each signing session requires fresh random nonces — generated,
+used once, destroyed. Nonce reuse across different transactions can expose the signer's private key (see Exercise 2 below).
+
+## What This Flow Builds
+
+A complete 3-of-3 MuSig2 key-path spend in six stages:
+
+    SIGNERS → KEYAGG → PREIMAGE → ROUND 1 → ROUND 2 → TRANSACTION

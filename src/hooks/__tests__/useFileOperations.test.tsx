@@ -35,6 +35,17 @@ describe("useFileOperations", () => {
       cb(0);
       return 0;
     });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        return {
+          status: 200,
+          json: async () => ({
+            code: "def identity(val):\n    return val",
+          }),
+        } as unknown as Response;
+      })
+    );
     restoreScriptSteps([]);
   });
 
@@ -349,6 +360,102 @@ describe("useFileOperations", () => {
     );
   });
 
+  it("fetches function source only once per unique function in LLM export", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockClear();
+    const mutableURL = URL as typeof URL & {
+      createObjectURL?: (blob: Blob) => string;
+      revokeObjectURL?: (url: string) => void;
+    };
+    const originalCreateObjectURL = mutableURL.createObjectURL;
+    const originalRevokeObjectURL = mutableURL.revokeObjectURL;
+    mutableURL.createObjectURL = () => "blob:mock";
+    mutableURL.revokeObjectURL = () => undefined;
+
+    try {
+      const { result } = renderUseFileOperations({
+        initialNodes: [
+          buildFlowNode({
+            id: "node-a",
+            type: "calculation",
+            data: { functionName: "identity" },
+            selected: true,
+          }),
+          buildFlowNode({
+            id: "node-b",
+            type: "calculation",
+            data: { functionName: "identity" },
+            selected: true,
+          }),
+        ],
+      });
+
+      await act(async () => {
+        await result.current.saveLlmExport();
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
+        "/code?functionName=identity"
+      );
+    } finally {
+      if (originalCreateObjectURL) {
+        mutableURL.createObjectURL = originalCreateObjectURL;
+      } else {
+        Reflect.deleteProperty(mutableURL, "createObjectURL");
+      }
+      if (originalRevokeObjectURL) {
+        mutableURL.revokeObjectURL = originalRevokeObjectURL;
+      } else {
+        Reflect.deleteProperty(mutableURL, "revokeObjectURL");
+      }
+    }
+  });
+
+  it("does not fetch function sources for simplified export", () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockClear();
+
+    const mutableURL = URL as typeof URL & {
+      createObjectURL?: (blob: Blob) => string;
+      revokeObjectURL?: (url: string) => void;
+    };
+    const originalCreateObjectURL = mutableURL.createObjectURL;
+    const originalRevokeObjectURL = mutableURL.revokeObjectURL;
+    mutableURL.createObjectURL = () => "blob:mock";
+    mutableURL.revokeObjectURL = () => undefined;
+
+    try {
+      const { result } = renderUseFileOperations({
+        initialNodes: [
+          buildFlowNode({
+            id: "node-a",
+            type: "calculation",
+            data: { functionName: "identity" },
+            selected: true,
+          }),
+        ],
+      });
+
+      act(() => {
+        result.current.saveSimplifiedFlow();
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      if (originalCreateObjectURL) {
+        mutableURL.createObjectURL = originalCreateObjectURL;
+      } else {
+        Reflect.deleteProperty(mutableURL, "createObjectURL");
+      }
+      if (originalRevokeObjectURL) {
+        mutableURL.revokeObjectURL = originalRevokeObjectURL;
+      } else {
+        Reflect.deleteProperty(mutableURL, "revokeObjectURL");
+      }
+    }
+  });
+
   describe("export filenames", () => {
     const setupDownloadSpies = () => {
       const anchors: Array<HTMLAnchorElement> = [];
@@ -430,6 +537,34 @@ describe("useFileOperations", () => {
         result.current.saveFlow();
       });
       expect(anchors[1]?.download).toBe("My Flow (1).json");
+
+      expect(anchors[0]?.click).toHaveBeenCalledTimes(1);
+      expect(anchors[1]?.click).toHaveBeenCalledTimes(1);
+
+      restore();
+    });
+
+    it("uses the active tab title for LLM exports and tracks indices per suffix", async () => {
+      const { anchors, restore } = setupDownloadSpies();
+
+      const { result, nodes } = renderUseFileOperations({
+        tabTitle: "Cool:Flow",
+      });
+      nodes[0].selected = true;
+
+      await act(async () => {
+        await result.current.saveLlmExport();
+      });
+      expect(anchors[0]?.download).toBe(
+        "Cool Flow - llm export selection.json"
+      );
+
+      await act(async () => {
+        await result.current.saveLlmExport();
+      });
+      expect(anchors[1]?.download).toBe(
+        "Cool Flow - llm export selection (1).json"
+      );
 
       expect(anchors[0]?.click).toHaveBeenCalledTimes(1);
       expect(anchors[1]?.click).toHaveBeenCalledTimes(1);

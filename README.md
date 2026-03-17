@@ -183,9 +183,15 @@ npm run test
 source .myenv/bin/activate
 pytest backend/tests
 
+# MuSig2 BIP327 official vector suite
+pytest backend/tests/test_musig2_bip327_vectors.py
+
 # One command for everything (frontend + E2E + backend)
 python3 run_all_tests.py        # add --e2e-browsers=all for FF/WebKit too
 ```
+
+The MuSig2 backend path is validated against official BIP327 vectors and includes the
+spec-mandated internal Sign self-check (`PartialSigVerifyInternal`).
 
 ---
 

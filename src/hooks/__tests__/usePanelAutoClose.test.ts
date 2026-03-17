@@ -5,11 +5,12 @@ import { useState } from "react";
 import { usePanelAutoClose } from "../usePanelAutoClose";
 
 describe("usePanelAutoClose", () => {
-  it("closes panels when the active tab changes", () => {
+  it("closes error/search panels when the active tab changes", () => {
     const { result, rerender } = renderHook(
       ({ activeTabId, calcStatus, errorCount }: { activeTabId: string; calcStatus: "OK" | "CALC" | "ERROR"; errorCount: number }) => {
         const [showError, setShowError] = useState(true);
         const [showSearch, setShowSearch] = useState(true);
+        const [showDiagram, setShowDiagram] = useState(true);
 
         usePanelAutoClose({
           activeTabId,
@@ -18,9 +19,17 @@ describe("usePanelAutoClose", () => {
           showErrorPanel: showError,
           setShowErrorPanel: setShowError,
           setShowSearchPanel: setShowSearch,
+          setShowProtocolDiagramPanel: setShowDiagram,
         });
 
-        return { showError, showSearch, setShowError, setShowSearch };
+        return {
+          showError,
+          showSearch,
+          showDiagram,
+          setShowError,
+          setShowSearch,
+          setShowDiagram,
+        };
       },
       {
         initialProps: { activeTabId: "tab-1", calcStatus: "ERROR" as const, errorCount: 1 },
@@ -30,12 +39,14 @@ describe("usePanelAutoClose", () => {
     act(() => {
       result.current.setShowError(true);
       result.current.setShowSearch(true);
+      result.current.setShowDiagram(true);
     });
 
     rerender({ activeTabId: "tab-2", calcStatus: "ERROR", errorCount: 1 });
 
     expect(result.current.showError).toBe(false);
     expect(result.current.showSearch).toBe(false);
+    expect(result.current.showDiagram).toBe(true);
   });
 
   it("closes the error panel when status returns to OK", () => {

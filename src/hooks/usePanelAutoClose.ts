@@ -8,6 +8,7 @@ interface UsePanelAutoCloseArgs {
   showErrorPanel: boolean;
   setShowErrorPanel: React.Dispatch<React.SetStateAction<boolean>>;
   setShowSearchPanel: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowProtocolDiagramPanel?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function usePanelAutoClose({
@@ -21,7 +22,11 @@ export function usePanelAutoClose({
   useEffect(() => {
     setShowErrorPanel(false);
     setShowSearchPanel(false);
-  }, [activeTabId, setShowErrorPanel, setShowSearchPanel]);
+  }, [
+    activeTabId,
+    setShowErrorPanel,
+    setShowSearchPanel,
+  ]);
 
   useEffect(() => {
     if (showErrorPanel && calcStatus === "OK" && errorCount === 0) {

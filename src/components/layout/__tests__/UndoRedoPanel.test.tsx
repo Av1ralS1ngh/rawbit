@@ -45,4 +45,9 @@ describe("UndoRedoPanel", () => {
     expect(updatedList.style.maxHeight).toContain("3.5rem - 2.5rem");
     expect(updatedList.style.maxHeight).not.toContain("- 2.5rem - 2.5rem");
   });
+
+  it("prevents text selection within the panel surface", () => {
+    render(<UndoRedoPanel isOpen hasVisibleTabs onClose={vi.fn()} />);
+    expect(screen.getByTestId("undo-redo-panel").className).toContain("select-none");
+  });
 });

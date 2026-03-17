@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import type { FlowNode } from "@/types";
+import { useMemo } from "react";
 import type { DragEvent } from "react";
 
 interface FlowCanvasProps {
@@ -77,6 +78,14 @@ export function FlowCanvas({
   const selectionEnabled = !isReadOnly && isSelectionModeActive;
   const minZoom = isReadOnly ? MOBILE_MIN_ZOOM : MIN_ZOOM;
   const maxZoom = isReadOnly ? MOBILE_MAX_ZOOM : MAX_ZOOM;
+  const renderedEdges = useMemo(() => {
+    if (!selectionEnabled) return edges;
+    return edges.map((edge) =>
+      edge.selectable === false && !edge.selected
+        ? edge
+        : { ...edge, selectable: false, selected: false }
+    );
+  }, [edges, selectionEnabled]);
 
   return (
     <ReactFlow
@@ -85,7 +94,7 @@ export function FlowCanvas({
       onlyRenderVisibleElements
       nodeTypes={nodeTypes}
       nodes={nodes}
-      edges={edges}
+      edges={renderedEdges}
       onInit={onInit}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}

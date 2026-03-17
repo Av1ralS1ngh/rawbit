@@ -12,11 +12,8 @@ export function buildPorts(n: FlowNode): NodePorts {
   const outputs: PortInfo[] =
     Array.isArray(data.outputPorts) && data.outputPorts.length > 0
       ? data.outputPorts
-      : data.functionName === "taproot_tree_builder"
-      ? [
-          { label: "root", handleId: "" },
-          { label: "path", handleId: "output-1" },
-        ]
+          .filter((port) => port.showHandle !== false)
+          .map((port) => ({ label: port.label, handleId: port.handleId }))
       : [{ label: "out", handleId: "" }];
 
   const handleLabels = new Map<string, string>();

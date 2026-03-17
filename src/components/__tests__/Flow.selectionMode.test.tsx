@@ -352,6 +352,7 @@ vi.mock("@/hooks/useFileOperations", () => ({
     return {
       fileInputRef: { current: null },
       saveFlow: vi.fn(),
+      saveLlmExport: vi.fn(),
       saveSimplifiedFlow: vi.fn(),
       openFileDialog: vi.fn(),
       handleFileSelect: vi.fn(),

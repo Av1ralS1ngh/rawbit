@@ -134,8 +134,9 @@ describe("useCalcNodeMutations", () => {
   });
 
   it("normalises empty titles and comment toggles", () => {
+    const scheduleSnapshot = vi.fn();
     const { result } = renderHook(() =>
-      useCalcNodeMutations(nodeId, setNodes, setEdges)
+      useCalcNodeMutations(nodeId, setNodes, setEdges, { scheduleSnapshot })
     );
 
     act(() => {
@@ -152,5 +153,28 @@ describe("useCalcNodeMutations", () => {
       result.current.handleCommentChange("hello");
     });
     expect(nodes[0].data.comment).toBe("hello");
+
+    act(() => {
+      result.current.handleCommentChange("hello world");
+    });
+
+    act(() => {
+      result.current.commitCommentOnBlur("hello", "hello world");
+    });
+
+    expect(scheduleSnapshot).toHaveBeenCalledWith("Update Node Comment");
+
+    scheduleSnapshot.mockClear();
+    act(() => {
+      result.current.commitCommentOnBlur("hello world", "hello world");
+    });
+    expect(scheduleSnapshot).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.handleCommentChange("   ");
+      result.current.commitCommentOnBlur("hello world", "   ");
+    });
+    expect(nodes[0].data.comment).toBeUndefined();
+    expect(scheduleSnapshot).toHaveBeenCalledWith("Update Node Comment");
   });
 });

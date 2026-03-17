@@ -120,6 +120,9 @@ export default function OpCodeNode({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [miniSearch, setMiniSearch] = useState("");
+  const commentEditStartRef = useRef(
+    typeof data.comment === "string" ? data.comment : ""
+  );
   const {
     fullSearch,
     setFullSearch,
@@ -268,6 +271,41 @@ export default function OpCodeNode({
       );
     },
     [id, setNodes]
+  );
+
+  const handleCommentFocus = useCallback((value: string) => {
+    commentEditStartRef.current = value;
+  }, []);
+
+  const commitCommentOnBlur = useCallback(
+    (value: string) => {
+      const normalizedStart = commentEditStartRef.current.trim();
+      const normalizedNext = value.trim();
+      commentEditStartRef.current = value;
+
+      if (normalizedStart === normalizedNext) return;
+
+      const shouldNormalizeStoredValue =
+        value !== normalizedNext || normalizedNext.length === 0;
+
+      if (shouldNormalizeStoredValue) {
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id !== id) return n;
+            const nextData = { ...n.data };
+            if (normalizedNext) {
+              nextData.comment = normalizedNext;
+            } else {
+              delete nextData.comment;
+            }
+            return { ...n, data: nextData };
+          })
+        );
+      }
+
+      scheduleSnapshot("Update Node Comment");
+    },
+    [id, scheduleSnapshot, setNodes]
   );
 
   const deleteNode = useCallback(() => {
@@ -472,6 +510,8 @@ export default function OpCodeNode({
               placeholder="Enter your notes here…"
               value={data.comment || ""}
               onChange={(e) => changeComment(e.target.value)}
+              onFocus={(e) => handleCommentFocus(e.target.value)}
+              onBlur={(e) => commitCommentOnBlur(e.target.value)}
               style={{ maxHeight: "120px", overflowY: "auto" }}
             />
           </div>

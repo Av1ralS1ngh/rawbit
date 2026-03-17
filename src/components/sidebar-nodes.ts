@@ -1328,10 +1328,16 @@ export const allSidebarNodes: NodeTemplate[] = [
       paramExtraction: "multi_val",
       numInputs: 1,
       inputs: { vals: [] },
+      outputLayout: "taproot_tree_builder",
       taprootLeafIndex: 0,
       outputPorts: [
-        { label: "root", handleId: "" },
-        { label: "path", handleId: "output-1" },
+        { label: "root", handleId: "", handleTop: "50%", showLabel: false },
+        {
+          label: "path",
+          handleId: "output-1",
+          handleTopSource: "taproot-path-select",
+          showLabel: false,
+        },
       ],
       inputStructure: {
         ungrouped: [],
@@ -1697,9 +1703,26 @@ export const allSidebarNodes: NodeTemplate[] = [
       paramExtraction: "multi_val",
       numInputs: 2,
       inputs: { vals: ["", ""] },
+      outputLayout: "taproot_tweak_xonly_pubkey",
       outputPorts: [
-        { label: "Q (x-only)", handleId: "" },
-        { label: "parity (c0/c1)", handleId: "output-1" },
+        {
+          label: "Q (x-only)",
+          handleId: "",
+          handleTop: "50%",
+          showLabel: false,
+        },
+        {
+          label: "parity (c0/c1)",
+          handleId: "output-1",
+          handleTopSource: "taproot-output-parity",
+          showLabel: false,
+        },
+        {
+          label: "tweak (32B)",
+          handleId: "output-2",
+          showHandle: false,
+          showLabel: false,
+        },
       ],
       inputStructure: {
         ungrouped: [
@@ -1728,7 +1751,7 @@ export const allSidebarNodes: NodeTemplate[] = [
     category: "Key & Address",
     subcategory: "",
     description:
-      "Lightweight MuSig2-style aggregation: coefficients + aggregated x-only pubkey",
+      "BIP327 KeyAgg over compressed pubkeys: coefficients + aggregated x-only pubkey",
     type: "calculation",
     nodeData: {
       functionName: "musig2_aggregate_pubkeys",
@@ -1739,7 +1762,7 @@ export const allSidebarNodes: NodeTemplate[] = [
       inputStructure: {
         groups: [
           {
-            title: "XONLY_PUBKEYS[]",
+            title: "PUBKEYS[]",
             baseIndex: 0,
             expandable: true,
             fieldCountToAdd: 1,
@@ -1748,9 +1771,9 @@ export const allSidebarNodes: NodeTemplate[] = [
             fields: [
               {
                 index: 0,
-                label: "X-only PubKey:",
+                label: "Compressed PubKey:",
                 rows: 2,
-                placeholder: "<32B hex>",
+                placeholder: "<33B hex (02/03...)>",
               },
             ],
           },
@@ -1758,8 +1781,353 @@ export const allSidebarNodes: NodeTemplate[] = [
         ungrouped: [],
         afterGroups: [],
       },
-      groupInstances: { "XONLY_PUBKEYS[]": 2 },
-      groupInstanceKeys: { "XONLY_PUBKEYS[]": [0, 100] },
+      groupInstances: { "PUBKEYS[]": 2 },
+      groupInstanceKeys: { "PUBKEYS[]": [0, 100] },
+      outputPorts: [{ label: "aggregated_pubkey", handleId: "" }],
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_nonce_gen",
+    label: "MuSig2 Nonce Gen",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Each signer generates a BIP327 nonce pair from secret key, aggregate key context, message, randomness, and signer pubkey",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_nonce_gen",
+      title: "MuSig2 Nonce Gen",
+      paramExtraction: "multi_val",
+      numInputs: 5,
+      inputs: { vals: [] },
+      outputLayout: "musig2_nonce_gen",
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Secret Key (32B hex):",
+            rows: 2,
+            placeholder: "<secret key>",
+          },
+          {
+            index: 1,
+            label: "Output Key Q (32B x-only hex, optional):",
+            rows: 2,
+            placeholder: "<aggregate key context>",
+          },
+          {
+            index: 2,
+            label: "Message (hex):",
+            rows: 2,
+            placeholder: "<msg bytes>",
+          },
+          {
+            index: 3,
+            label: "Rand (32B hex):",
+            rows: 2,
+            placeholder: "<aux randomness>",
+          },
+          {
+            index: 4,
+            label: "Signer PubKey (33B compressed hex):",
+            rows: 2,
+            placeholder: "<02/03...>",
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: {},
+      outputPorts: [
+        {
+          label: "pubnonce (66B)",
+          handleId: "",
+          handleTop: "33%",
+          handleTopSource: "musig2-pubnonce",
+          showLabel: false,
+        },
+        {
+          label: "secnonce (97B)",
+          handleId: "output-1",
+          handleTop: "66%",
+          handleTopSource: "musig2-secnonce",
+          showLabel: false,
+        },
+      ],
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_nonce_agg",
+    label: "MuSig2 Nonce Agg",
+    category: "Key & Address",
+    subcategory: "",
+    description: "Aggregate pubnonces into aggnonce",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_nonce_agg",
+      title: "MuSig2 Nonce Agg",
+      paramExtraction: "multi_val",
+      numInputs: 2,
+      inputs: { vals: [] },
+      inputStructure: {
+        groups: [
+          {
+            title: "PUBNONCES[]",
+            baseIndex: 0,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "Pubnonce (66B hex):",
+                rows: 2,
+                placeholder: "<R1||R2>",
+              },
+            ],
+          },
+        ],
+        ungrouped: [],
+        afterGroups: [],
+      },
+      groupInstances: { "PUBNONCES[]": 2 },
+      groupInstanceKeys: { "PUBNONCES[]": [0, 100] },
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_partial_sign",
+    label: "MuSig2 Partial Sign",
+    category: "Key & Address",
+    subcategory: "",
+    description: "Each signer produces a MuSig2 partial signature",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_partial_sign",
+      title: "MuSig2 Partial Sign",
+      paramExtraction: "multi_val",
+      numInputs: 5,
+      inputs: { vals: [] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Secret Key (32B hex):",
+            rows: 2,
+            placeholder: "<secret key>",
+          },
+          {
+            index: 1,
+            label: "Secnonce (97B hex):",
+            rows: 2,
+            placeholder: "<k1||k2||P>",
+          },
+          {
+            index: 2,
+            label: "Aggnonce (66B hex):",
+            rows: 2,
+            placeholder: "<R1||R2>",
+          },
+          {
+            index: 3,
+            label: "Message Hash (32B hex):",
+            rows: 2,
+            placeholder: "<msg hash>",
+          },
+          {
+            index: 4,
+            label: "Taproot Tweak (32B hex, optional):",
+            rows: 2,
+            placeholder: "leave empty for no tweak",
+            allowEmptyBlank: true,
+          },
+        ],
+        groups: [
+          {
+            title: "PUBKEYS[]",
+            baseIndex: 100,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "Compressed PubKey:",
+                rows: 2,
+                placeholder: "<33B hex (02/03...)>",
+              },
+            ],
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: { "PUBKEYS[]": 2 },
+      groupInstanceKeys: { "PUBKEYS[]": [100, 200] },
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_partial_sig_verify",
+    label: "MuSig2 Partial Sig Verify",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Verify one signer's MuSig2 partial signature against the shared session context",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_partial_sig_verify",
+      title: "MuSig2 Partial Sig Verify",
+      paramExtraction: "multi_val",
+      numInputs: 6,
+      inputs: { vals: [] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Partial Sig (32B hex):",
+            rows: 2,
+            placeholder: "<s_i>",
+          },
+          {
+            index: 1,
+            label: "Signer Pubnonce (66B hex):",
+            rows: 2,
+            placeholder: "<R1_i||R2_i>",
+          },
+          {
+            index: 2,
+            label: "Signer PubKey (33B compressed hex):",
+            rows: 2,
+            placeholder: "<02/03...>",
+          },
+          {
+            index: 3,
+            label: "Aggnonce (66B hex):",
+            rows: 2,
+            placeholder: "<R1||R2>",
+          },
+          {
+            index: 4,
+            label: "Message Hash (32B hex):",
+            rows: 2,
+            placeholder: "<msg hash>",
+          },
+          {
+            index: 5,
+            label: "Taproot Tweak (32B hex, optional):",
+            rows: 2,
+            placeholder: "leave empty for no tweak",
+            allowEmptyBlank: true,
+          },
+        ],
+        groups: [
+          {
+            title: "PUBKEYS[]",
+            baseIndex: 100,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "Compressed PubKey:",
+                rows: 2,
+                placeholder: "<33B hex (02/03...)>",
+              },
+            ],
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: { "PUBKEYS[]": 2 },
+      groupInstanceKeys: { "PUBKEYS[]": [100, 200] },
+      result: "",
+    },
+  },
+  {
+    functionName: "musig2_partial_sig_agg",
+    label: "MuSig2 Partial Sig Agg",
+    category: "Key & Address",
+    subcategory: "",
+    description:
+      "Combine partial sigs (same count as pubkeys) into a final Schnorr signature",
+    type: "calculation",
+    nodeData: {
+      functionName: "musig2_partial_sig_agg",
+      title: "MuSig2 Partial Sig Agg",
+      paramExtraction: "multi_val",
+      numInputs: 3,
+      inputs: { vals: [] },
+      inputStructure: {
+        ungrouped: [
+          {
+            index: 0,
+            label: "Aggnonce (66B hex):",
+            rows: 2,
+            placeholder: "<R1||R2>",
+          },
+          {
+            index: 1,
+            label: "Message Hash (32B hex):",
+            rows: 2,
+            placeholder: "<msg hash>",
+          },
+          {
+            index: 2,
+            label: "Taproot Tweak (32B hex, optional):",
+            rows: 2,
+            placeholder: "leave empty for no tweak",
+            allowEmptyBlank: true,
+          },
+        ],
+        groups: [
+          {
+            title: "PUBKEYS[]",
+            baseIndex: 100,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "Compressed PubKey:",
+                rows: 2,
+                placeholder: "<33B hex (02/03...)>",
+              },
+            ],
+          },
+          {
+            title: "PARTIAL_SIGS[]",
+            baseIndex: 1000,
+            expandable: true,
+            fieldCountToAdd: 1,
+            minInstances: 2,
+            maxInstances: 10,
+            fields: [
+              {
+                index: 0,
+                label: "Partial Sig (32B hex):",
+                rows: 2,
+                placeholder: "<s_i>",
+              },
+            ],
+          },
+        ],
+        afterGroups: [],
+      },
+      groupInstances: {
+        "PUBKEYS[]": 2,
+        "PARTIAL_SIGS[]": 2,
+      },
+      groupInstanceKeys: {
+        "PUBKEYS[]": [100, 200],
+        "PARTIAL_SIGS[]": [1000, 1100],
+      },
       result: "",
     },
   },

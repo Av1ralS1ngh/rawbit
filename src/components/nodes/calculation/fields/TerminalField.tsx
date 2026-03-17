@@ -17,6 +17,8 @@ export interface TerminalFieldProps {
   small?: boolean;
   rows?: number;
   onChange?: (val: string) => void;
+  onFocus?: (val: string) => void;
+  onBlur?: (val: string) => void;
   onLabelChange?: (val: string) => void;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
@@ -48,6 +50,8 @@ function terminalFieldPropsAreEqual(
     prev.is00 === next.is00 &&
     prev.isBlank === next.isBlank &&
     prev.onChange === next.onChange &&
+    prev.onFocus === next.onFocus &&
+    prev.onBlur === next.onBlur &&
     prev.onLabelChange === next.onLabelChange &&
     prev.onToggle00 === next.onToggle00 &&
     prev.onToggleBlank === next.onToggleBlank
@@ -65,6 +69,8 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
   small,
   rows,
   onChange,
+  onFocus,
+  onBlur,
   onLabelChange,
   allowEmpty00,
   allowEmptyBlank,
@@ -160,6 +166,8 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                 rows={rows ?? 3}
                 spellCheck={false}
                 onChange={(event) => onChange?.(event.target.value)}
+                onFocus={(event) => onFocus?.(event.target.value)}
+                onBlur={(event) => onBlur?.(event.target.value)}
                 style={{
                   maxHeight: "200px",
                   overflowY: "auto",
@@ -238,6 +246,8 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
         rows={rows ?? 3}
         spellCheck={false}
         onChange={(event) => onChange?.(event.target.value)}
+        onFocus={(event) => onFocus?.(event.target.value)}
+        onBlur={(event) => onBlur?.(event.target.value)}
         style={{
           maxHeight: "200px",
           overflowY: "auto",

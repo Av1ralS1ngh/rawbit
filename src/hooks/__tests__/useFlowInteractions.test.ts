@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import type { Connection, Edge, NodeChange } from "@xyflow/react";
+import type { Connection, Edge, EdgeChange, NodeChange } from "@xyflow/react";
 import type { FlowNode } from "@/types";
 import { useFlowInteractions } from "../useFlowInteractions";
 
@@ -338,5 +338,124 @@ describe("useFlowInteractions", () => {
       "tab-1",
       "Workflow: Example Flow"
     );
+  });
+
+  it("ignores edge select=true changes from node marquee selection mode", () => {
+    const deps = baseDeps();
+    let nodesState: FlowNode[] = [];
+    let edgesState: Edge[] = [];
+
+    const getNodes = () => nodesState;
+    const getEdges = () => edgesState;
+    const setNodes = (updater: (nodes: FlowNode[]) => FlowNode[]) => {
+      nodesState = updater(nodesState);
+    };
+    const setEdges = (updater: (edges: Edge[]) => Edge[]) => {
+      edgesState = updater(edgesState);
+    };
+
+    const { result } = renderHook(() =>
+      useFlowInteractions({
+        ...deps,
+        rawOnNodesChange: deps.rawOnNodesChange,
+        rawOnEdgesChange: deps.rawOnEdgesChange,
+        onConnect: deps.onConnect,
+        onDrop: deps.onDrop,
+        onNodeDragStop: deps.onNodeDragStop,
+        getNodes,
+        getEdges,
+        setNodes,
+        setEdges,
+        getTopLeftPosition: deps.getTopLeftPosition,
+        pasteNodes: deps.pasteNodes,
+        isSidebarOpen: false,
+        setTabTooltip: deps.setTabTooltip,
+        renameTab: deps.renameTab,
+        activeTabId: "tab-1",
+        groupSelectedNodes: deps.groupSelectedNodes,
+        ungroupSelectedNodes: deps.ungroupSelectedNodes,
+        clearHighlights: deps.clearHighlights,
+        setIsSearchHighlight: deps.setIsSearchHighlight,
+        incRev: deps.incRev,
+        pushCleanState: deps.pushCleanState,
+        updatePaletteEligibility: deps.updatePaletteEligibility,
+        isSelectionModeActive: true,
+        skipNextNodeRemovalRef: deps.skipNextNodeRemovalRef,
+        releaseNodeRemovalSnapshotSkip: deps.releaseNodeRemovalSnapshotSkip,
+      })
+    );
+
+    act(() => {
+      result.current.onEdgesChange([
+        { id: "edge-1", type: "select", selected: true } as EdgeChange,
+      ]);
+    });
+
+    expect(deps.rawOnEdgesChange).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.onEdgesChange([
+        { id: "edge-1", type: "select", selected: false } as EdgeChange,
+      ]);
+    });
+
+    expect(deps.rawOnEdgesChange).toHaveBeenCalledWith([
+      { id: "edge-1", type: "select", selected: false },
+    ]);
+  });
+
+  it("forwards edge select=true changes in normal mode", () => {
+    const deps = baseDeps();
+    let nodesState: FlowNode[] = [];
+    let edgesState: Edge[] = [];
+
+    const getNodes = () => nodesState;
+    const getEdges = () => edgesState;
+    const setNodes = (updater: (nodes: FlowNode[]) => FlowNode[]) => {
+      nodesState = updater(nodesState);
+    };
+    const setEdges = (updater: (edges: Edge[]) => Edge[]) => {
+      edgesState = updater(edgesState);
+    };
+
+    const { result } = renderHook(() =>
+      useFlowInteractions({
+        ...deps,
+        rawOnNodesChange: deps.rawOnNodesChange,
+        rawOnEdgesChange: deps.rawOnEdgesChange,
+        onConnect: deps.onConnect,
+        onDrop: deps.onDrop,
+        onNodeDragStop: deps.onNodeDragStop,
+        getNodes,
+        getEdges,
+        setNodes,
+        setEdges,
+        getTopLeftPosition: deps.getTopLeftPosition,
+        pasteNodes: deps.pasteNodes,
+        isSidebarOpen: false,
+        setTabTooltip: deps.setTabTooltip,
+        renameTab: deps.renameTab,
+        activeTabId: "tab-1",
+        groupSelectedNodes: deps.groupSelectedNodes,
+        ungroupSelectedNodes: deps.ungroupSelectedNodes,
+        clearHighlights: deps.clearHighlights,
+        setIsSearchHighlight: deps.setIsSearchHighlight,
+        incRev: deps.incRev,
+        pushCleanState: deps.pushCleanState,
+        updatePaletteEligibility: deps.updatePaletteEligibility,
+        skipNextNodeRemovalRef: deps.skipNextNodeRemovalRef,
+        releaseNodeRemovalSnapshotSkip: deps.releaseNodeRemovalSnapshotSkip,
+      })
+    );
+
+    act(() => {
+      result.current.onEdgesChange([
+        { id: "edge-1", type: "select", selected: true } as EdgeChange,
+      ]);
+    });
+
+    expect(deps.rawOnEdgesChange).toHaveBeenCalledWith([
+      { id: "edge-1", type: "select", selected: true },
+    ]);
   });
 });

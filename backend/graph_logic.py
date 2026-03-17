@@ -46,6 +46,11 @@ from calc_functions.calc_func import (
     schnorr_verify_bip340,
     taproot_sighash_default,
     musig2_aggregate_pubkeys,
+    musig2_nonce_gen,
+    musig2_nonce_agg,
+    musig2_partial_sign,
+    musig2_partial_sig_verify,
+    musig2_partial_sig_agg,
     schnorr_batch_verify_demo,
     hash160_to_p2sh_address,
     date_to_unix_timestamp,
@@ -120,6 +125,11 @@ CALC_FUNCTIONS = {
     "schnorr_verify_bip340": schnorr_verify_bip340,
     "taproot_sighash_default": taproot_sighash_default,
     "musig2_aggregate_pubkeys": musig2_aggregate_pubkeys,
+    "musig2_nonce_gen": musig2_nonce_gen,
+    "musig2_nonce_agg": musig2_nonce_agg,
+    "musig2_partial_sign": musig2_partial_sign,
+    "musig2_partial_sig_verify": musig2_partial_sig_verify,
+    "musig2_partial_sig_agg": musig2_partial_sig_agg,
     "schnorr_batch_verify_demo": schnorr_batch_verify_demo,
     "hash160_to_p2sh_address": hash160_to_p2sh_address,
     "date_to_unix_timestamp": date_to_unix_timestamp,
@@ -650,7 +660,11 @@ def bulk_calculate_logic(nodes, edges):
                             parity_bit = parsed.get("output_parity")
                             parity_byte = "c1" if str(parity_bit) == "1" else "c0"
                             data["result"] = output_xonly
-                            data["outputValues"] = {"output-1": parity_byte}
+                            output_values = {"output-1": parity_byte}
+                            tweak_val = parsed.get("tweak")
+                            if tweak_val:
+                                output_values["output-2"] = tweak_val
+                            data["outputValues"] = output_values
                         except Exception:
                             data["result"] = result
                             data.pop("outputValues", None)
@@ -672,6 +686,26 @@ def bulk_calculate_logic(nodes, edges):
                             data["outputValues"] = {"output-1": path_hex}
                         except Exception:
                             data["result"] = result
+                    elif fn_name == "musig2_aggregate_pubkeys":
+                        try:
+                            parsed = json.loads(result)
+                            data["result"] = parsed.get("aggregated_pubkey", result)
+                            data.pop("outputValues", None)
+                        except Exception:
+                            data["result"] = result
+                            data.pop("outputValues", None)
+                    elif fn_name == "musig2_nonce_gen":
+                        try:
+                            parsed = json.loads(result)
+                            data["result"] = parsed.get("pubnonce", result)
+                            secnonce = parsed.get("secnonce")
+                            if secnonce is not None:
+                                data["outputValues"] = {"output-1": secnonce}
+                            else:
+                                data.pop("outputValues", None)
+                        except Exception:
+                            data["result"] = result
+                            data.pop("outputValues", None)
                     else:
                         data["result"] = result
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check } from "lucide-react";
 
 import {
   Dialog,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 type ExampleFlowOption = {
   id: string;
@@ -121,21 +123,55 @@ export function FirstRunDialog({
             </div>
             {flows.length ? (
               <>
-                <Select
-                  value={selectedFlowId}
-                  onValueChange={setSelectedFlowId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose an example flow" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {flows.map((flow) => (
-                      <SelectItem key={flow.id} value={flow.id}>
-                        {flow.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {hideStartEmpty ? (
+                  <div
+                    role="listbox"
+                    aria-label="Example flows"
+                    className="max-h-64 overflow-y-auto rounded-md border"
+                  >
+                    {flows.map((flow) => {
+                      const selected = flow.id === selectedFlowId;
+                      return (
+                        <button
+                          key={flow.id}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => setSelectedFlowId(flow.id)}
+                          className={cn(
+                            "flex w-full items-center justify-between border-l-4 border-transparent px-3 py-2 text-left text-sm transition-colors",
+                            selected
+                              ? "bg-primary/10 text-foreground font-semibold border-primary"
+                              : "hover:bg-muted/50"
+                          )}
+                        >
+                          <span className="truncate">{flow.label}</span>
+                          <span className="ml-3 flex h-4 w-4 items-center justify-center">
+                            {selected ? (
+                              <Check className="h-4 w-4 text-primary" />
+                            ) : null}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedFlowId}
+                    onValueChange={setSelectedFlowId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose an example flow" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {flows.map((flow) => (
+                        <SelectItem key={flow.id} value={flow.id}>
+                          {flow.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant="outline"
                   onClick={handleLoadClick}

@@ -206,7 +206,7 @@ export function SearchPanel(props: SearchPanelFullProps) {
   return (
     <div
       className={cn(
-        "fixed top-14 bottom-0 right-0 z-10 flex flex-col border-l border-border bg-background transition-[width] duration-300",
+        "fixed top-14 bottom-0 right-0 z-10 flex flex-col select-none border-l border-border bg-background transition-[width] duration-300",
         isOpen ? "w-64" : "w-0 overflow-hidden"
       )}
       data-testid="search-panel"
@@ -235,11 +235,13 @@ export function SearchPanel(props: SearchPanelFullProps) {
           <div className="px-2 pt-2">
             <div className="relative">
               <Input
+                id="search-panel-input"
+                name="searchPanelInput"
                 value={draft}
                 placeholder="Search node id, name, text"
                 spellCheck={false}
                 onChange={(e) => handleChange(e.target.value)}
-                className="h-8 pr-7"
+                className="h-8 pr-7 select-text"
                 autoFocus
               />
               {draft && (

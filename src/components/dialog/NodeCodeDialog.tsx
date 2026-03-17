@@ -210,7 +210,7 @@ export function NodeCodeDialog({
               language="python"
               style={isDarkMode ? oneDark : oneLight}
               showLineNumbers
-              wrapLongLines
+              wrapLongLines={false}
               // Make line numbers unselectable
               lineNumberStyle={{
                 userSelect: "none",
@@ -222,6 +222,7 @@ export function NodeCodeDialog({
               customStyle={{
                 margin: 0,
                 fontSize: "14px",
+                whiteSpace: "pre",
               }}
               // Code tag props to ensure proper selection
               codeTagProps={{

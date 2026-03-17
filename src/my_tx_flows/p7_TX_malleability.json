@@ -15,7 +15,8 @@
         "height": 2693,
         "title": "1. Adding OP_NOP at End ",
         "dirty": false,
-        "fontSize": 48
+        "fontSize": 48,
+        "excludeFromFlowMap": true
       },
       "dragHandle": "[data-drag-handle]"
     },
@@ -296,7 +297,10 @@
           "INPUTS[]": 2
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100]
+          "INPUTS[]": [
+            0,
+            100
+          ]
         },
         "baseHeight": 80,
         "title": "Pre-image + SIGHASH",
@@ -351,7 +355,10 @@
           "INPUTS[]": 2
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100]
+          "INPUTS[]": [
+            0,
+            100
+          ]
         },
         "baseHeight": 80,
         "title": "Signature + Flag",
@@ -408,7 +415,12 @@
           "INPUTS[]": 4
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
         },
         "baseHeight": 80,
         "title": "scriptSig (push sig & pubkey)",
@@ -556,8 +568,12 @@
           "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [1000],
-          "OUTPUTS[]": [3000]
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
         },
         "baseHeight": 120,
         "borderColor": "#22c55e",
@@ -705,8 +721,12 @@
           "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [1000],
-          "OUTPUTS[]": [3000]
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
         },
         "baseHeight": 120,
         "borderColor": "#a855f7",
@@ -1225,7 +1245,10 @@
         "groupInstances": {},
         "paramExtraction": "single_val",
         "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_3", "OP_CHECKMULTISIG"],
+        "opSequenceNames": [
+          "OP_3",
+          "OP_CHECKMULTISIG"
+        ],
         "borderColor": "#22c55e"
       }
     },
@@ -1281,7 +1304,16 @@
           "INPUTS[]": 8
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300, 400, 500, 600, 700]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300,
+            400,
+            500,
+            600,
+            700
+          ]
         },
         "baseHeight": 80,
         "title": "redeem script 2-3 multisig",
@@ -1311,7 +1343,9 @@
         "groupInstances": {},
         "paramExtraction": "single_val",
         "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_2"],
+        "opSequenceNames": [
+          "OP_2"
+        ],
         "borderColor": "#22c55e"
       }
     },
@@ -1550,7 +1584,12 @@
           "INPUTS[]": 4
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
         },
         "baseHeight": 80,
         "totalInputs": 4,
@@ -1579,7 +1618,9 @@
         "groupInstances": {},
         "paramExtraction": "single_val",
         "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_HASH160"],
+        "opSequenceNames": [
+          "OP_HASH160"
+        ],
         "borderColor": "#22c55e"
       }
     },
@@ -1665,7 +1706,9 @@
         "groupInstances": {},
         "paramExtraction": "single_val",
         "title": "Opcode Sequence",
-        "opSequenceNames": ["OP_EQUAL"],
+        "opSequenceNames": [
+          "OP_EQUAL"
+        ],
         "borderColor": "#22c55e"
       }
     },
@@ -1759,7 +1802,12 @@
           "INPUTS[]": 4
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
         },
         "baseHeight": 80,
         "title": "scriptSig (push sig & pubkey)",
@@ -1908,8 +1956,12 @@
           "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [1000],
-          "OUTPUTS[]": [3000]
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
         },
         "baseHeight": 120,
         "totalInputs": 12,
@@ -2017,7 +2069,9 @@
         },
         "result": "61",
         "value": "61",
-        "opSequenceNames": ["OP_NOP"],
+        "opSequenceNames": [
+          "OP_NOP"
+        ],
         "dirty": false,
         "groupInstances": {},
         "showComment": true,
@@ -2073,7 +2127,10 @@
           "INPUTS[]": 2
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100]
+          "INPUTS[]": [
+            0,
+            100
+          ]
         },
         "baseHeight": 80,
         "totalInputs": 2,
@@ -2096,7 +2153,8 @@
         "height": 2693,
         "title": "2. OP_0 + OP_DROP Prefix",
         "dirty": false,
-        "fontSize": 48
+        "fontSize": 48,
+        "excludeFromFlowMap": true
       },
       "dragHandle": "[data-drag-handle]"
     },
@@ -2148,7 +2206,12 @@
           "INPUTS[]": 4
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
         },
         "baseHeight": 80,
         "title": "scriptSig (push sig & pubkey)",
@@ -2297,8 +2360,12 @@
           "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [1000],
-          "OUTPUTS[]": [3000]
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
         },
         "baseHeight": 120,
         "totalInputs": 12,
@@ -2406,7 +2473,10 @@
         },
         "result": "0075",
         "value": "0075",
-        "opSequenceNames": ["OP_0", "OP_DROP"],
+        "opSequenceNames": [
+          "OP_0",
+          "OP_DROP"
+        ],
         "dirty": false,
         "groupInstances": {},
         "showComment": true,
@@ -2462,7 +2532,10 @@
           "INPUTS[]": 2
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100]
+          "INPUTS[]": [
+            0,
+            100
+          ]
         },
         "baseHeight": 80,
         "totalInputs": 2,
@@ -2485,7 +2558,8 @@
         "height": 2693,
         "title": "3. Multiple OP_NOPs at End ",
         "dirty": false,
-        "fontSize": 48
+        "fontSize": 48,
+        "excludeFromFlowMap": true
       },
       "dragHandle": "[data-drag-handle]"
     },
@@ -2537,7 +2611,12 @@
           "INPUTS[]": 4
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100, 200, 300]
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
         },
         "baseHeight": 80,
         "title": "scriptSig (push sig & pubkey)",
@@ -2686,8 +2765,12 @@
           "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [1000],
-          "OUTPUTS[]": [3000]
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
         },
         "baseHeight": 120,
         "totalInputs": 12,
@@ -2826,7 +2909,10 @@
           "INPUTS[]": 2
         },
         "groupInstanceKeys": {
-          "INPUTS[]": [0, 100]
+          "INPUTS[]": [
+            0,
+            100
+          ]
         },
         "baseHeight": 80,
         "totalInputs": 2,
@@ -2852,7 +2938,11 @@
         },
         "result": "616161",
         "value": "616161",
-        "opSequenceNames": ["OP_NOP", "OP_NOP", "OP_NOP"],
+        "opSequenceNames": [
+          "OP_NOP",
+          "OP_NOP",
+          "OP_NOP"
+        ],
         "dirty": false,
         "groupInstances": {},
         "showComment": true,
@@ -3222,7 +3312,9 @@
               "opcode_name": "OP_CHECKSIG",
               "pc": 24,
               "phase": "scriptPubKey",
-              "stack_after": ["01"],
+              "stack_after": [
+                "01"
+              ],
               "stack_before": [
                 "3044022010d9cfccd8e1da0aa5fb5418fc608536f5c68329b26c1a57979029e02029012302207882dfb54af19dc3fa0c2599df67c3ca7fa29a312176a7abf3a82a69e2b3f9fd01",
                 "0385de2a93b34ce799777b3bd7b8b88b6a9a2f93732ed43e2fc780362b3ae32371"
@@ -3436,7 +3528,9 @@
               "opcode_name": "OP_CHECKSIG",
               "pc": 24,
               "phase": "scriptPubKey",
-              "stack_after": ["01"],
+              "stack_after": [
+                "01"
+              ],
               "stack_before": [
                 "3044022010d9cfccd8e1da0aa5fb5418fc608536f5c68329b26c1a57979029e02029012302207882dfb54af19dc3fa0c2599df67c3ca7fa29a312176a7abf3a82a69e2b3f9fd01",
                 "0385de2a93b34ce799777b3bd7b8b88b6a9a2f93732ed43e2fc780362b3ae32371"
@@ -3551,7 +3645,9 @@
               "opcode_name": "OP_0",
               "pc": 0,
               "phase": "scriptSig",
-              "stack_after": [""],
+              "stack_after": [
+                ""
+              ],
               "stack_before": []
             },
             {
@@ -3560,7 +3656,9 @@
               "pc": 1,
               "phase": "scriptSig",
               "stack_after": [],
-              "stack_before": [""]
+              "stack_before": [
+                ""
+              ]
             },
             {
               "opcode": 71,
@@ -3654,7 +3752,9 @@
               "opcode_name": "OP_CHECKSIG",
               "pc": 24,
               "phase": "scriptPubKey",
-              "stack_after": ["01"],
+              "stack_after": [
+                "01"
+              ],
               "stack_before": [
                 "3044022010d9cfccd8e1da0aa5fb5418fc608536f5c68329b26c1a57979029e02029012302207882dfb54af19dc3fa0c2599df67c3ca7fa29a312176a7abf3a82a69e2b3f9fd01",
                 "0385de2a93b34ce799777b3bd7b8b88b6a9a2f93732ed43e2fc780362b3ae32371"
@@ -3898,7 +3998,9 @@
               "opcode_name": "OP_CHECKSIG",
               "pc": 24,
               "phase": "scriptPubKey",
-              "stack_after": ["01"],
+              "stack_after": [
+                "01"
+              ],
               "stack_before": [
                 "3044022010d9cfccd8e1da0aa5fb5418fc608536f5c68329b26c1a57979029e02029012302207882dfb54af19dc3fa0c2599df67c3ca7fa29a312176a7abf3a82a69e2b3f9fd01",
                 "0385de2a93b34ce799777b3bd7b8b88b6a9a2f93732ed43e2fc780362b3ae32371"
@@ -3937,7 +4039,7 @@
         "y": 597.3177032210984
       },
       "data": {
-        "content": "# Transaction Malleability — Bitcoin’s Shapeshifting Vulnerability\n\nA quick primer on how a **valid** Bitcoin transaction can be tweaked into a **different TXID** without changing what it does.\n\n## The Identity Problem\nBitcoin identifies transactions by **TXID** (double‑SHA256 of the serialized tx). Pre‑SegWit, the parts that hold signatures (e.g., **scriptSig**) were hashed too. That means you can alter bytes that don’t change evaluation → **same spend, new TXID**. This is **transaction malleability**.\n\n## Why It Matters\nFor one‑off payments, confirmations lock the TXID and you move on. For protocols that depend on **unconfirmed** TXIDs, it’s dangerous:\n\n**Payment channels break**\n- Refunds are pre‑signed against a **specific** funding TXID  \n- Malleate the funding → refund invalid  \n- Funds can get stuck in multisig\n\n**Exchange playbook (historical)**\n- Request withdrawal → malleate tx → claim it “failed”  \n- Human re‑sends → duplicate payout risk  \n- Mt. Gox lost thousands of BTC via such patterns (not the sole cause of the collapse)\n\n## How Malleability Works\nSignatures don’t sign **themselves** (avoids circularity), leaving room for byte‑level edits that keep validation intact:\n\n**Script malleability (this lesson)**\n- Append `OP_NOP` (does nothing)\n- Prefix `OP_0; OP_DROP` (push empty, then drop)\n- Add multiple do‑nothing ops\n\n**Signature/encoding quirks (other vectors)**\n- ECDSA **S** value flipping (±S)\n- Loose DER encodings\n- Non‑minimal pushdata encodings\n\nThink: `2 + 2 = 4` vs `2 + 2 + 0 = 4`. Same result, different bytes → different hash.\n\n## What You’ll Build\nWe’ll demonstrate three mutations on testnet:\n1) **Baseline**: P2PKH spend (normal)\n2) **Mutation A**: Append `OP_NOP`\n3) **Mutation B**: Prefix `OP_0; OP_DROP`\n4) **Mutation C**: Append `OP_NOP OP_NOP OP_NOP`  \nAll four **pass script verification** yet produce **different TXIDs**.\n\n*Policy note:* These scriptSig mutations are **consensus‑valid but non‑standard** (scriptSig not push‑only). Don’t expect default nodes to relay them.\n\n*Non-push opcodes in scriptSig are non-standard (won’t relay). For P2SH they’re consensus-invalid (BIP16). BIP66 (2015) made strict-DER consensus; 0.10.3/0.11.1 made high-S non-standard. SegWit activation (Aug 24 2017) adds NULLDUMMY + CLEANSTACK as consensus for SegWit; legacy still policy.*\n\n## The Road to SegWit\nPartial fixes emerged over years:\n- BIP62: Canonical transaction rules\n- Low-S enforcement\n- Strict DER encoding\n\nBut new attack vectors kept appearing. Bitcoin needed architectural change.\n\n**The Elegant Solution**: SegWit segregated witness data from TXID calculation:\n```\nPre-SegWit: TXID = Hash(transaction + signatures)\nSegWit:     TXID = Hash(transaction without signatures)\n```\n\nSignatures may still be malleated, but **TXIDs stay stable**. This unlocks safe channel designs (e.g., Lightning, 2017+).\n\n## Satoshi’s Blind Spot (history note)\nSatoshi acknowledged malleability and favored “wait for confirmations” for simple cash use. As Bitcoin grew into **protocols that chain on unconfirmed TXIDs**, this quirk became a blocker—hence SegWit.\n\n## Key Takeaways\n- Malleability doesn’t break a **transaction**; it breaks **systems** that rely on its **unconfirmed TXID**\n- Many byte‑tweaks keep validation true while changing identity\n- SegWit removed signatures from the TXID calculation → stable identities\n- Treat unconfirmed TXIDs as **unstable** in protocol design\n",
+        "content": "# Transaction Malleability — Bitcoin’s Shapeshifting Vulnerability\n\nA quick primer on how a **valid** Bitcoin transaction can be tweaked into a **different TXID** without changing what it does.\n\n## The Identity Problem\nBitcoin identifies transactions by **TXID** (double‑SHA256 of the serialized tx). Pre‑SegWit, the parts that hold signatures (e.g., **scriptSig**) were hashed too. That means you can alter bytes that don’t change evaluation → **same spend, new TXID**. This is **transaction malleability**.\n\n## Why It Matters\nFor one‑off payments, confirmations lock the TXID and you move on. For protocols that depend on **unconfirmed** TXIDs, it’s dangerous:\n\n**Payment channels break**\n- Refunds are pre‑signed against a **specific** funding TXID  \n- Malleate the funding → refund invalid  \n- Funds can get stuck in multisig\n\n**Exchange playbook (historical)**\n- Request withdrawal → malleate tx → claim it “failed”  \n- Human re‑sends → duplicate payout risk  \n- Malleability was a minor contributing factor in Mt. Gox accounting failures (not the main cause of the collapse)\n\n## How Malleability Works\nSignatures don’t sign **themselves** (avoids circularity), leaving room for byte‑level edits that keep validation intact:\n\n**Script malleability (this lesson)**\n- Append `OP_NOP` (does nothing)\n- Prefix `OP_0; OP_DROP` (push empty, then drop)\n- Add multiple do‑nothing ops\n\n**Signature/encoding quirks (other vectors)**\n- ECDSA **S** value flipping (±S)\n- Loose DER encodings\n- Non‑minimal pushdata encodings\n\nThink: `2 + 2 = 4` vs `2 + 2 + 0 = 4`. Same result, different bytes → different hash.\n\n## What You’ll Build\nWe’ll demonstrate three mutations on testnet:\n1) **Baseline**: P2PKH spend (normal)\n2) **Mutation A**: Append `OP_NOP`\n3) **Mutation B**: Prefix `OP_0; OP_DROP`\n4) **Mutation C**: Append `OP_NOP OP_NOP OP_NOP`  \nAll four **pass script verification** yet produce **different TXIDs**.\n\n*Policy note:* These scriptSig mutations are **consensus‑valid but non‑standard** (scriptSig not push‑only). Don’t expect default nodes to relay them.\n\n*Non-push opcodes in scriptSig are non-standard (won’t relay). For P2SH they’re consensus-invalid (BIP16). BIP66 (2015) made strict-DER consensus; 0.10.3/0.11.1 made high-S non-standard. SegWit activation (Aug 24 2017) adds NULLDUMMY + CLEANSTACK as consensus for SegWit; legacy still policy.*\n\n## The Road to SegWit\nPartial fixes emerged over years:\n- BIP62: Canonical transaction rules\n- Low-S enforcement\n- Strict DER encoding\n\nBut new attack vectors kept appearing. Bitcoin needed architectural change.\n\n**The Elegant Solution**: SegWit segregated witness data from TXID calculation:\n```\nPre-SegWit: TXID = Hash(transaction + signatures)\nSegWit:     TXID = Hash(transaction without signatures)\n```\n\nSignatures may still be malleated, but **TXIDs stay stable**. This unlocks safe channel designs (e.g., Lightning, 2017+).\n\n## Satoshi’s Blind Spot (history note)\nSatoshi acknowledged malleability and favored “wait for confirmations” for simple cash use. As Bitcoin grew into **protocols that chain on unconfirmed TXIDs**, this quirk became a blocker—hence SegWit.\n\n## Key Takeaways\n- Malleability doesn’t break a **transaction**; it breaks **systems** that rely on its **unconfirmed TXID**\n- Many byte‑tweaks keep validation true while changing identity\n- SegWit removed signatures from the TXID calculation → stable identities\n- Treat unconfirmed TXIDs as **unstable** in protocol design\n",
         "fontSize": 28,
         "width": 300,
         "height": 200,

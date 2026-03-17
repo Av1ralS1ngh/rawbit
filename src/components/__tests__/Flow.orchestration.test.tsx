@@ -39,6 +39,12 @@ const setInfoDialogMock = vi.fn();
 const setTabTooltipMock = vi.fn();
 const renameTabMock = vi.fn();
 const markPendingAfterDirtyChangeMock = vi.fn();
+const saveLlmExportMock = vi.fn();
+const saveSimplifiedFlowMock = vi.fn();
+const saveConfirmationHookCalls: {
+  saveFn: () => void | Promise<void>;
+  promptSave: ReturnType<typeof vi.fn>;
+}[] = [];
 
 const mockNodesState: { current: FlowNode[] } = {
   current: [],
@@ -298,13 +304,21 @@ vi.mock("@/hooks/useSharedFlowLoader", () => ({
 }));
 
 vi.mock("@/hooks/useSimplifiedSave", () => ({
-  useSimplifiedSave: () => ({
-    showConfirmation: false,
-    confirmationMessage: "",
-    promptSave: vi.fn(),
-    confirmSave: vi.fn(),
-    cancelSave: vi.fn(),
-  }),
+  useSimplifiedSave: ({
+    saveSimplifiedFlow,
+  }: {
+    saveSimplifiedFlow: () => void | Promise<void>;
+  }) => {
+    const promptSave = vi.fn();
+    saveConfirmationHookCalls.push({ saveFn: saveSimplifiedFlow, promptSave });
+    return {
+      showConfirmation: false,
+      confirmationMessage: "",
+      promptSave,
+      confirmSave: vi.fn(),
+      cancelSave: vi.fn(),
+    };
+  },
 }));
 
 vi.mock("@/hooks/useSearchHighlights", () => ({
@@ -328,7 +342,8 @@ vi.mock("@/hooks/useFileOperations", () => ({
     return {
       fileInputRef: { current: null },
       saveFlow: vi.fn(),
-      saveSimplifiedFlow: vi.fn(),
+      saveLlmExport: saveLlmExportMock,
+      saveSimplifiedFlow: saveSimplifiedFlowMock,
       openFileDialog: vi.fn(),
       handleFileSelect: vi.fn(),
     };
@@ -387,6 +402,9 @@ beforeEach(() => {
   connectDialogState.inputs = [];
   connectDialogState.allPorts = [];
   connectDialogState.handleApply.mockClear();
+  saveLlmExportMock.mockClear();
+  saveSimplifiedFlowMock.mockClear();
+  saveConfirmationHookCalls.length = 0;
   skipLoadRef.current = false;
   localStorage.clear();
   localStorage.setItem("rawbit.ui.welcomeSeen", "1");
@@ -650,5 +668,24 @@ describe("Flow canvas viewport persistence", () => {
       y: -5,
       zoom: 1.25,
     });
+  });
+});
+
+describe("Flow save confirmations", () => {
+  it("routes both simplified and LLM save actions through confirmation prompts", () => {
+    renderFlow();
+
+    expect(saveConfirmationHookCalls).toHaveLength(2);
+    const simplifiedPrompt = saveConfirmationHookCalls.find(
+      (entry) => entry.saveFn === saveSimplifiedFlowMock
+    );
+    const llmPrompt = saveConfirmationHookCalls.find(
+      (entry) => entry.saveFn === saveLlmExportMock
+    );
+
+    expect(simplifiedPrompt?.promptSave).toBeDefined();
+    expect(llmPrompt?.promptSave).toBeDefined();
+    expect(topBarProps.current?.onSaveSimplified).toBe(simplifiedPrompt?.promptSave);
+    expect(topBarProps.current?.onSaveLlmExport).toBe(llmPrompt?.promptSave);
   });
 });

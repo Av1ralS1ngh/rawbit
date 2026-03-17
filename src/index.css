@@ -64,12 +64,107 @@
     --chart-5: 340 75% 55%;
     --resizer-handle-color: white;
 
-    /* 
+    /*
       Use the same controls color in dark mode (so they're visible).
       Change if you'd like a different color in dark:
     */
     --controls-color: #6b7280;
   }
+
+  /* ===================== Paper Ledger skin — light ===================== */
+  [data-skin="paper"] {
+    --radius: 0.5rem;
+    --background: 42 43% 94%;
+    --foreground: 26 24% 20%;
+    --card: 40 48% 97%;
+    --card-foreground: 26 24% 20%;
+    --popover: 40 48% 97%;
+    --popover-foreground: 26 24% 20%;
+    --primary: 22 58% 37%;
+    --primary-foreground: 42 48% 96%;
+    --secondary: 38 34% 88%;
+    --secondary-foreground: 26 24% 20%;
+    --muted: 38 32% 89%;
+    --muted-foreground: 28 16% 44%;
+    --accent: 36 20% 86%;
+    --accent-foreground: 26 24% 20%;
+    --border: 35 27% 74%;
+    --input: 35 27% 74%;
+    --ring: 22 58% 41%;
+    --controls-color: #6b4d34;
+    --skin-accent-hover-alpha: 0.42;
+  }
+
+  /* ===================== Paper Ledger skin — dark ===================== */
+  [data-skin="paper"].dark {
+    --background: 24 16% 13%;
+    --foreground: 42 35% 89%;
+    --card: 24 14% 17%;
+    --card-foreground: 42 35% 89%;
+    --popover: 24 14% 17%;
+    --popover-foreground: 42 35% 89%;
+    --primary: 33 74% 62%;
+    --primary-foreground: 24 16% 13%;
+    --secondary: 23 12% 23%;
+    --secondary-foreground: 42 35% 89%;
+    --muted: 23 12% 23%;
+    --muted-foreground: 34 16% 63%;
+    --accent: 24 10% 30%;
+    --accent-foreground: 42 35% 89%;
+    --border: 24 12% 32%;
+    --input: 24 12% 34%;
+    --ring: 33 74% 58%;
+    --controls-color: #d7c09a;
+    --skin-accent-hover-alpha: 0.34;
+  }
+
+  /* ===================== Midnight Signal skin — light ===================== */
+  [data-skin="midnight"] {
+    --radius: 0.75rem;
+    --background: 223 27% 96%;
+    --foreground: 228 36% 19%;
+    --card: 0 0% 100%;
+    --card-foreground: 228 36% 19%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 36% 19%;
+    --primary: 224 62% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 225 22% 90%;
+    --secondary-foreground: 228 36% 19%;
+    --muted: 225 20% 91%;
+    --muted-foreground: 224 14% 45%;
+    --accent: 224 22% 86%;
+    --accent-foreground: 228 36% 19%;
+    --border: 224 20% 81%;
+    --input: 224 20% 82%;
+    --ring: 196 74% 42%;
+    --controls-color: #304c75;
+    --skin-accent-hover-alpha: 0.4;
+  }
+
+  /* ===================== Midnight Signal skin — dark ===================== */
+  [data-skin="midnight"].dark {
+    --background: 226 28% 8%;
+    --foreground: 214 21% 92%;
+    --card: 226 24% 12%;
+    --card-foreground: 214 21% 92%;
+    --popover: 226 24% 12%;
+    --popover-foreground: 214 21% 92%;
+    --primary: 191 93% 60%;
+    --primary-foreground: 226 28% 8%;
+    --secondary: 226 16% 19%;
+    --secondary-foreground: 214 21% 92%;
+    --muted: 226 16% 19%;
+    --muted-foreground: 218 14% 64%;
+    --accent: 224 14% 24%;
+    --accent-foreground: 214 21% 92%;
+    --border: 224 14% 25%;
+    --input: 224 14% 28%;
+    --ring: 191 93% 60%;
+    --controls-color: #89a7d2;
+    --skin-accent-hover-alpha: 0.32;
+  }
+
 }
 
 @layer base {
@@ -79,6 +174,18 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Keep tab-strip scroll behavior, but hide native horizontal scrollbars. */
+.tab-strip-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tab-strip-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* 
@@ -92,6 +199,12 @@
   z-index: 2 !important;
 }
 
+/* Avoid occasional jagged/square edge artifacts while dragging nodes in light mode. */
+.react-flow__node.dragging > * {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 /* The group node => behind edges: z-index: 0 */
 .react-flow__node-shadcnGroup {
   z-index: 0 !important;
@@ -100,6 +213,18 @@
 /* Edges => in the middle: z-index: 1 (so above group, but below normal nodes) */
 .react-flow__edges {
   z-index: 1 !important;
+}
+
+/*
+  During selection mode (hold-S or locked tool), keep one consistent
+  crosshair cursor across the whole canvas.
+*/
+body[data-flow-selection-mode="true"] .react-flow__pane,
+body[data-flow-selection-mode="true"] .react-flow__pane.selection,
+body[data-flow-selection-mode="true"] .react-flow__pane.draggable,
+body[data-flow-selection-mode="true"] .react-flow__node,
+body[data-flow-selection-mode="true"] .react-flow__node * {
+  cursor: crosshair !important;
 }
 
 /* Allow the text info node to work properly with the resizer */
@@ -162,24 +287,41 @@
   stroke-width: 1;
 }
 
-/* 1) Target the node's inner element, not the RF wrapper */
-.react-flow__node.selected.is-highlighted > * {
-  position: relative; /* anchor the overlay */
-  /* remove Tailwind ring from the selected state (keeps drop-shadow) */
-  --tw-ring-offset-shadow: 0 0 #0000 !important;
-  --tw-ring-shadow: 0 0 #0000 !important;
-  box-shadow: var(--tw-shadow, 0 0 #0000) !important;
+/* Diagram-bundle edge highlighting uses React Flow selection state. */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #2563eb !important;
+  stroke-width: 2.4 !important;
 }
 
-/* 2) Draw the highlight on top of the card (correct size, not the wrapper) */
-.react-flow__node.selected.is-highlighted > *::after {
-  content: "";
-  position: absolute;
-  inset: 0; /* match the card’s box */
-  pointer-events: none;
-  box-shadow: 0 0 0 7px #facc15; /* the yellow highlight ring */
-  border-radius: inherit; /* respects card rounding */
-  z-index: 1;
+.dark .react-flow__edge.selected .react-flow__edge-path {
+  stroke: #60a5fa !important;
+}
+
+/* Light-mode non-selected edge visibility tuning. */
+.react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-light-opacity-default, 0.63) !important;
+}
+
+[data-skin="paper"] .react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-light-opacity-paper, 0.63) !important;
+}
+
+[data-skin="midnight"] .react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-light-opacity-midnight, 0.5) !important;
+}
+
+/* Tone down non-selected edges in dark mode across skins. */
+.dark .react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-dark-opacity-default, 0.5) !important;
+}
+
+/* Skin-specific dark-mode tuning (slightly less bright than default dark). */
+[data-skin="paper"].dark .react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-dark-opacity-paper, 0.55) !important;
+}
+
+[data-skin="midnight"].dark .react-flow__edge:not(.selected) .react-flow__edge-path {
+  opacity: var(--edge-dark-opacity-midnight, 0.45) !important;
 }
 
 /* ===================== Large-drag low-detail mode ===================== */
@@ -199,4 +341,205 @@ body[data-large-drag="true"] .rf-node {
   filter: none !important;
   box-shadow: none !important;
   will-change: transform;
+}
+
+/* ===================== Paper Ledger skin — class overrides ===================== */
+
+[data-skin="paper"] body {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      hsl(35 30% 62% / 0.08) 0px,
+      hsl(35 30% 62% / 0.08) 1px,
+      transparent 1px,
+      transparent 30px
+    );
+}
+
+[data-skin="paper"] .react-flow__node {
+  font-family: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", serif !important;
+}
+
+[data-skin="paper"] .react-flow__node > * {
+  border-radius: 0.5rem !important;
+  border-width: 1.25px !important;
+  border-color: hsl(var(--border));
+  background: hsl(var(--card) / 0.98) !important;
+  box-shadow: 0 10px 18px -22px hsl(27 32% 18% / 0.9) !important;
+}
+
+[data-skin="paper"] .react-flow__node-shadcnGroup > * {
+  border-radius: 0.625rem !important;
+  border-width: 1.5px !important;
+  border-color: hsl(var(--primary) / 0.5);
+  background-color: hsl(var(--background) / 0.8) !important;
+}
+
+[data-skin="paper"] .react-flow__node-shadcnGroup [data-drag-handle] {
+  border-bottom-color: hsl(var(--primary) / 0.28) !important;
+}
+
+[data-skin="paper"] .react-flow__node-shadcnGroup [data-testid="group-fill"] {
+  opacity: 0.08 !important;
+}
+
+[data-skin="paper"] .react-flow__edge-path {
+  stroke-width: 1.4 !important;
+  stroke-dasharray: 9 5 !important;
+  stroke-linecap: round !important;
+}
+
+[data-skin="paper"] .react-flow__edge.selected .react-flow__edge-path {
+  stroke-dasharray: none !important;
+  stroke-width: 2.4 !important;
+}
+
+[data-skin="paper"] .custom-flow-controls .react-flow__controls-button {
+  border-radius: 6px !important;
+}
+
+[data-skin="paper"] .react-flow__handle {
+  border-radius: 999px !important;
+  border-width: 1.4px !important;
+}
+
+[data-skin="paper"] .react-flow__node.selected > * {
+  position: relative;
+  outline: none !important;
+}
+
+[data-skin="paper"] .react-flow__node.selected:not(.is-highlighted) > *::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 5px hsl(var(--ring));
+  z-index: 2;
+}
+
+/* ===================== Midnight Signal skin — class overrides ===================== */
+
+[data-skin="midnight"] body {
+  font-family: "Sora", "IBM Plex Sans", "Ubuntu", sans-serif;
+  background-image:
+    radial-gradient(64rem 38rem at 50% -18%, hsl(194 95% 54% / 0.15), transparent 60%),
+    radial-gradient(48rem 28rem at 98% 98%, hsl(42 92% 57% / 0.12), transparent 56%);
+}
+
+[data-skin="midnight"] .react-flow__node {
+  font-family: "Sora", "IBM Plex Sans", "Ubuntu", sans-serif !important;
+  letter-spacing: 0.01em;
+}
+
+[data-skin="midnight"] .react-flow__node > * {
+  border-radius: 0.75rem !important;
+  border-width: 1.25px !important;
+  border-color: hsl(var(--primary) / 0.45);
+  background: linear-gradient(
+    180deg,
+    hsl(var(--card) / 0.95) 0%,
+    hsl(var(--background) / 0.96) 100%
+  ) !important;
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.14),
+    0 16px 28px -24px hsl(224 45% 4% / 0.95) !important;
+}
+
+[data-skin="midnight"] .react-flow__node-shadcnGroup > * {
+  border-radius: 0.875rem !important;
+  border-width: 1.5px !important;
+  border-color: hsl(var(--accent) / 0.5);
+  background-color: hsl(var(--card) / 0.7) !important;
+}
+
+[data-skin="midnight"] .react-flow__node-shadcnGroup [data-drag-handle] {
+  border-bottom-color: hsl(var(--accent) / 0.32) !important;
+}
+
+[data-skin="midnight"] .react-flow__node-shadcnGroup [data-testid="group-fill"] {
+  opacity: 0.1 !important;
+}
+
+[data-skin="midnight"] .react-flow__edge-path {
+  stroke-width: 1.8 !important;
+}
+
+[data-skin="midnight"] .react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 3px !important;
+}
+
+[data-skin="midnight"] .custom-flow-controls .react-flow__controls-button {
+  border-radius: 8px !important;
+}
+
+[data-skin="midnight"] .react-flow__handle {
+  border-width: 2px !important;
+}
+
+[data-skin="midnight"] .react-flow__node.selected > * {
+  position: relative;
+  outline: none !important;
+}
+
+[data-skin="midnight"] .react-flow__node.selected:not(.is-highlighted) > *::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 5px hsl(var(--ring));
+  z-index: 2;
+}
+
+/* Tone down non-shadcn hover/focus accent intensity across UI controls. */
+[data-skin="paper"] .hover\:bg-accent:hover,
+[data-skin="paper"] .focus\:bg-accent:focus,
+[data-skin="paper"] .focus-visible\:bg-accent:focus-visible,
+[data-skin="paper"] .data-\[state\=open\]\:bg-accent[data-state="open"],
+[data-skin="paper"] .data-\[state\=active\]\:bg-accent[data-state="active"],
+[data-skin="midnight"] .hover\:bg-accent:hover,
+[data-skin="midnight"] .focus\:bg-accent:focus,
+[data-skin="midnight"] .focus-visible\:bg-accent:focus-visible,
+[data-skin="midnight"] .data-\[state\=open\]\:bg-accent[data-state="open"],
+[data-skin="midnight"] .data-\[state\=active\]\:bg-accent[data-state="active"] {
+  background-color: hsl(var(--accent) / var(--skin-accent-hover-alpha, 1)) !important;
+}
+
+[data-skin="paper"] .data-\[state\=open\]\:text-accent-foreground[data-state="open"],
+[data-skin="paper"] .data-\[state\=active\]\:text-accent-foreground[data-state="active"],
+[data-skin="midnight"] .data-\[state\=open\]\:text-accent-foreground[data-state="open"],
+[data-skin="midnight"] .data-\[state\=active\]\:text-accent-foreground[data-state="active"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Endpoint/search highlight halo: keep this after skin blocks so it wins. */
+[data-skin] .react-flow__node.is-highlighted > *,
+.react-flow__node.is-highlighted > * {
+  position: relative;
+}
+
+[data-skin] .react-flow__node.is-highlighted > *::after,
+.react-flow__node.is-highlighted > *::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  /* Match default look: offset gap + thick outer yellow ring */
+  box-shadow: 0 0 0 4px hsl(var(--background)), 0 0 0 12px #facc15;
+  z-index: 3;
+}
+
+/* Neutralize skin/node selected ring styles when highlighted. */
+[data-skin] .react-flow__node.selected.is-highlighted > *,
+.react-flow__node.selected.is-highlighted > * {
+  outline: none !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
 }

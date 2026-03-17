@@ -41,7 +41,13 @@ import { UndoRedoProvider } from "@/contexts/UndoRedoContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 
 import { cn } from "@/lib/utils";
-import type { CalcError, CalcStatus, FlowData, FlowNode } from "@/types";
+import type {
+  CalcError,
+  CalcStatus,
+  FlowData,
+  FlowNode,
+  ProtocolDiagramLayout,
+} from "@/types";
 import type { FlowValidationIssue } from "@/lib/flow/validate";
 import { isCalculableNode } from "@/lib/flow/nonCalculableNodes";
 import {
@@ -71,6 +77,12 @@ import { useSearchHighlights } from "@/hooks/useSearchHighlights";
 import { useSharedFlowLoader } from "@/hooks/useSharedFlowLoader";
 import { useSimplifiedSave } from "@/hooks/useSimplifiedSave";
 import { shouldBlockMobile } from "@/lib/device";
+import { buildProtocolDiagramModel } from "@/lib/protocolDiagram/buildProtocolDiagramModel";
+import { getDefaultProtocolPanelWidth } from "@/lib/protocolDiagram/panelSizing";
+import {
+  collectGroupNodeIds,
+  sanitizeProtocolDiagramLayout,
+} from "@/lib/protocolDiagram/layoutPersistence";
 
 const COLORABLE_NODE_TYPES = new Set([
   "calculation",
@@ -107,6 +119,22 @@ const TABS_STORAGE_KEYS = [
   "rawbit.flow.tabs",
   "rawbit.flow.tabs.archive",
 ] as const;
+const EDGE_OPACITY_TUNER_ENABLED = false;
+type EdgeDarkOpacity = {
+  default: number;
+  paper: number;
+  midnight: number;
+};
+const EDGE_DARK_OPACITY_DEFAULTS = {
+  default: 0.5,
+  paper: 0.55,
+  midnight: 0.45,
+};
+const EDGE_LIGHT_OPACITY_DEFAULTS = {
+  default: 0.63,
+  paper: 0.63,
+  midnight: 0.5,
+};
 
 function isAutomationEnvironment() {
   if (typeof navigator !== "undefined" && navigator.webdriver) {
@@ -143,6 +171,10 @@ function FlowContent() {
 
   // 🔍 search-panel state
   const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [showProtocolDiagramPanel, setShowProtocolDiagramPanel] = useState(false);
+  const [protocolDiagramLayout, setProtocolDiagramLayout] = useState<
+    ProtocolDiagramLayout | undefined
+  >(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
@@ -173,6 +205,46 @@ function FlowContent() {
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const [showEdgeOpacityTuner, setShowEdgeOpacityTuner] = useState(true);
+  const [edgeDarkOpacity, setEdgeDarkOpacity] = useState<EdgeDarkOpacity>({
+    default: EDGE_DARK_OPACITY_DEFAULTS.default,
+    paper: EDGE_DARK_OPACITY_DEFAULTS.paper,
+    midnight: EDGE_DARK_OPACITY_DEFAULTS.midnight,
+  });
+  const [edgeLightOpacity, setEdgeLightOpacity] = useState<EdgeDarkOpacity>({
+    default: EDGE_LIGHT_OPACITY_DEFAULTS.default,
+    paper: EDGE_LIGHT_OPACITY_DEFAULTS.paper,
+    midnight: EDGE_LIGHT_OPACITY_DEFAULTS.midnight,
+  });
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--edge-dark-opacity-default",
+      String(edgeDarkOpacity.default)
+    );
+    root.style.setProperty(
+      "--edge-dark-opacity-paper",
+      String(edgeDarkOpacity.paper)
+    );
+    root.style.setProperty(
+      "--edge-dark-opacity-midnight",
+      String(edgeDarkOpacity.midnight)
+    );
+    root.style.setProperty(
+      "--edge-light-opacity-default",
+      String(edgeLightOpacity.default)
+    );
+    root.style.setProperty(
+      "--edge-light-opacity-paper",
+      String(edgeLightOpacity.paper)
+    );
+    root.style.setProperty(
+      "--edge-light-opacity-midnight",
+      String(edgeLightOpacity.midnight)
+    );
+  }, [edgeDarkOpacity, edgeLightOpacity]);
 
   const exampleFlowMap = useMemo(
     () => new Map(customFlows.map((flow) => [flow.id, flow])),
@@ -259,14 +331,28 @@ function FlowContent() {
     }
   }, []);
 
-  const RHS_PANEL_W = 256; // Tailwind w-64  (=16 rem)
+  const RHS_PANEL_W = 256; // default right panels (=16rem)
   const MM_GAP = 44.8; // 2.8 rem  (space beside controls)
+
+  // Track dynamic protocol panel width
+  const [protocolPanelWidth, setProtocolPanelWidth] = useState(() =>
+    getDefaultProtocolPanelWidth()
+  );
+
   const showUndoRedoPanelUI = isMobileReadOnly ? false : showUndoRedoPanel;
   const showErrorPanelUI = isMobileReadOnly ? false : showErrorPanel;
   const showSearchPanelUI = isMobileReadOnly ? false : showSearchPanel;
-  const rightPanelOpen =
-    showUndoRedoPanelUI || showErrorPanelUI || showSearchPanelUI;
-  const miniMapOffset = rightPanelOpen ? RHS_PANEL_W + MM_GAP : MM_GAP;
+  const showProtocolDiagramPanelUI = isMobileReadOnly
+    ? false
+    : showProtocolDiagramPanel;
+  let rightPanelWidth = 0;
+  if (showProtocolDiagramPanelUI) {
+    rightPanelWidth = protocolPanelWidth; // Use dynamic width
+  } else if (showUndoRedoPanelUI || showErrorPanelUI || showSearchPanelUI) {
+    rightPanelWidth = RHS_PANEL_W;
+  }
+  const rightPanelOpen = rightPanelWidth > 0;
+  const miniMapOffset = rightPanelOpen ? rightPanelWidth + MM_GAP : MM_GAP;
 
   const flowInstanceRef = useRef<ReactFlowInstance | null>(null);
   const [hasFitOnInitialLoad, setHasFitOnInitialLoad] = useState(false);
@@ -291,7 +377,28 @@ function FlowContent() {
     ungroupSelectedNodes,
     canGroupSelectedNodes,
     canUngroupSelectedNodes,
-  } = useNodeOperations();
+  } = useNodeOperations({
+    getProtocolDiagramLayout: () => protocolDiagramLayout,
+    setProtocolDiagramLayout,
+  });
+
+  const protocolDiagramModel = useMemo(
+    () => buildProtocolDiagramModel({ nodes, edges }),
+    [nodes, edges]
+  );
+  const hasProtocolDiagram = protocolDiagramModel.hasGroups;
+
+  const handleProtocolDiagramOffsetsChange = useCallback(
+    (groupOffsets: NonNullable<ProtocolDiagramLayout["groupOffsets"]>) => {
+      const groupIds = collectGroupNodeIds(nodes);
+      const nextLayout = sanitizeProtocolDiagramLayout(
+        { groupOffsets },
+        groupIds
+      );
+      setProtocolDiagramLayout(nextLayout);
+    },
+    [nodes]
+  );
 
   const {
     copyNodes,
@@ -398,10 +505,37 @@ function FlowContent() {
     [baseSetEdges, incRev]
   );
 
+  useEffect(() => {
+    if (!isSelectionMode) return;
+    const store = storeApi.getState();
+    const selectedEdges = store.edges.filter((edge) => edge.selected);
+    if (!selectedEdges.length) return;
+
+    store.resetSelectedElements?.();
+    store.unselectNodesAndEdges?.({ nodes: [], edges: selectedEdges });
+
+    setEdges((currentEdges) => {
+      let mutated = false;
+      const next = currentEdges.map((edge) => {
+        if (!edge.selected) return edge;
+        mutated = true;
+        return { ...edge, selected: false };
+      });
+      return mutated ? next : currentEdges;
+    });
+  }, [isSelectionMode, setEdges, storeApi]);
+
   const groupWithUndoRef = useRef<(() => void) | null>(null);
   const ungroupWithUndoRef = useRef<(() => void) | null>(null);
   const hasSelection = useStore((s) => s.nodes.some((n) => n.selected));
   const hasSelectionRef = useRef(hasSelection);
+  const canvasSelectedEdgeIds = useStore(
+    useCallback(
+      (s: { edges: Edge[] }) => s.edges.filter((e) => e.selected).map((e) => e.id),
+      []
+    ),
+    (a, b) => a.length === b.length && a.every((id, i) => id === b[i])
+  );
   useEffect(() => {
     hasSelectionRef.current = hasSelection;
   }, [hasSelection]);
@@ -531,6 +665,8 @@ function FlowContent() {
   } = useTabs({
     getNodes,
     getEdges,
+    getProtocolDiagramLayout: () => protocolDiagramLayout,
+    setProtocolDiagramLayout,
     baseSetNodes,
     baseSetEdges,
     graphRevRef: graphRev,
@@ -643,6 +779,7 @@ function FlowContent() {
     restoreScriptSteps([]);
     setNodes(() => []);
     setEdges(() => []);
+    setProtocolDiagramLayout(undefined);
 
     refreshBanner([], activeTabId, {
       immediate: true,
@@ -659,6 +796,7 @@ function FlowContent() {
     scheduleSnapshot,
     setEdges,
     setNodes,
+    setProtocolDiagramLayout,
     setTabTooltip,
   ]);
 
@@ -697,9 +835,15 @@ function FlowContent() {
       const normalizedEdges = edgesFromFlow.map((edge) => ({
         ...edge,
       })) as Edge[];
+      const groupIds = collectGroupNodeIds(normalizedNodes);
+      const normalizedLayout = sanitizeProtocolDiagramLayout(
+        clonedData.protocolDiagramLayout,
+        groupIds
+      );
 
       setNodes(() => normalizedNodes);
       setEdges(() => normalizedEdges);
+      setProtocolDiagramLayout(normalizedLayout);
 
       refreshBanner(normalizedNodes, activeTabId, {
         immediate: true,
@@ -731,6 +875,7 @@ function FlowContent() {
       scheduleSnapshot,
       setEdges,
       setNodes,
+      setProtocolDiagramLayout,
       setTabTooltip,
     ]
   );
@@ -772,7 +917,11 @@ function FlowContent() {
     infoDialog,
     setInfoDialog,
     closeInfoDialog,
-  } = useShareFlow({ getNodes, getEdges });
+  } = useShareFlow({
+    getNodes,
+    getEdges,
+    getProtocolDiagramLayout: () => protocolDiagramLayout,
+  });
 
   const isNodeColorable = useCallback(
     (node: FlowNode) => COLORABLE_NODE_TYPES.has(node.type as string),
@@ -830,6 +979,7 @@ function FlowContent() {
   const {
     fileInputRef,
     saveFlow,
+    saveLlmExport,
     saveSimplifiedFlow,
     openFileDialog,
     handleFileSelect,
@@ -840,6 +990,8 @@ function FlowContent() {
     fitView: fitImportedFlow,
     onTooltip: handleImportTooltip,
     onError: handleImportError,
+    getProtocolDiagramLayout: () => protocolDiagramLayout,
+    setProtocolDiagramLayout,
     getActiveTabTitle: () => {
       const tabId = activeTabIdRef.current ?? activeTabId;
       const activeTab = tabs.find((tab) => tab.id === tabId);
@@ -860,6 +1012,27 @@ function FlowContent() {
       const node = getNodes().find((nd) => nd.id === nodeId);
       if (!node) return;
 
+      setNodes((currentNodes) => {
+        let mutated = false;
+        const next = currentNodes.map((entry) => {
+          const shouldSelect = entry.id === nodeId;
+          if (entry.selected === shouldSelect) return entry;
+          mutated = true;
+          return { ...entry, selected: shouldSelect };
+        });
+        return mutated ? next : currentNodes;
+      });
+
+      setEdges((currentEdges) => {
+        let mutated = false;
+        const next = currentEdges.map((edge) => {
+          if (!edge.selected) return edge;
+          mutated = true;
+          return { ...edge, selected: false };
+        });
+        return mutated ? next : currentEdges;
+      });
+
       /* `fitView` automatically computes the bounding-box of the node,
        keeps the user’s current zoom if possible, and respects padding. */
       instance.fitView({
@@ -869,7 +1042,154 @@ function FlowContent() {
         duration: 350, // smooth scroll
       });
     },
+    [getNodes, setEdges, setNodes]
+  );
+
+  const focusDiagramNode = useCallback(
+    (nodeId: string) => {
+      const instance = flowInstanceRef.current;
+      if (!instance) return;
+      const node = getNodes().find((entry) => entry.id === nodeId);
+      if (!node) return;
+
+      setNodes((currentNodes) => {
+        let mutated = false;
+        const next = currentNodes.map((entry) => {
+          const shouldSelect = entry.id === nodeId;
+          if (entry.selected === shouldSelect) return entry;
+          mutated = true;
+          return { ...entry, selected: shouldSelect };
+        });
+        return mutated ? next : currentNodes;
+      });
+
+      setEdges((currentEdges) => {
+        let mutated = false;
+        const next = currentEdges.map((edge) => {
+          if (!edge.selected) return edge;
+          mutated = true;
+          return { ...edge, selected: false };
+        });
+        return mutated ? next : currentEdges;
+      });
+
+      instance.fitView({
+        nodes: [node],
+        padding: 0.05,
+        maxZoom: 2.6,
+        duration: 320,
+      });
+    },
+    [getNodes, setEdges, setNodes]
+  );
+
+  const centerOnGroup = useCallback(
+    (groupId: string) => {
+      const instance = flowInstanceRef.current;
+      if (!instance) return;
+
+      const allNodes = getNodes();
+      const groupNode = allNodes.find((node) => node.id === groupId);
+      const groupChildren = allNodes.filter((node) => node.parentId === groupId);
+      const targetNodes =
+        groupNode ? [groupNode] : groupChildren.length > 0 ? groupChildren : [];
+      if (targetNodes.length === 0) return;
+
+      instance.fitView({
+        nodes: targetNodes,
+        padding: 0.05,
+        maxZoom: 2.6,
+        duration: 320,
+      });
+    },
     [getNodes]
+  );
+
+  const updateProtocolDiagramGroupComment = useCallback(
+    (groupId: string, comment: string) => {
+      const normalizedComment = comment.trim();
+      const currentGroup = getNodes().find(
+        (node) => node.id === groupId && node.type === "shadcnGroup"
+      );
+      if (!currentGroup) return;
+      const currentComment =
+        typeof currentGroup?.data?.comment === "string"
+          ? currentGroup.data.comment
+          : "";
+      if (currentComment.trim() === normalizedComment) return;
+
+      setNodes((currentNodes) => {
+        const nextNodes = currentNodes.map((node) => {
+          if (node.id !== groupId || node.type !== "shadcnGroup") return node;
+
+          const currentComment =
+            typeof node.data?.comment === "string" ? node.data.comment : "";
+          if (currentComment.trim() === normalizedComment) return node;
+
+          const nextData = { ...(node.data ?? {}) };
+          if (normalizedComment) {
+            nextData.comment = normalizedComment;
+          } else {
+            delete nextData.comment;
+          }
+          return { ...node, data: nextData };
+        });
+        return nextNodes;
+      });
+
+      setTimeout(() => {
+        pushState(getNodes(), getEdges(), "Update Group Comment (Flow Map)");
+      }, 0);
+    },
+    [getEdges, getNodes, pushState, setNodes]
+  );
+
+  const focusConnectionEndpoints = useCallback(
+    (edgeIds: string[], nodeIds: string[]) => {
+      const edgeIdSet = new Set(edgeIds);
+
+      // When selecting edges, deselect all nodes first
+      if (edgeIds.length > 0) {
+        setNodes((currentNodes) => {
+          let mutated = false;
+          const next = currentNodes.map((entry) => {
+            if (!entry.selected) return entry;
+            mutated = true;
+            return { ...entry, selected: false };
+          });
+          return mutated ? next : currentNodes;
+        });
+      }
+
+      // Select/deselect edges
+      setEdges((currentEdges) => {
+        let mutated = false;
+        const next = currentEdges.map((edge) => {
+          const shouldSelect = edgeIdSet.has(edge.id);
+          if (edge.selected === shouldSelect) return edge;
+          mutated = true;
+          return { ...edge, selected: shouldSelect };
+        });
+        return mutated ? next : currentEdges;
+      });
+
+      // Fit view to show endpoints when selecting
+      if (nodeIds.length > 0) {
+        const instance = flowInstanceRef.current;
+        if (!instance) return;
+        const nodeIdSet = new Set(nodeIds);
+        const toFit = getNodes().filter((n) => nodeIdSet.has(n.id));
+        if (toFit.length) {
+          instance.fitView({
+            nodes: toFit,
+            padding: 0.2,
+            maxZoom: 2,
+            duration: 350,
+          });
+        }
+      }
+    },
+    [getNodes, setEdges, setNodes]
   );
 
   const miniMapSize = useMiniMapSize(nodes, showMiniMap, {
@@ -890,6 +1210,7 @@ function FlowContent() {
     showErrorPanel,
     setShowErrorPanel,
     setShowSearchPanel,
+    setShowProtocolDiagramPanel,
   });
 
   const handleSelectTab = useCallback(
@@ -979,6 +1300,19 @@ function FlowContent() {
     initialHydrationDone,
     skipLoadRef,
     loadingUndoRef,
+  ]);
+
+  useEffect(() => {
+    if (!initialHydrationDone) return;
+    if (skipLoadRef.current || loadingUndoRef.current) return;
+    saveTabData(activeTabId);
+  }, [
+    activeTabId,
+    initialHydrationDone,
+    loadingUndoRef,
+    protocolDiagramLayout,
+    saveTabData,
+    skipLoadRef,
   ]);
 
   // Build a stable signature that only changes when the set of selected IDs changes
@@ -1120,6 +1454,7 @@ function FlowContent() {
     incRev,
     pushCleanState,
     updatePaletteEligibility,
+    isSelectionModeActive: isSelectionMode,
   });
 
   useEffect(() => {
@@ -1157,6 +1492,8 @@ function FlowContent() {
   useSharedFlowLoader({
     getNodes,
     getEdges,
+    getProtocolDiagramLayout: () => protocolDiagramLayout,
+    setProtocolDiagramLayout,
     onNodesChange: rawOnNodesChange,
     onEdgesChange: rawOnEdgesChange,
     scheduleSnapshot,
@@ -1378,6 +1715,14 @@ function FlowContent() {
     cancelSave: handleCancelSimplifiedSave,
   } = useSimplifiedSave({ nodes, saveSimplifiedFlow });
 
+  const {
+    showConfirmation: showLlmSaveConfirmation,
+    confirmationMessage: llmSaveConfirmationMessage,
+    promptSave: handleSaveLlmWithConfirmation,
+    confirmSave: handleConfirmLlmSave,
+    cancelSave: handleCancelLlmSave,
+  } = useSimplifiedSave({ nodes, saveSimplifiedFlow: saveLlmExport });
+
   const { focusSearchHit } = useSearchHighlights({
     showSearchPanel,
     searchQuery,
@@ -1462,6 +1807,7 @@ function FlowContent() {
               fileInputRef={fileInputRef}
               onSave={saveFlow}
               onSaveSimplified={handleSaveSimplified}
+              onSaveLlmExport={handleSaveLlmWithConfirmation}
               onLoad={openFileDialog}
               onFileSelect={handleFileSelect}
               canCopy={nodes.some((n) => n.selected)}
@@ -1477,6 +1823,10 @@ function FlowContent() {
               hasLimitErrors={hasLimitErrors}
               showUndoRedoPanel={showUndoRedoPanel}
               setShowUndoRedoPanel={setShowUndoRedoPanel}
+              showProtocolDiagramPanel={showProtocolDiagramPanel}
+              setShowProtocolDiagramPanel={setShowProtocolDiagramPanel}
+              hasProtocolDiagram={hasProtocolDiagram}
+              protocolDiagramDisabledTooltip="Add groups to enable diagram view"
               onToggleColorPalette={handleToggleColorPalette}
               isColorPaletteOpen={isColorPaletteOpen}
               canColorSelection={canColorSelection}
@@ -1495,6 +1845,7 @@ function FlowContent() {
               onSearchClick={() => {
                 setShowUndoRedoPanel(false); // never overlap
                 setShowErrorPanel(false);
+                setShowProtocolDiagramPanel(false);
                 setShowSearchPanel((v) => !v); // toggle
               }}
               setShowSearchPanel={setShowSearchPanel}
@@ -1504,6 +1855,7 @@ function FlowContent() {
               onToggleSelectionMode={() => setIsSelectionLocked((v) => !v)}
               onShare={handleShareClick}
               shareDisabled={nodes.length === 0}
+              tabBarRightInset={rightPanelWidth}
             />
           )}
 
@@ -1526,12 +1878,19 @@ function FlowContent() {
           >
             <div
               className={cn(
-                "relative flex-1 overflow-hidden",
-                (showUndoRedoPanelUI ||
-                  showErrorPanelUI ||
-                  showSearchPanelUI) &&
-                  "md:mr-64"
+                "relative flex-1 min-w-[1px] min-h-[1px] overflow-hidden transition-[margin] duration-300"
               )}
+              style={
+                isMobileReadOnly
+                  ? undefined
+                  : {
+                      // Keep React Flow's parent non-zero to avoid warning #004
+                      // during narrow-width panel layouts/transitions.
+                      marginRight: rightPanelOpen
+                        ? `min(${rightPanelWidth}px, calc(100% - 1px))`
+                        : 0,
+                    }
+              }
             >
               <FlowCanvas
                 nodeTypes={nodeTypes}
@@ -1605,6 +1964,191 @@ function FlowContent() {
                   </div>
                 </div>
               )}
+              {EDGE_OPACITY_TUNER_ENABLED && !isMobileReadOnly && (
+                <div className="pointer-events-none absolute right-4 top-4 z-30 select-none">
+                  <div
+                    className="pointer-events-auto w-72 rounded-md border border-border bg-background/95 p-2 shadow-md backdrop-blur"
+                    onPointerDownCapture={(event) => event.stopPropagation()}
+                    onWheelCapture={(event) => event.stopPropagation()}
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Edge Opacity Tuner
+                      </span>
+                      <button
+                        type="button"
+                        className="h-6 rounded border border-border px-2 text-[11px] font-medium hover:bg-muted"
+                        onClick={() => setShowEdgeOpacityTuner((open) => !open)}
+                      >
+                        {showEdgeOpacityTuner ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    {showEdgeOpacityTuner && (
+                      <div className="space-y-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Dark mode
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Default</span>
+                            <span className="font-mono">
+                              {edgeDarkOpacity.default.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.25}
+                            max={0.9}
+                            step={0.01}
+                            value={edgeDarkOpacity.default}
+                            onChange={(event) =>
+                              setEdgeDarkOpacity((prev) => ({
+                                ...prev,
+                                default: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Paper</span>
+                            <span className="font-mono">
+                              {edgeDarkOpacity.paper.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.25}
+                            max={0.9}
+                            step={0.01}
+                            value={edgeDarkOpacity.paper}
+                            onChange={(event) =>
+                              setEdgeDarkOpacity((prev) => ({
+                                ...prev,
+                                paper: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Midnight</span>
+                            <span className="font-mono">
+                              {edgeDarkOpacity.midnight.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.25}
+                            max={0.9}
+                            step={0.01}
+                            value={edgeDarkOpacity.midnight}
+                            onChange={(event) =>
+                              setEdgeDarkOpacity((prev) => ({
+                                ...prev,
+                                midnight: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+
+                        <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Light mode
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Default</span>
+                            <span className="font-mono">
+                              {edgeLightOpacity.default.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.4}
+                            max={1}
+                            step={0.01}
+                            value={edgeLightOpacity.default}
+                            onChange={(event) =>
+                              setEdgeLightOpacity((prev) => ({
+                                ...prev,
+                                default: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Paper</span>
+                            <span className="font-mono">
+                              {edgeLightOpacity.paper.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.4}
+                            max={1}
+                            step={0.01}
+                            value={edgeLightOpacity.paper}
+                            onChange={(event) =>
+                              setEdgeLightOpacity((prev) => ({
+                                ...prev,
+                                paper: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span>Midnight</span>
+                            <span className="font-mono">
+                              {edgeLightOpacity.midnight.toFixed(2)}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0.4}
+                            max={1}
+                            step={0.01}
+                            value={edgeLightOpacity.midnight}
+                            onChange={(event) =>
+                              setEdgeLightOpacity((prev) => ({
+                                ...prev,
+                                midnight: Number(event.target.value),
+                              }))
+                            }
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            className="h-6 rounded border border-border px-2 text-[11px] font-medium hover:bg-muted"
+                            onClick={() => {
+                              setEdgeDarkOpacity({
+                                default: EDGE_DARK_OPACITY_DEFAULTS.default,
+                                paper: EDGE_DARK_OPACITY_DEFAULTS.paper,
+                                midnight: EDGE_DARK_OPACITY_DEFAULTS.midnight,
+                              });
+                              setEdgeLightOpacity({
+                                default: EDGE_LIGHT_OPACITY_DEFAULTS.default,
+                                paper: EDGE_LIGHT_OPACITY_DEFAULTS.paper,
+                                midnight: EDGE_LIGHT_OPACITY_DEFAULTS.midnight,
+                              });
+                            }}
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {!isMobileReadOnly && (
@@ -1617,12 +2161,25 @@ function FlowContent() {
                 nodes={nodes}
                 showSearchPanel={showSearchPanel}
                 setShowSearchPanel={setShowSearchPanel}
+                showProtocolDiagramPanel={showProtocolDiagramPanel}
+                setShowProtocolDiagramPanel={setShowProtocolDiagramPanel}
+                protocolDiagramModel={protocolDiagramModel}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 edges={edges}
                 centerOnNode={centerOnNode}
+                focusDiagramNode={focusDiagramNode}
+                centerOnGroup={centerOnGroup}
+                focusConnectionEndpoints={focusConnectionEndpoints}
+                canvasSelectedEdgeIds={canvasSelectedEdgeIds}
                 focusSearchHit={focusSearchHit}
                 hasMultipleTabs={tabs.length > 0}
+                protocolDiagramOffsets={protocolDiagramLayout?.groupOffsets}
+                onProtocolDiagramOffsetsChange={
+                  handleProtocolDiagramOffsetsChange
+                }
+                onProtocolPanelWidthChange={setProtocolPanelWidth}
+                onUpdateGroupComment={updateProtocolDiagramGroupComment}
               />
             )}
           </main>
@@ -1646,6 +2203,10 @@ function FlowContent() {
             saveConfirmationMessage={saveConfirmationMessage}
             onConfirmSave={handleConfirmSimplifiedSave}
             onCancelSave={handleCancelSimplifiedSave}
+            showLlmSaveConfirmation={showLlmSaveConfirmation}
+            llmSaveConfirmationMessage={llmSaveConfirmationMessage}
+            onConfirmLlmSave={handleConfirmLlmSave}
+            onCancelLlmSave={handleCancelLlmSave}
             infoDialog={infoDialog}
             closeInfoDialog={closeInfoDialog}
             connectOpen={connectOpen}

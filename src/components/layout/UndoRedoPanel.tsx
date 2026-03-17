@@ -30,11 +30,12 @@ export function UndoRedoPanel({
   return (
     <div
       className={cn(
-        "fixed top-0 bottom-0 right-0 z-10 flex flex-col",
+        "fixed top-0 bottom-0 right-0 z-10 flex flex-col select-none",
         "border-l border-border bg-background text-foreground",
         "transition-[width] duration-300",
         isOpen ? "w-64" : "w-0 overflow-hidden"
       )}
+      data-testid="undo-redo-panel"
       style={{ pointerEvents: isOpen ? "auto" : "none" }}
     >
       {isOpen && (

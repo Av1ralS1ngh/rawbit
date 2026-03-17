@@ -23,6 +23,7 @@ export interface UseCalcNodeMutationsResult {
   handleRegenerate: () => void;
   toggleComment: () => void;
   handleCommentChange: (value: string) => void;
+  commitCommentOnBlur: (previousValue: string, nextValue: string) => void;
   deleteNode: () => void;
 }
 
@@ -211,6 +212,35 @@ export function useCalcNodeMutations(
     [id, setNodes]
   );
 
+  const commitCommentOnBlur = useCallback(
+    (previousValue: string, nextValue: string) => {
+      const normalizedPrevious = previousValue.trim();
+      const normalizedNext = nextValue.trim();
+      if (normalizedPrevious === normalizedNext) return;
+
+      const shouldNormalizeStoredValue =
+        nextValue !== normalizedNext || normalizedNext.length === 0;
+
+      if (shouldNormalizeStoredValue) {
+        setNodes((nodes) =>
+          nodes.map((node) => {
+            if (node.id !== id) return node;
+            const nextData: NodeData = { ...(node.data as NodeData) };
+            if (normalizedNext) {
+              nextData.comment = normalizedNext;
+            } else {
+              delete nextData.comment;
+            }
+            return { ...node, data: nextData };
+          })
+        );
+      }
+
+      snapshotHooks?.scheduleSnapshot?.("Update Node Comment");
+    },
+    [id, setNodes, snapshotHooks]
+  );
+
   const deleteNode = useCallback(() => {
     removeScriptSteps(id);
     const { lockEdgeSnapshotSkip, releaseEdgeSnapshotSkip, scheduleSnapshot } =
@@ -251,6 +281,7 @@ export function useCalcNodeMutations(
     handleRegenerate,
     toggleComment,
     handleCommentChange,
+    commitCommentOnBlur,
     deleteNode,
   };
 }

@@ -29,6 +29,49 @@ export interface SidebarProps {
   onToggle: () => void;
 }
 
+function setSidebarDragPreview(
+  dataTransfer: DataTransfer,
+  sourceEl: Element
+) {
+  if (typeof document === "undefined" || !(sourceEl instanceof HTMLElement)) {
+    return;
+  }
+
+  const rect = sourceEl.getBoundingClientRect();
+  const computed = window.getComputedStyle(sourceEl);
+  const ghost = sourceEl.cloneNode(true) as HTMLElement;
+
+  Object.assign(ghost.style, {
+    position: "fixed",
+    top: "-1000px",
+    left: "-1000px",
+    pointerEvents: "none",
+    zIndex: "2147483647",
+    width: `${Math.max(1, rect.width)}px`,
+    height: `${Math.max(1, rect.height)}px`,
+    margin: "0",
+    transform: "none",
+    transition: "none",
+    borderRadius: computed.borderRadius,
+    overflow: "hidden",
+    boxShadow: computed.boxShadow,
+    opacity: "0.98",
+  } as CSSStyleDeclaration);
+
+  document.body.appendChild(ghost);
+  dataTransfer.setDragImage(
+    ghost,
+    Math.min(18, Math.max(8, rect.width / 6)),
+    Math.min(18, Math.max(8, rect.height / 4))
+  );
+
+  const cleanup = () => {
+    ghost.remove();
+    sourceEl.removeEventListener("dragend", cleanup);
+  };
+  sourceEl.addEventListener("dragend", cleanup, { once: true });
+}
+
 // Basic category definitions for your sidebar
 const categories = [
   {
@@ -156,6 +199,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
       JSON.stringify(dragData)
     );
     event.dataTransfer.effectAllowed = "move";
+    setSidebarDragPreview(event.dataTransfer, event.currentTarget);
   };
 
   const clearSearch = () => setSearchQuery("");
@@ -202,8 +246,10 @@ export function Sidebar({ isOpen }: SidebarProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
+            id="sidebar-search"
+            name="sidebarSearch"
             placeholder="Search nodes..."
-            className="pl-8 h-8 text-sm"
+            className="pl-8 pr-8 h-8 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             /* Disable browser spell‑check and auto‑features */
@@ -375,11 +421,11 @@ export function Sidebar({ isOpen }: SidebarProps) {
                             "application/reactflow",
                             JSON.stringify(dragObj)
                           );
-                          event.dataTransfer.setData(
-                            "application/reactflow",
-                            JSON.stringify(dragObj)
-                          );
                           event.dataTransfer.effectAllowed = "move";
+                          setSidebarDragPreview(
+                            event.dataTransfer,
+                            event.currentTarget
+                          );
                         }}
                         className="ml-4 flex cursor-grab items-center rounded-md border bg-card p-3 hover:bg-accent transition-colors"
                       >

@@ -3,7 +3,7 @@ import type { SnapshotScheduler } from "@/hooks/useSnapshotScheduler";
 import type { FlowNode } from "@/types";
 import type { Edge } from "@xyflow/react";
 import userEvent from "@testing-library/user-event";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const clipboardHook = vi.fn();
@@ -251,5 +251,49 @@ describe("TextInfoNode", () => {
     await waitFor(() =>
       expect(scheduler.scheduleSnapshot).toHaveBeenCalledWith("Node(s) removed", { refresh: true })
     );
+  });
+
+  it("closes the inline menu when clicking outside the node", async () => {
+    const clipboardMock = {
+      prettyResult: "",
+      copyResult: vi.fn(),
+      copyError: vi.fn(),
+      copyId: vi.fn(),
+      resultCopied: false,
+      errorCopied: false,
+      idCopied: false,
+    };
+    clipboardHook.mockReturnValue(clipboardMock);
+
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <TextInfoNode
+        id="text-1"
+        data={nodesState[0].data}
+        selected={false}
+        type="text"
+        dragging={false}
+        zIndex={0}
+        width={nodesState[0].width}
+        height={nodesState[0].height}
+        isConnectable={true}
+        positionAbsoluteX={0}
+        positionAbsoluteY={0}
+      />,
+      { snapshotScheduler: scheduler }
+    );
+
+    const markdownControls = screen.getByText("Markdown").parentElement as HTMLElement;
+    const menuButton = markdownControls.querySelector("button:not([title])") as HTMLButtonElement;
+
+    await user.click(menuButton);
+    expect(screen.getByRole("button", { name: /copy id/i })).toBeInTheDocument();
+
+    fireEvent.pointerDown(document.body);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /copy id/i })).toBeNull();
+    });
   });
 });

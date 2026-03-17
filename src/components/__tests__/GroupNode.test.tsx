@@ -156,6 +156,102 @@ describe("GroupNode interactions", () => {
     expect(clipboardMock.copyId).toHaveBeenCalledTimes(1);
   });
 
+  it("saves group comment from the menu and records undo state", () => {
+    renderGroupNode({ comment: "" });
+
+    fireEvent.click(screen.getByTitle("More"));
+    const commentInput = screen.getByLabelText("Group Comment");
+    fireEvent.change(commentInput, {
+      target: { value: "Derives sighash preimage components for signing." },
+    });
+    fireEvent.click(screen.getByTitle("More"));
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.comment).toBe(
+      "Derives sighash preimage components for signing."
+    );
+    expect(pushState).toHaveBeenCalledWith(
+      nodes,
+      edges,
+      "Update Group Comment"
+    );
+  });
+
+  it("autosaves group comment while typing with debounce", () => {
+    renderGroupNode({ comment: "" });
+
+    fireEvent.click(screen.getByTitle("More"));
+    const commentInput = screen.getByLabelText("Group Comment");
+    fireEvent.change(commentInput, {
+      target: { value: "Auto-save comment while typing." },
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(400);
+      vi.runOnlyPendingTimers();
+    });
+
+    expect(nodes[0].data.comment).toBe("Auto-save comment while typing.");
+    expect(pushState).toHaveBeenCalledWith(
+      nodes,
+      edges,
+      "Update Group Comment"
+    );
+  });
+
+  it("toggles flow map exclusion from the group menu and records undo state", () => {
+    renderGroupNode({ excludeFromFlowMap: false });
+
+    fireEvent.click(screen.getByTitle("More"));
+    const excludeCheckbox = screen.getByLabelText("Exclude from Flow Map");
+    fireEvent.click(excludeCheckbox);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.excludeFromFlowMap).toBe(true);
+    expect(pushState).toHaveBeenCalledWith(
+      nodes,
+      edges,
+      "Exclude Group From Flow Map"
+    );
+
+    fireEvent.click(screen.getByLabelText("Exclude from Flow Map"));
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(nodes[0].data.excludeFromFlowMap).toBeUndefined();
+    expect(pushState).toHaveBeenCalledWith(
+      nodes,
+      edges,
+      "Include Group In Flow Map"
+    );
+  });
+
+  it("supports long group comments beyond the previous 220-char cap", () => {
+    renderGroupNode({ comment: "" });
+
+    const longComment = "A".repeat(500);
+
+    fireEvent.click(screen.getByTitle("More"));
+    const commentInput = screen.getByLabelText("Group Comment");
+    fireEvent.change(commentInput, {
+      target: { value: longComment },
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(400);
+      vi.runOnlyPendingTimers();
+    });
+
+    expect(nodes[0].data.comment).toBe(longComment);
+  });
+
   it("commits title edits and records undo state", () => {
     renderGroupNode();
 
@@ -312,6 +408,108 @@ describe("GroupNode interactions", () => {
       zoom: 1,
     });
     expect(body.releasePointerCapture).toHaveBeenCalledWith(1);
+  });
+
+  it("clears selected edges when clicking inside the group body", () => {
+    const groupNode = createNode();
+    const selectedEdge = buildEdge({
+      id: "edge-selected",
+      source: "node-a",
+      target: "node-b",
+      selected: true,
+    });
+    const untouchedEdge = buildEdge({
+      id: "edge-untouched",
+      source: "node-b",
+      target: "node-c",
+      selected: false,
+    });
+
+    setupNodes([groupNode], [selectedEdge, untouchedEdge]);
+    render(<ShadcnGroupNode {...buildNodeProps(groupNode)} />);
+
+    const body = screen.getByTestId("group-body") as HTMLElement & {
+      setPointerCapture: (pointerId: number) => void;
+    };
+    body.setPointerCapture = vi.fn();
+
+    const reactKey = Object.keys(body).find((key) =>
+      key.startsWith("__reactProps$")
+    );
+    const propsRecord = reactKey
+      ? (body as unknown as Record<string, unknown>)[reactKey]
+      : undefined;
+    const handlers = (propsRecord as
+      | Partial<Record<string, (event: PointerEventInit & { pointerId: number }) => void>>
+      | undefined) ?? {};
+
+    const makeEvent = (overrides: Partial<PointerEventInit> = {}) => ({
+      button: 0,
+      pointerId: 2,
+      clientX: 10,
+      clientY: 10,
+      pointerType: "mouse",
+      buttons: 1,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: body,
+      currentTarget: body,
+      ...overrides,
+    });
+
+    handlers.onPointerDownCapture?.(makeEvent());
+
+    expect(edges.find((edge) => edge.id === "edge-selected")?.selected).toBe(
+      false
+    );
+    expect(edges.find((edge) => edge.id === "edge-untouched")?.selected).toBe(
+      false
+    );
+  });
+
+  it("blurs active inline editors when clicking inside the group body", () => {
+    renderGroupNode();
+
+    const body = screen.getByTestId("group-body") as HTMLElement & {
+      setPointerCapture: (pointerId: number) => void;
+    };
+    body.setPointerCapture = vi.fn();
+
+    const editor = document.createElement("input");
+    document.body.appendChild(editor);
+    editor.focus();
+    const blurSpy = vi.spyOn(editor, "blur");
+
+    const reactKey = Object.keys(body).find((key) =>
+      key.startsWith("__reactProps$")
+    );
+    const propsRecord = reactKey
+      ? (body as unknown as Record<string, unknown>)[reactKey]
+      : undefined;
+    const handlers = (propsRecord as
+      | Partial<Record<string, (event: PointerEventInit & { pointerId: number }) => void>>
+      | undefined) ?? {};
+
+    const makeEvent = (overrides: Partial<PointerEventInit> = {}) => ({
+      button: 0,
+      pointerId: 3,
+      clientX: 30,
+      clientY: 30,
+      pointerType: "mouse",
+      buttons: 1,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      target: body,
+      currentTarget: body,
+      ...overrides,
+    });
+
+    handlers.onPointerDownCapture?.(makeEvent());
+
+    expect(blurSpy).toHaveBeenCalledTimes(1);
+
+    blurSpy.mockRestore();
+    editor.remove();
   });
 
   it("calls shared ungroup action from menu", () => {
