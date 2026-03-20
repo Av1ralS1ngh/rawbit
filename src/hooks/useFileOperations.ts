@@ -122,6 +122,19 @@ interface SimplifiedEdgePayload {
   targetHandle?: string;
 }
 
+interface ExportRuntimeSemantics {
+  version: 1;
+  inputResolution: {
+    precedence: string[];
+    sentinels: Record<string, string>;
+    functionSpecificRules: string[];
+  };
+  typeCoercion: {
+    integerParams: string;
+    numberParams: string;
+  };
+}
+
 interface LlmExportPayload {
   exportType: "rawbit-llm-export";
   llmBackground: string;
@@ -134,6 +147,7 @@ interface LlmExportPayload {
   exportedAt: string;
   nodes: SimplifiedNodePayload[];
   edges: SimplifiedEdgePayload[];
+  runtimeSemantics: ExportRuntimeSemantics;
   functionSources: Record<string, string>;
   functionSourceErrors?: Record<string, string>;
 }
@@ -143,6 +157,7 @@ interface SimplifiedExportPayload {
   schemaVersion: number;
   nodes: SimplifiedNodePayload[];
   edges: SimplifiedEdgePayload[];
+  runtimeSemantics: ExportRuntimeSemantics;
 }
 
 interface ImportBehaviorOptions {
@@ -171,6 +186,32 @@ const LLM_EXPORT_BACKGROUND =
   "This is a compact Rawbit flow export for LLM explanation. It includes node/edge graph data plus the Python backend function sources used by exported nodes.";
 const LLM_EXPORT_ABOUT_RAWBIT =
   "Rawbit is a node-based visual builder for Bitcoin transaction, script, and cryptography workflows. Nodes represent calculation steps, data transforms, and script logic connected by directed edges.";
+const EXPORT_RUNTIME_SEMANTICS: ExportRuntimeSemantics = {
+  version: 1,
+  inputResolution: {
+    precedence: [
+      "__FORCE00__",
+      "__EMPTY__",
+      "__NULL__",
+      "edge value",
+      "manual text",
+    ],
+    sentinels: {
+      __FORCE00__: "Forces effective input value to the hex string '00'.",
+      __EMPTY__: "Forces effective input value to an empty string.",
+      __NULL__: "Marker value interpreted by function-specific runtime rules.",
+    },
+    functionSpecificRules: [
+      "musig2_nonce_gen: vals[2] '__NULL__' is translated to null before function call.",
+    ],
+  },
+  typeCoercion: {
+    integerParams:
+      "Parameters declared as 'integer' in function specs are cast to int when non-empty.",
+    numberParams:
+      "Parameters declared as 'number' in function specs are cast to float when non-empty.",
+  },
+};
 
 const isLocalHost = (hostname?: string) =>
   typeof hostname === "string" && LOCAL_HOSTS.has(hostname.toLowerCase());
@@ -272,6 +313,10 @@ export function useFileOperations(
   onEdgesChange: (changes: EdgeChange[]) => void,
   importOptions?: ImportBehaviorOptions
 ) {
+  type FullExportPayload = FlowData & {
+    runtimeSemantics: ExportRuntimeSemantics;
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const downloadCountsRef = useRef<Map<string, number>>(new Map());
 
@@ -305,9 +350,10 @@ export function useFileOperations(
       groupIds
     );
 
-    const payload: FlowData = {
+    const payload: FullExportPayload = {
       name: `flow-${Date.now()}`,
       schemaVersion: FLOW_SCHEMA_VERSION,
+      runtimeSemantics: EXPORT_RUNTIME_SEMANTICS,
       nodes: nodesWithSteps.map((n) => ({
         id: n.id,
         type: n.type,
@@ -824,6 +870,7 @@ export function useFileOperations(
       schemaVersion: FLOW_SCHEMA_VERSION,
       nodes: snapshot.nodes,
       edges: snapshot.edges,
+      runtimeSemantics: EXPORT_RUNTIME_SEMANTICS,
     };
 
     const slimJson = JSON.stringify(slim, omitUIState, 2);
@@ -880,6 +927,7 @@ export function useFileOperations(
           `Scope: ${selectionScope}.`,
           "Node data: id, title, functionName, labeled inputs, result, tutorial/comment text, group relation, error state, and script debug steps when present.",
           "Edge data: source/target links between exported nodes, plus handle metadata where relevant.",
+          "Runtime semantics: sentinel overwrite behavior (__FORCE00__, __EMPTY__, __NULL__) and type-coercion rules used by rawBit runtime.",
           "Backend source code: unique Python function implementations for exported node function names (deduplicated).",
         ],
       },
@@ -888,6 +936,7 @@ export function useFileOperations(
       exportedAt: new Date().toISOString(),
       nodes: snapshot.nodes,
       edges: snapshot.edges,
+      runtimeSemantics: EXPORT_RUNTIME_SEMANTICS,
       functionSources,
     };
 

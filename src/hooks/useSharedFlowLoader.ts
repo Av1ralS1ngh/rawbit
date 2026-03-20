@@ -60,6 +60,7 @@ function setAlternateShareJsonLink(href?: string) {
 interface UseSharedFlowLoaderOptions {
   getNodes: () => FlowNode[];
   getEdges: () => Edge[];
+  fitView?: () => void;
   getProtocolDiagramLayout?: () => ProtocolDiagramLayout | undefined;
   setProtocolDiagramLayout?: (layout: ProtocolDiagramLayout | undefined) => void;
   onNodesChange: (changes: NodeChange<FlowNode>[]) => void;
@@ -80,6 +81,7 @@ interface UseSharedFlowLoaderOptions {
 export function useSharedFlowLoader({
   getNodes,
   getEdges,
+  fitView,
   getProtocolDiagramLayout,
   setProtocolDiagramLayout,
   onNodesChange,
@@ -321,12 +323,16 @@ export function useSharedFlowLoader({
 
         loadedSharedIdRef.current = sharedId;
 
-        const instance = flowInstanceRef.current;
-        if (instance) {
-          requestAnimationFrame(() => {
-            if (cancelled) return;
-            instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
-          });
+        if (fitView) {
+          fitView();
+        } else {
+          const instance = flowInstanceRef.current;
+          if (instance) {
+            requestAnimationFrame(() => {
+              if (cancelled) return;
+              instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
+            });
+          }
         }
       } catch (err) {
         if (cancelled) return;
@@ -363,6 +369,7 @@ export function useSharedFlowLoader({
   }, [
     activeTabId,
     flowInstanceRef,
+    fitView,
     getEdges,
     getNodes,
     getProtocolDiagramLayout,

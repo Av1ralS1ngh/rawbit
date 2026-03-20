@@ -6,7 +6,7 @@ import type { FlowData } from "@/types";
 // Make sure your paths match exactly where they live in your project:
 
 import intro_p2pkh_p2pk from "@/my_tx_flows/p1_Intro_P2PKH_and_P2PK.json";
-import p2_multisig from "@/my_tx_flows/p2_P2PK_and_P2SH_MultiSig.json";
+import p2_multisig from "@/my_tx_flows/p2_Bare_P2MS_and_P2SH_MultiSig.json";
 import locktime_tx from "@/my_tx_flows/p3_Locktime_Intro.json";
 import locktime_script from "@/my_tx_flows/p4_Script_timelocks_CLTV_CSV.json";
 import op_return from "@/my_tx_flows/p5_OP_Return.json";
@@ -30,7 +30,7 @@ export const customFlows = [
 
   {
     id: "flow-2",
-    label: "P2PK_and_P2SH_MultiSig",
+    label: "Multisig: Bare P2MS and P2SH Multisig",
     data: p2_multisig as unknown as FlowData,
   },
   {

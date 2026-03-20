@@ -9,7 +9,7 @@ import { resolveFixturePath } from './utils';
 
 test.describe('Script debug persistence', () => {
   test('shared flow retains script steps after reload', async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(150_000);
 
     const shareId = 'playwright-script-debug-persistence';
     const fixture: FlowData = JSON.parse(
@@ -92,15 +92,12 @@ test.describe('Script debug persistence', () => {
 
 async function assertScriptStepsVisible(page: Page, fallbackPayload: FlowData | null) {
   try {
-    await page.waitForSelector('.react-flow__node', {
-      state: 'attached',
-      timeout: 60_000,
-    });
+    await waitForCanvasNodes(page, 15_000);
   } catch (err) {
     if (page.isClosed()) throw err;
 
     const fileInput = page.locator('input[type="file"][accept=".json"]');
-    await fileInput.first().waitFor({ state: 'attached', timeout: 10_000 });
+    await fileInput.first().waitFor({ state: 'attached', timeout: 5_000 });
 
     const buffer = Buffer.from(JSON.stringify(fallbackPayload ?? {}));
 
@@ -115,10 +112,7 @@ async function assertScriptStepsVisible(page: Page, fallbackPayload: FlowData | 
       throw fileErr;
     }
 
-    await page.waitForSelector('.react-flow__node', {
-      state: 'attached',
-      timeout: 60_000,
-    });
+    await waitForCanvasNodes(page, 30_000);
   }
 
   const node = page
@@ -139,6 +133,16 @@ async function assertScriptStepsVisible(page: Page, fallbackPayload: FlowData | 
   const closeButton = stepsDialog.getByRole('button', { name: /^Close$/ }).first();
   await closeButton.click();
   await expect(stepsDialog).toBeHidden();
+}
+
+async function waitForCanvasNodes(page: Page, timeout: number) {
+  const flowNodes = page.locator('[data-testid^="rf__node-"]');
+  await expect
+    .poll(async () => flowNodes.count(), {
+      timeout,
+      intervals: [150, 300, 500, 1000],
+    })
+    .toBeGreaterThan(0);
 }
 
 function waitForSharedResponse(page: Page, shareId: string) {

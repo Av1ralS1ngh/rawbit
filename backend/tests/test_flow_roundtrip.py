@@ -51,8 +51,8 @@ FLOW_SCENARIOS = [
         },
     },
     {
-        "name": "p2_P2PK_and_P2SH_MultiSig.json",
-        "path": ROOT / "src" / "my_tx_flows" / "p2_P2PK_and_P2SH_MultiSig.json",
+        "name": "p2_Bare_P2MS_and_P2SH_MultiSig.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p2_Bare_P2MS_and_P2SH_MultiSig.json",
         "node_changes": {
             "node_DyhEXHsp": "1",
         },

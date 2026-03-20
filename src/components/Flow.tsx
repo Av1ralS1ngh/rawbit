@@ -1001,10 +1001,17 @@ function FlowContent() {
     const instance = flowInstanceRef.current;
     if (!instance) return;
 
-    const runFit = () => instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
+    const runFit = () =>
+      instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
     // Use a double rAF so the React Flow store has applied imported nodes/edges
     requestAnimationFrame(() => requestAnimationFrame(runFit));
   }, []);
+
+  const fitSharedImportedFlow = useCallback(() => {
+    // Shared-flow loading can race WebKit layout readiness; use the resilient
+    // retry scheduler for this path only.
+    scheduleExampleFlowFit();
+  }, [scheduleExampleFlowFit]);
 
   const handleImportTooltip = useCallback(
     (filename?: string) => {
@@ -1540,6 +1547,7 @@ function FlowContent() {
   useSharedFlowLoader({
     getNodes,
     getEdges,
+    fitView: fitSharedImportedFlow,
     getProtocolDiagramLayout: () => protocolDiagramLayout,
     setProtocolDiagramLayout,
     onNodesChange: rawOnNodesChange,
@@ -1639,8 +1647,7 @@ function FlowContent() {
       });
 
       if (hasMissingHandle) {
-        clearHighlights();
-        setEdges([]);
+        // Keep the current edges visible while handles remount to avoid a flash.
         requestAnimationFrame(() => {
           setTimeout(() => setEdges(restoredEdges), 0);
         });

@@ -110,6 +110,106 @@ describe("useFileOperations", () => {
     };
   };
 
+  const setupDownloadCapture = () => {
+    const anchors: Array<HTMLAnchorElement> = [];
+    const blobs: Blob[] = [];
+    const originalBlob = globalThis.Blob;
+
+    class MockBlob {
+      readonly size: number;
+      readonly type: string;
+      private readonly rawText: string;
+
+      constructor(parts: BlobPart[] = [], options?: BlobPropertyBag) {
+        this.rawText = parts
+          .map((part) => {
+            if (typeof part === "string") return part;
+            if (part instanceof ArrayBuffer) {
+              return new TextDecoder().decode(part);
+            }
+            if (ArrayBuffer.isView(part)) {
+              return new TextDecoder().decode(part);
+            }
+            return String(part);
+          })
+          .join("");
+        this.size = this.rawText.length;
+        this.type = options?.type ?? "";
+      }
+
+      async text(): Promise<string> {
+        return this.rawText;
+      }
+    }
+
+    vi.stubGlobal("Blob", MockBlob as unknown as typeof Blob);
+
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, "createElement")
+      .mockImplementation((tagName: string) => {
+        if (tagName.toLowerCase() === "a") {
+          const anchor = {
+            href: "",
+            download: "",
+            click: vi.fn(),
+          } as unknown as HTMLAnchorElement;
+          anchors.push(anchor);
+          return anchor;
+        }
+        return originalCreateElement(tagName);
+      });
+
+    const mutableURL = URL as typeof URL & {
+      createObjectURL?: (blob: Blob) => string;
+      revokeObjectURL?: (url: string) => void;
+    };
+    const originalCreateObjectURL = mutableURL.createObjectURL;
+    const originalRevokeObjectURL = mutableURL.revokeObjectURL;
+    Object.defineProperty(mutableURL, "createObjectURL", {
+      configurable: true,
+      writable: true,
+      value: vi.fn((blob: Blob) => {
+        blobs.push(blob);
+        return `blob:mock-${blobs.length}`;
+      }) as typeof mutableURL.createObjectURL,
+    });
+    Object.defineProperty(mutableURL, "revokeObjectURL", {
+      configurable: true,
+      writable: true,
+      value: vi.fn() as typeof mutableURL.revokeObjectURL,
+    });
+
+    const restore = () => {
+      createElementSpy.mockRestore();
+      if (originalCreateObjectURL) {
+        Object.defineProperty(mutableURL, "createObjectURL", {
+          configurable: true,
+          writable: true,
+          value: originalCreateObjectURL,
+        });
+      } else {
+        Reflect.deleteProperty(mutableURL, "createObjectURL");
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(mutableURL, "revokeObjectURL", {
+          configurable: true,
+          writable: true,
+          value: originalRevokeObjectURL,
+        });
+      } else {
+        Reflect.deleteProperty(mutableURL, "revokeObjectURL");
+      }
+      if (originalBlob) {
+        vi.stubGlobal("Blob", originalBlob);
+      } else {
+        Reflect.deleteProperty(globalThis, "Blob");
+      }
+    };
+
+    return { anchors, blobs, restore };
+  };
+
   it("notifies error when file exceeds byte limit", async () => {
     const { result, onError } = renderUseFileOperations();
     const bigContent = "x".repeat(MAX_FLOW_BYTES + 1);
@@ -453,6 +553,81 @@ describe("useFileOperations", () => {
       } else {
         Reflect.deleteProperty(mutableURL, "revokeObjectURL");
       }
+    }
+  });
+
+  it("adds runtime semantics metadata to full, simplified, and LLM exports", async () => {
+    const { blobs, restore } = setupDownloadCapture();
+
+    try {
+      const { result, nodes } = renderUseFileOperations({
+        tabTitle: "Runtime Semantics",
+      });
+      nodes[0].selected = true;
+
+      act(() => {
+        result.current.saveFlow();
+      });
+      act(() => {
+        result.current.saveSimplifiedFlow();
+      });
+      await act(async () => {
+        await result.current.saveLlmExport();
+      });
+
+      expect(blobs).toHaveLength(3);
+
+      const readBlobText = async (blob: Blob): Promise<string> => {
+        if (typeof blob.text === "function") {
+          return blob.text();
+        }
+        if (typeof blob.arrayBuffer === "function") {
+          const bytes = await blob.arrayBuffer();
+          return new TextDecoder().decode(bytes);
+        }
+        try {
+          return await new Response(blob as unknown as BodyInit).text();
+        } catch {
+          // fall through to explicit error
+        }
+        throw new Error("Unable to read downloaded blob content");
+      };
+
+      const [full, simplified, llm] = await Promise.all(
+        blobs.map(async (blob) => JSON.parse(await readBlobText(blob)) as Record<string, unknown>)
+      );
+
+      const semanticsMatcher = expect.objectContaining({
+        version: 1,
+        inputResolution: expect.objectContaining({
+          precedence: expect.arrayContaining([
+            "__FORCE00__",
+            "__EMPTY__",
+            "__NULL__",
+            "edge value",
+            "manual text",
+          ]),
+          sentinels: expect.objectContaining({
+            __FORCE00__: expect.any(String),
+            __EMPTY__: expect.any(String),
+            __NULL__: expect.any(String),
+          }),
+        }),
+        typeCoercion: expect.objectContaining({
+          integerParams: expect.any(String),
+          numberParams: expect.any(String),
+        }),
+      });
+
+      expect(full.runtimeSemantics).toEqual(semanticsMatcher);
+      expect(simplified.runtimeSemantics).toEqual(semanticsMatcher);
+      expect(llm.runtimeSemantics).toEqual(semanticsMatcher);
+      const llmContext = llm.llmContext as { whatIsExported?: string[] } | undefined;
+      expect(llmContext?.whatIsExported).toEqual(
+        expect.arrayContaining([expect.stringContaining("Runtime semantics:")])
+      );
+    } finally {
+      restore();
     }
   });
 

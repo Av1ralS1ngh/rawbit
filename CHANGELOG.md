@@ -112,3 +112,19 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 - Loading example flows on mobile no longer risks a blank canvas due to mount/fit timing races.
 - Lesson content polish in L1/L3, including corrected locktime/CLTV wording and removal of stale “ready to broadcast” text in flows 1-3.
 - Improved Safari drag responsiveness in the paper skin by removing dashed-edge styling.
+
+## [0.3.9] - 2026-03-20
+
+### Added
+
+- Exports (`full`, `simplified`, `LLM`) now include `runtimeSemantics` metadata describing sentinel precedence (`__FORCE00__`, `__EMPTY__`, `__NULL__`) and numeric type coercion rules.
+
+### Changed
+
+- Lesson 2 flow renamed to **Multisig: Bare P2MS and P2SH Multisig** (`p2_Bare_P2MS_and_P2SH_MultiSig.json`), with refreshed in-flow wording.
+
+### Fixed
+
+- Shared-flow imports now use more resilient fit-view timing to avoid occasional blank/offscreen canvas states.
+- Redo no longer causes a visible canvas blink during history restore.
+- Lesson 3 cleanup: removed redundant “Resulting TXID” helper comments.
