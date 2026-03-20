@@ -14,7 +14,9 @@ export interface FieldDefinition {
   rows?: number;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  allowNull?: boolean;
   emptyLabel?: string;
+  nullLabel?: string;
   unconnectable?: boolean;
   comment?: string;
   options?: string[];

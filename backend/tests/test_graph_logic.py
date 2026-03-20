@@ -110,6 +110,68 @@ def test_build_multi_val_params_precedence(monkeypatch):
     }
 
 
+def test_bulk_calculate_logic_musig2_nonce_gen_message_null_sentinel():
+    rand = "0f" * 32
+    signer_pubkey = "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"
+
+    node_template = {
+        "id": "nonce",
+        "type": "calculation",
+        "data": {
+            "functionName": "musig2_nonce_gen",
+            "paramExtraction": "multi_val",
+            "inputStructure": {
+                "ungrouped": [
+                    {"index": 0},
+                    {"index": 1},
+                    {"index": 2},
+                    {"index": 3},
+                    {"index": 4},
+                ]
+            },
+            "inputs": {"vals": {}},
+            "groupInstances": {},
+        },
+    }
+
+    node_null = copy.deepcopy(node_template)
+    node_null["data"]["inputs"]["vals"] = {
+        "2": graph_logic.SENTINEL_NULL,
+        "3": rand,
+        "4": signer_pubkey,
+    }
+    nodes_null, errors_null = graph_logic.bulk_calculate_logic([node_null], [])
+    assert errors_null == []
+    data_null = list(nodes_null)[0]["data"]
+
+    assert data_null["result"] == (
+        "02c96e7cb1e8aa5dac64d872947914198f607d90ecde5200de52978ad5ded63c00"
+        "0299ec5117c2d29edee8a2092587c3909be694d5cff0667d6c02ea4059f7cd9786"
+    )
+    assert data_null["outputValues"]["output-1"] == (
+        "89bdd787d0284e5e4d5fc572e49e316bab7e21e3b1830de37dfe80156fa41a6d"
+        "0b17ae8d024c53679699a6fd7944d9c4a366b514baf43088e0708b1023dd2897"
+        "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"
+    )
+    assert data_null["inputs"]["vals"]["2"] == graph_logic.SENTINEL_NULL
+
+    node_empty = copy.deepcopy(node_template)
+    node_empty["data"]["inputs"]["vals"] = {
+        "2": "",
+        "3": rand,
+        "4": signer_pubkey,
+    }
+    nodes_empty, errors_empty = graph_logic.bulk_calculate_logic([node_empty], [])
+    assert errors_empty == []
+    data_empty = list(nodes_empty)[0]["data"]
+
+    assert data_empty["result"] == (
+        "0316711283776c75b2c43e2badd8dcdc3b97ac549db870a614c2776554acbee830"
+        "0393836bea014fdef432ebd4fa94a8e74fbbe52a081dceb9491aebca86f6fe76ad"
+    )
+    assert data_empty["result"] != data_null["result"]
+
+
 @pytest.mark.parametrize(
     "leaf_index, expected_path",
     [

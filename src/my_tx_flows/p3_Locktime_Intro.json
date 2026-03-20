@@ -1,13 +1,13 @@
 {
-  "name": "flow-1755348240822",
+  "name": "flow-1773920153997",
   "schemaVersion": 1,
   "nodes": [
     {
       "id": "node_ZDBADVUZ",
       "type": "calculation",
       "position": {
-        "x": 1139.6265994145188,
-        "y": 1047.9332701040382
+        "x": 1049.6265994145188,
+        "y": 1002.9332701040382
       },
       "data": {
         "functionName": "identity",
@@ -38,8 +38,8 @@
       "id": "node_Qq6MHx8f",
       "type": "calculation",
       "position": {
-        "x": 1141.3415926943953,
-        "y": 1475.318580639446
+        "x": 1051.3415926943953,
+        "y": 1430.318580639446
       },
       "data": {
         "functionName": "identity",
@@ -73,8 +73,8 @@
       "id": "node_d8HXLe8b",
       "type": "calculation",
       "position": {
-        "x": 1129.9823178570832,
-        "y": 1831.8925594865568
+        "x": 1039.9823178570832,
+        "y": 1786.8925594865568
       },
       "data": {
         "functionName": "identity",
@@ -107,8 +107,8 @@
       "id": "node_CUXoxjzM",
       "type": "calculation",
       "position": {
-        "x": 1132.133132643311,
-        "y": 2384.01373193611
+        "x": 1042.133132643311,
+        "y": 2339.01373193611
       },
       "data": {
         "functionName": "identity",
@@ -139,8 +139,8 @@
       "id": "node_4J1YJI1d",
       "type": "calculation",
       "position": {
-        "x": 1184.2971008513205,
-        "y": 3935.2549700655427
+        "x": 1094.2971008513205,
+        "y": 3890.2549700655427
       },
       "data": {
         "functionName": "identity",
@@ -171,8 +171,8 @@
       "id": "node_w91e8Aof",
       "type": "calculation",
       "position": {
-        "x": 1104.4953310347782,
-        "y": 4399.465166217306
+        "x": 1014.4953310347782,
+        "y": 4354.465166217306
       },
       "data": {
         "functionName": "identity",
@@ -205,8 +205,8 @@
       "id": "node_JeU1QNzG",
       "type": "calculation",
       "position": {
-        "x": 1122.680213485196,
-        "y": 3413.1345693976
+        "x": 1032.680213485196,
+        "y": 3368.1345693976
       },
       "data": {
         "functionName": "identity",
@@ -239,8 +239,8 @@
       "id": "node_TiFCbQhF",
       "type": "calculation",
       "position": {
-        "x": 2906.971999551054,
-        "y": 2677.0790128954213
+        "x": 2816.971999551054,
+        "y": 2632.0790128954213
       },
       "data": {
         "functionName": "identity",
@@ -271,8 +271,8 @@
       "id": "node_AOh2DyT1",
       "type": "calculation",
       "position": {
-        "x": 1115.0291715358699,
-        "y": 2794.0750131598725
+        "x": 1025.0291715358699,
+        "y": 2749.0750131598725
       },
       "data": {
         "functionName": "identity",
@@ -305,8 +305,8 @@
       "id": "node_n10f59TC",
       "type": "calculation",
       "position": {
-        "x": 3572.698550458338,
-        "y": 1983.8910047814734
+        "x": 3482.698550458338,
+        "y": 1938.8910047814734
       },
       "data": {
         "functionName": "concat_all",
@@ -360,8 +360,8 @@
       "id": "node_oqWYq7eA",
       "type": "calculation",
       "position": {
-        "x": 5328.473204804307,
-        "y": 2374.510082679457
+        "x": 5238.473204804307,
+        "y": 2329.510082679457
       },
       "data": {
         "functionName": "concat_all",
@@ -415,8 +415,8 @@
       "id": "node_O24yrwAc",
       "type": "calculation",
       "position": {
-        "x": 6321.7268743925515,
-        "y": 2346.308329819253
+        "x": 6231.7268743925515,
+        "y": 2301.308329819253
       },
       "data": {
         "functionName": "concat_all",
@@ -472,8 +472,8 @@
       "id": "node_CDcd2S8p",
       "type": "calculation",
       "position": {
-        "x": 2312.4617587285857,
-        "y": 1802.7450669814236
+        "x": 2222.4617587285857,
+        "y": 1757.7450669814236
       },
       "data": {
         "functionName": "concat_all",
@@ -621,8 +621,8 @@
       "id": "node_7itc4U2H",
       "type": "calculation",
       "position": {
-        "x": 7439.450027815054,
-        "y": 2025.0967379874592
+        "x": 7349.450027815054,
+        "y": 1980.0967379874592
       },
       "data": {
         "functionName": "concat_all",
@@ -765,15 +765,15 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
       "id": "node_ymepColY",
       "type": "calculation",
       "position": {
-        "x": -483.6138844588613,
-        "y": 627.7027730530365
+        "x": -573.6138844588613,
+        "y": 582.7027730530365
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -794,8 +794,8 @@
       "id": "node_kcC18QKi",
       "type": "calculation",
       "position": {
-        "x": -109.49339361006332,
-        "y": 634.4030016663078
+        "x": -199.49339361006332,
+        "y": 589.4030016663078
       },
       "data": {
         "functionName": "hash160_hex",
@@ -825,8 +825,8 @@
       "id": "node_cx3CrAGX",
       "type": "calculation",
       "position": {
-        "x": 1589.8442600881472,
-        "y": 1531.8824922619362
+        "x": 1499.8442600881472,
+        "y": 1486.8824922619362
       },
       "data": {
         "functionName": "encode_varint",
@@ -846,8 +846,8 @@
       "id": "node_KPfS1CNU",
       "type": "calculation",
       "position": {
-        "x": 1588.3824095090267,
-        "y": 1850.2117864805177
+        "x": 1498.3824095090267,
+        "y": 1805.2117864805177
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -867,8 +867,8 @@
       "id": "node_pfW71MxF",
       "type": "calculation",
       "position": {
-        "x": 1574.35226826893,
-        "y": 4018.748491242676
+        "x": 1484.35226826893,
+        "y": 3973.748491242676
       },
       "data": {
         "functionName": "encode_varint",
@@ -888,8 +888,8 @@
       "id": "node_I4SUsDMg",
       "type": "calculation",
       "position": {
-        "x": 1571.1754486990458,
-        "y": 4484.831188687979
+        "x": 1481.1754486990458,
+        "y": 4439.831188687979
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -910,8 +910,8 @@
       "id": "node_0SWHV0J1",
       "type": "calculation",
       "position": {
-        "x": 1591.2731717754368,
-        "y": 2824.2633455165897
+        "x": 1501.2731717754368,
+        "y": 2779.2633455165897
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -931,8 +931,8 @@
       "id": "node_ad0KH0sX",
       "type": "calculation",
       "position": {
-        "x": 4187.598626253896,
-        "y": 2286.3446194049766
+        "x": 4097.598626253896,
+        "y": 2241.3446194049766
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -962,8 +962,8 @@
       "id": "node_uHfA95ZK",
       "type": "calculation",
       "position": {
-        "x": 4666.284662963458,
-        "y": 2168.6569384229897
+        "x": 4576.284662963458,
+        "y": 2123.6569384229897
       },
       "data": {
         "functionName": "sign_as_bitcoin_core_low_r",
@@ -1002,8 +1002,8 @@
       "id": "node_uim5ww70",
       "type": "calculation",
       "position": {
-        "x": 6950.854213479422,
-        "y": 2323.576927414778
+        "x": 6860.854213479422,
+        "y": 2278.576927414778
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -1023,8 +1023,8 @@
       "id": "node_hsGzOIuO",
       "type": "calculation",
       "position": {
-        "x": 8361.120375914918,
-        "y": 3212.128915072856
+        "x": 8271.120375914918,
+        "y": 3167.128915072856
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -1056,8 +1056,8 @@
       "id": "node_EcCi9i9y",
       "type": "calculation",
       "position": {
-        "x": 8781.108555904742,
-        "y": 3506.6767827216636
+        "x": 8691.108555904742,
+        "y": 3461.6767827216636
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -1079,8 +1079,8 @@
       "id": "node_RLGGMuBR",
       "type": "calculation",
       "position": {
-        "x": 5894.035291915722,
-        "y": 2287.4198532524606
+        "x": 5804.035291915722,
+        "y": 2242.4198532524606
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -1111,8 +1111,8 @@
       "id": "node_lBXOLwyR",
       "type": "calculation",
       "position": {
-        "x": 5860.6229232855285,
-        "y": 2710.517188047961
+        "x": 5770.6229232855285,
+        "y": 2665.517188047961
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -1143,8 +1143,8 @@
       "id": "node_TqKbxWEE",
       "type": "calculation",
       "position": {
-        "x": -864.1502516006503,
-        "y": 621.4053281358447
+        "x": -954.1502516006503,
+        "y": 576.4053281358447
       },
       "data": {
         "functionName": "random_256",
@@ -1163,8 +1163,8 @@
       "id": "node_v7YTeTJs",
       "type": "calculation",
       "position": {
-        "x": 1595.8932650617216,
-        "y": 2365.3828146167034
+        "x": 1505.8932650617216,
+        "y": 2320.3828146167034
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -1185,8 +1185,8 @@
       "id": "node_fFaRsppG",
       "type": "calculation",
       "position": {
-        "x": 1589.7881843400655,
-        "y": 1166.650006793723
+        "x": 1499.7881843400655,
+        "y": 1121.650006793723
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -1207,8 +1207,8 @@
       "id": "node_76OG56mG",
       "type": "calculation",
       "position": {
-        "x": 3235.480755151714,
-        "y": 2494.1765405841843
+        "x": 3145.480755151714,
+        "y": 2449.1765405841843
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -1229,8 +1229,8 @@
       "id": "node_CpZt7BYK",
       "type": "calculation",
       "position": {
-        "x": 1065.9665008414277,
-        "y": 6314.801890713829
+        "x": 975.9665008414277,
+        "y": 6269.801890713829
       },
       "data": {
         "functionName": "identity",
@@ -1263,8 +1263,8 @@
       "id": "node_UP4Qt4up",
       "type": "calculation",
       "position": {
-        "x": 231.88192937178883,
-        "y": 5457.489168040908
+        "x": 141.88192937178883,
+        "y": 5412.489168040908
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -1285,8 +1285,8 @@
       "id": "node_Wh78Uc3j",
       "type": "calculation",
       "position": {
-        "x": 569.7160731884533,
-        "y": 5461.597514723313
+        "x": 479.71607318845327,
+        "y": 5416.597514723313
       },
       "data": {
         "functionName": "hash160_hex",
@@ -1316,8 +1316,8 @@
       "id": "node_ee3ND9xZ",
       "type": "calculation",
       "position": {
-        "x": -148.6544377700002,
-        "y": 5451.191723123717
+        "x": -238.6544377700002,
+        "y": 5406.191723123717
       },
       "data": {
         "functionName": "random_256",
@@ -1336,8 +1336,8 @@
       "id": "node_xgKTyAvb",
       "type": "calculation",
       "position": {
-        "x": 1344.5925553090356,
-        "y": 5136.305568676071
+        "x": 1254.5925553090356,
+        "y": 5091.305568676071
       },
       "data": {
         "functionName": "concat_all",
@@ -1395,8 +1395,8 @@
       "id": "node_5Qoku6XU",
       "type": "opCodeNode",
       "position": {
-        "x": 938.6459165480128,
-        "y": 5039.2080950121235
+        "x": 848.6459165480128,
+        "y": 4994.2080950121235
       },
       "data": {
         "functionName": "op_code_select",
@@ -1417,8 +1417,8 @@
       "id": "node_72CpDVHh",
       "type": "calculation",
       "position": {
-        "x": 933.4809471452272,
-        "y": 5316.725569352524
+        "x": 843.4809471452272,
+        "y": 5271.725569352524
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -1449,8 +1449,8 @@
       "id": "node_S13y8kEf",
       "type": "opCodeNode",
       "position": {
-        "x": 908.7009635724999,
-        "y": 5684.558855415173
+        "x": 818.7009635724999,
+        "y": 5639.558855415173
       },
       "data": {
         "functionName": "op_code_select",
@@ -1471,8 +1471,8 @@
       "id": "node_tJ4KT2gv",
       "type": "calculation",
       "position": {
-        "x": 1619.1037178989927,
-        "y": 3426.2110103363384
+        "x": 1529.1037178989927,
+        "y": 3381.2110103363384
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -1503,8 +1503,8 @@
       "id": "node_fgRfdB9Q",
       "type": "calculation",
       "position": {
-        "x": 1838.4435138820982,
-        "y": 5198.958851583808
+        "x": 1748.4435138820982,
+        "y": 5153.958851583808
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -1524,8 +1524,8 @@
       "id": "node_WdcBvbi8",
       "type": "calculation",
       "position": {
-        "x": 1473.2228051321972,
-        "y": 6365.773666502489
+        "x": 1383.2228051321972,
+        "y": 6320.773666502489
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -1546,8 +1546,8 @@
       "id": "node_fKK0h68O",
       "type": "calculation",
       "position": {
-        "x": 878.2013194483957,
-        "y": 7885.002939335738
+        "x": 788.2013194483957,
+        "y": 7840.002939335738
       },
       "data": {
         "functionName": "identity",
@@ -1578,8 +1578,8 @@
       "id": "node_Gf8fgRRF",
       "type": "calculation",
       "position": {
-        "x": 879.9163127282704,
-        "y": 8312.388249871146
+        "x": 789.9163127282704,
+        "y": 8267.388249871146
       },
       "data": {
         "functionName": "identity",
@@ -1613,8 +1613,8 @@
       "id": "node_1IynzusC",
       "type": "calculation",
       "position": {
-        "x": 864.5261682800033,
-        "y": 8714.185280598735
+        "x": 774.5261682800033,
+        "y": 8669.185280598735
       },
       "data": {
         "functionName": "identity",
@@ -1645,8 +1645,8 @@
       "id": "node_Tgc5LZz4",
       "type": "calculation",
       "position": {
-        "x": 916.6901364880127,
-        "y": 10265.426518728165
+        "x": 826.6901364880127,
+        "y": 10220.426518728165
       },
       "data": {
         "functionName": "identity",
@@ -1677,8 +1677,8 @@
       "id": "node_co4D5rv6",
       "type": "calculation",
       "position": {
-        "x": 836.8883666714705,
-        "y": 10729.63671487993
+        "x": 746.8883666714705,
+        "y": 10684.63671487993
       },
       "data": {
         "functionName": "identity",
@@ -1711,8 +1711,8 @@
       "id": "node_r476SzUf",
       "type": "calculation",
       "position": {
-        "x": 2639.3650351877463,
-        "y": 9007.250561558045
+        "x": 2549.3650351877463,
+        "y": 8962.250561558045
       },
       "data": {
         "functionName": "identity",
@@ -1743,8 +1743,8 @@
       "id": "node_0LC4e72b",
       "type": "calculation",
       "position": {
-        "x": 3305.0915860950304,
-        "y": 8314.062553444097
+        "x": 3215.0915860950304,
+        "y": 8269.062553444097
       },
       "data": {
         "functionName": "concat_all",
@@ -1798,8 +1798,8 @@
       "id": "node_zM4pTI01",
       "type": "calculation",
       "position": {
-        "x": 5060.866240440999,
-        "y": 8704.68163134208
+        "x": 4970.866240440999,
+        "y": 8659.68163134208
       },
       "data": {
         "functionName": "concat_all",
@@ -1853,8 +1853,8 @@
       "id": "node_yMuzykqZ",
       "type": "calculation",
       "position": {
-        "x": 6118.539680650851,
-        "y": 8490.540995096782
+        "x": 6028.539680650851,
+        "y": 8445.540995096782
       },
       "data": {
         "functionName": "concat_all",
@@ -1910,8 +1910,8 @@
       "id": "node_9Cr6A8YS",
       "type": "calculation",
       "position": {
-        "x": 2044.854794365278,
-        "y": 8132.916615644048
+        "x": 1954.854794365278,
+        "y": 8087.916615644048
       },
       "data": {
         "functionName": "concat_all",
@@ -2059,8 +2059,8 @@
       "id": "node_e1eAF0Rk",
       "type": "calculation",
       "position": {
-        "x": 7171.843063451746,
-        "y": 8355.268286650082
+        "x": 7081.843063451746,
+        "y": 8310.268286650082
       },
       "data": {
         "functionName": "concat_all",
@@ -2203,15 +2203,15 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
       "id": "node_jgLl2h0H",
       "type": "calculation",
       "position": {
-        "x": 1328.4189801220223,
-        "y": 8368.952161493637
+        "x": 1238.4189801220223,
+        "y": 8323.952161493637
       },
       "data": {
         "functionName": "encode_varint",
@@ -2231,8 +2231,8 @@
       "id": "node_K8DumtGF",
       "type": "calculation",
       "position": {
-        "x": 1306.7453039056222,
-        "y": 10348.920039905299
+        "x": 1216.7453039056222,
+        "y": 10303.920039905299
       },
       "data": {
         "functionName": "encode_varint",
@@ -2252,8 +2252,8 @@
       "id": "node_bOO5oL9Q",
       "type": "calculation",
       "position": {
-        "x": 1303.568484335738,
-        "y": 10815.002737350604
+        "x": 1213.568484335738,
+        "y": 10770.002737350604
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -2274,8 +2274,8 @@
       "id": "node_elRrU4ph",
       "type": "calculation",
       "position": {
-        "x": 1323.666207412129,
-        "y": 9154.434894179214
+        "x": 1233.666207412129,
+        "y": 9109.434894179214
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2295,8 +2295,8 @@
       "id": "node_yzjOn4Bf",
       "type": "calculation",
       "position": {
-        "x": 3919.9916618905886,
-        "y": 8616.516168067601
+        "x": 3829.9916618905886,
+        "y": 8571.516168067601
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -2326,8 +2326,8 @@
       "id": "node_oWVNqED7",
       "type": "calculation",
       "position": {
-        "x": 4398.67769860015,
-        "y": 8498.828487085613
+        "x": 4308.67769860015,
+        "y": 8453.828487085613
       },
       "data": {
         "functionName": "sign_as_bitcoin_core_low_r",
@@ -2366,8 +2366,8 @@
       "id": "node_0JLMzD9e",
       "type": "calculation",
       "position": {
-        "x": 6683.247249116113,
-        "y": 8653.7484760774
+        "x": 6593.247249116113,
+        "y": 8608.7484760774
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2387,8 +2387,8 @@
       "id": "node_M1Hg7Dy5",
       "type": "calculation",
       "position": {
-        "x": 8093.51341155161,
-        "y": 9542.30046373548
+        "x": 8003.51341155161,
+        "y": 9497.30046373548
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -2420,8 +2420,8 @@
       "id": "node_GhUrPCgC",
       "type": "calculation",
       "position": {
-        "x": 8513.501591541435,
-        "y": 9836.848331384286
+        "x": 8423.501591541435,
+        "y": 9791.848331384286
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -2443,8 +2443,8 @@
       "id": "node_xK8OLRQw",
       "type": "calculation",
       "position": {
-        "x": 5626.428327552414,
-        "y": 8617.591401915084
+        "x": 5536.428327552414,
+        "y": 8572.591401915084
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2475,8 +2475,8 @@
       "id": "node_PwVjGSne",
       "type": "calculation",
       "position": {
-        "x": 5618.7684034843205,
-        "y": 9081.770432785763
+        "x": 5528.7684034843205,
+        "y": 9036.770432785763
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2507,8 +2507,8 @@
       "id": "node_02Rm3U62",
       "type": "calculation",
       "position": {
-        "x": 1328.286300698414,
-        "y": 8695.554363279327
+        "x": 1238.286300698414,
+        "y": 8650.554363279327
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2529,8 +2529,8 @@
       "id": "node_Ia2mDkGf",
       "type": "calculation",
       "position": {
-        "x": 1328.3629043739406,
-        "y": 8003.719676025423
+        "x": 1238.3629043739406,
+        "y": 7958.719676025423
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2551,8 +2551,8 @@
       "id": "node_0DuEbYXA",
       "type": "calculation",
       "position": {
-        "x": 2967.8737907884065,
-        "y": 8824.348089246809
+        "x": 2877.8737907884065,
+        "y": 8779.348089246809
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2573,8 +2573,8 @@
       "id": "node_ePe43iZ8",
       "type": "calculation",
       "position": {
-        "x": -35.725034991518896,
-        "y": 11787.66071670353
+        "x": -125.7250349915189,
+        "y": 11742.66071670353
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -2595,8 +2595,8 @@
       "id": "node_2IFPgoX1",
       "type": "calculation",
       "position": {
-        "x": 302.10910882514554,
-        "y": 11791.769063385937
+        "x": 212.10910882514554,
+        "y": 11746.769063385937
       },
       "data": {
         "functionName": "hash160_hex",
@@ -2626,8 +2626,8 @@
       "id": "node_T3lnsmpQ",
       "type": "calculation",
       "position": {
-        "x": -416.2614021333079,
-        "y": 11781.36327178634
+        "x": -506.2614021333079,
+        "y": 11736.36327178634
       },
       "data": {
         "functionName": "random_256",
@@ -2646,8 +2646,8 @@
       "id": "node_Nx4fH0Zf",
       "type": "calculation",
       "position": {
-        "x": 1076.9855909457278,
-        "y": 11466.477117338694
+        "x": 986.9855909457278,
+        "y": 11421.477117338694
       },
       "data": {
         "functionName": "concat_all",
@@ -2705,8 +2705,8 @@
       "id": "node_i6L2l2HL",
       "type": "opCodeNode",
       "position": {
-        "x": 671.0389521847051,
-        "y": 11369.379643674747
+        "x": 581.0389521847051,
+        "y": 11324.379643674747
       },
       "data": {
         "functionName": "op_code_select",
@@ -2727,8 +2727,8 @@
       "id": "node_yud57QZc",
       "type": "calculation",
       "position": {
-        "x": 665.8739827819195,
-        "y": 11646.897118015147
+        "x": 575.8739827819195,
+        "y": 11601.897118015147
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -2759,8 +2759,8 @@
       "id": "node_3TssVXRM",
       "type": "opCodeNode",
       "position": {
-        "x": 641.0939992091921,
-        "y": 12014.730404077796
+        "x": 551.0939992091921,
+        "y": 11969.730404077796
       },
       "data": {
         "functionName": "op_code_select",
@@ -2781,8 +2781,8 @@
       "id": "node_lb7hvLoB",
       "type": "calculation",
       "position": {
-        "x": 1351.496753535685,
-        "y": 9756.382558998963
+        "x": 1261.496753535685,
+        "y": 9711.382558998963
       },
       "data": {
         "functionName": "reverse_bytes_4",
@@ -2813,8 +2813,8 @@
       "id": "node_R6ONTbA8",
       "type": "calculation",
       "position": {
-        "x": 1570.8365495187904,
-        "y": 11529.130400246431
+        "x": 1480.8365495187904,
+        "y": 11484.130400246431
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -2834,8 +2834,8 @@
       "id": "node_LN8ebOtL",
       "type": "calculation",
       "position": {
-        "x": 1013.8117006891484,
-        "y": 12605.880662432015
+        "x": 923.8117006891484,
+        "y": 12560.880662432015
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -2856,8 +2856,8 @@
       "id": "node_IHJMiOuz",
       "type": "calculation",
       "position": {
-        "x": 229.6792417939273,
-        "y": 12518.514763266028
+        "x": 139.6792417939273,
+        "y": 12473.514763266028
       },
       "data": {
         "functionName": "identity",
@@ -2890,8 +2890,8 @@
       "id": "node_90cNYhwV",
       "type": "calculation",
       "position": {
-        "x": 612.0998203249678,
-        "y": 12583.849287083945
+        "x": 522.0998203249678,
+        "y": 12538.849287083945
       },
       "data": {
         "functionName": "date_to_unix_timestamp",
@@ -2922,8 +2922,8 @@
       "id": "node_kPi3Rqe8",
       "type": "calculation",
       "position": {
-        "x": 869.6305083728207,
-        "y": 9621.758591899432
+        "x": 779.6305083728207,
+        "y": 9576.758591899432
       },
       "data": {
         "functionName": "identity",
@@ -2956,8 +2956,8 @@
       "id": "node_L6fw9K56",
       "type": "calculation",
       "position": {
-        "x": 909.7163762099813,
-        "y": 14063.347551495131
+        "x": 819.7163762099813,
+        "y": 14018.347551495131
       },
       "data": {
         "functionName": "identity",
@@ -2988,8 +2988,8 @@
       "id": "node_0KPkiPLP",
       "type": "calculation",
       "position": {
-        "x": 911.431369489856,
-        "y": 14490.732862030545
+        "x": 821.431369489856,
+        "y": 14445.732862030545
       },
       "data": {
         "functionName": "identity",
@@ -3023,8 +3023,8 @@
       "id": "node_TbSZAAfV",
       "type": "calculation",
       "position": {
-        "x": 896.0412250415889,
-        "y": 14892.529892758128
+        "x": 806.0412250415889,
+        "y": 14847.529892758128
       },
       "data": {
         "functionName": "identity",
@@ -3055,8 +3055,8 @@
       "id": "node_Rqjn5GQF",
       "type": "calculation",
       "position": {
-        "x": 948.2051932495983,
-        "y": 16443.771130887562
+        "x": 858.2051932495983,
+        "y": 16398.771130887562
       },
       "data": {
         "functionName": "identity",
@@ -3087,8 +3087,8 @@
       "id": "node_PqWm116n",
       "type": "calculation",
       "position": {
-        "x": 868.4034234330561,
-        "y": 16907.981327039324
+        "x": 778.4034234330561,
+        "y": 16862.981327039324
       },
       "data": {
         "functionName": "identity",
@@ -3121,8 +3121,8 @@
       "id": "node_S5a8UdEH",
       "type": "calculation",
       "position": {
-        "x": 2670.880091949332,
-        "y": 15185.595173717444
+        "x": 2580.880091949332,
+        "y": 15140.595173717444
       },
       "data": {
         "functionName": "identity",
@@ -3153,8 +3153,8 @@
       "id": "node_KVwkPRMa",
       "type": "calculation",
       "position": {
-        "x": 3336.606642856616,
-        "y": 14492.40716560349
+        "x": 3246.606642856616,
+        "y": 14447.40716560349
       },
       "data": {
         "functionName": "concat_all",
@@ -3208,8 +3208,8 @@
       "id": "node_6y8DeYnD",
       "type": "calculation",
       "position": {
-        "x": 5092.381297202584,
-        "y": 14883.026243501477
+        "x": 5002.381297202584,
+        "y": 14838.026243501477
       },
       "data": {
         "functionName": "concat_all",
@@ -3263,8 +3263,8 @@
       "id": "node_42eBeg3Y",
       "type": "calculation",
       "position": {
-        "x": 6150.054737412436,
-        "y": 14668.88560725618
+        "x": 6060.054737412436,
+        "y": 14623.88560725618
       },
       "data": {
         "functionName": "concat_all",
@@ -3320,8 +3320,8 @@
       "id": "node_dULNvN7r",
       "type": "calculation",
       "position": {
-        "x": 2076.3698511268635,
-        "y": 14311.261227803447
+        "x": 1986.3698511268635,
+        "y": 14266.261227803447
       },
       "data": {
         "functionName": "concat_all",
@@ -3469,8 +3469,8 @@
       "id": "node_QRIjq3E7",
       "type": "calculation",
       "position": {
-        "x": 7203.358120213332,
-        "y": 14533.612898809475
+        "x": 7113.358120213332,
+        "y": 14488.612898809475
       },
       "data": {
         "functionName": "concat_all",
@@ -3613,15 +3613,15 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
       "id": "node_n8NbtI9e",
       "type": "calculation",
       "position": {
-        "x": 1359.9340368836079,
-        "y": 14547.29677365303
+        "x": 1269.9340368836079,
+        "y": 14502.29677365303
       },
       "data": {
         "functionName": "encode_varint",
@@ -3641,8 +3641,8 @@
       "id": "node_AdGY7lzr",
       "type": "calculation",
       "position": {
-        "x": 1338.2603606672078,
-        "y": 16527.264652064692
+        "x": 1248.2603606672078,
+        "y": 16482.264652064692
       },
       "data": {
         "functionName": "encode_varint",
@@ -3662,8 +3662,8 @@
       "id": "node_4qjaw2Ie",
       "type": "calculation",
       "position": {
-        "x": 1335.0835410973236,
-        "y": 16993.34734951
+        "x": 1245.0835410973236,
+        "y": 16948.34734951
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -3684,8 +3684,8 @@
       "id": "node_ymWSnmB8",
       "type": "calculation",
       "position": {
-        "x": 1355.1812641737147,
-        "y": 15332.779506338611
+        "x": 1265.1812641737147,
+        "y": 15287.779506338611
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3705,8 +3705,8 @@
       "id": "node_JJmDn440",
       "type": "calculation",
       "position": {
-        "x": 3951.506718652174,
-        "y": 14794.860780226994
+        "x": 3861.506718652174,
+        "y": 14749.860780226994
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -3736,8 +3736,8 @@
       "id": "node_SJKZJk5a",
       "type": "calculation",
       "position": {
-        "x": 4430.192755361735,
-        "y": 14677.173099245007
+        "x": 4340.192755361735,
+        "y": 14632.173099245007
       },
       "data": {
         "functionName": "sign_as_bitcoin_core_low_r",
@@ -3776,8 +3776,8 @@
       "id": "node_iXeuGur3",
       "type": "calculation",
       "position": {
-        "x": 6714.762305877699,
-        "y": 14832.093088236794
+        "x": 6624.762305877699,
+        "y": 14787.093088236794
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -3797,8 +3797,8 @@
       "id": "node_ihXOKuIF",
       "type": "calculation",
       "position": {
-        "x": 8125.028468313194,
-        "y": 15720.645075894874
+        "x": 8035.028468313194,
+        "y": 15675.645075894874
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -3830,8 +3830,8 @@
       "id": "node_GzA48xCd",
       "type": "calculation",
       "position": {
-        "x": 8545.016648303019,
-        "y": 16015.19294354368
+        "x": 8455.016648303019,
+        "y": 15970.19294354368
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -3853,8 +3853,8 @@
       "id": "node_xBi6GM8D",
       "type": "calculation",
       "position": {
-        "x": 5657.943384314,
-        "y": 14795.93601407448
+        "x": 5567.943384314,
+        "y": 14750.93601407448
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3885,8 +3885,8 @@
       "id": "node_retzy2BD",
       "type": "calculation",
       "position": {
-        "x": 5726.286277669691,
-        "y": 15136.93806498247
+        "x": 5636.286277669691,
+        "y": 15091.93806498247
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -3917,8 +3917,8 @@
       "id": "node_hFb0W8hf",
       "type": "calculation",
       "position": {
-        "x": 1359.8013574599995,
-        "y": 14873.898975438726
+        "x": 1269.8013574599995,
+        "y": 14828.898975438726
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3939,8 +3939,8 @@
       "id": "node_kHd5vjJT",
       "type": "calculation",
       "position": {
-        "x": 1359.8779611355262,
-        "y": 14182.064288184822
+        "x": 1269.8779611355262,
+        "y": 14137.064288184822
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3961,8 +3961,8 @@
       "id": "node_mUITheM9",
       "type": "calculation",
       "position": {
-        "x": 2999.388847549992,
-        "y": 15002.692701406206
+        "x": 2909.388847549992,
+        "y": 14957.692701406206
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -3983,8 +3983,8 @@
       "id": "node_1EBr9DY5",
       "type": "calculation",
       "position": {
-        "x": -4.209978229932403,
-        "y": 17966.005328862924
+        "x": -94.2099782299324,
+        "y": 17921.005328862924
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -4005,8 +4005,8 @@
       "id": "node_n9ch6WRc",
       "type": "calculation",
       "position": {
-        "x": 333.6241655867311,
-        "y": 17970.11367554533
+        "x": 243.62416558673112,
+        "y": 17925.11367554533
       },
       "data": {
         "functionName": "hash160_hex",
@@ -4036,8 +4036,8 @@
       "id": "node_gzu6eWcB",
       "type": "calculation",
       "position": {
-        "x": -384.74634537172324,
-        "y": 17959.707883945735
+        "x": -474.74634537172324,
+        "y": 17914.707883945735
       },
       "data": {
         "functionName": "random_256",
@@ -4056,12 +4056,12 @@
       "id": "node_unbFEOuJ",
       "type": "calculation",
       "position": {
-        "x": 1108.5006477073134,
-        "y": 17644.82172949809
+        "x": 1018.5006477073134,
+        "y": 17599.82172949809
       },
       "data": {
         "functionName": "concat_all",
-        "title": "Concat",
+        "title": "P2PKH scriptpubkey",
         "paramExtraction": "multi_val",
         "numInputs": 2,
         "inputs": {
@@ -4115,8 +4115,8 @@
       "id": "node_elxOg4xx",
       "type": "opCodeNode",
       "position": {
-        "x": 702.5540089462907,
-        "y": 17547.724255834142
+        "x": 612.5540089462907,
+        "y": 17502.724255834142
       },
       "data": {
         "functionName": "op_code_select",
@@ -4137,8 +4137,8 @@
       "id": "node_9zezC85H",
       "type": "calculation",
       "position": {
-        "x": 697.3890395435051,
-        "y": 17825.24173017454
+        "x": 607.3890395435051,
+        "y": 17780.24173017454
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -4169,8 +4169,8 @@
       "id": "node_jzmZEaAY",
       "type": "opCodeNode",
       "position": {
-        "x": 672.6090559707777,
-        "y": 18193.075016237195
+        "x": 582.6090559707777,
+        "y": 18148.075016237195
       },
       "data": {
         "functionName": "op_code_select",
@@ -4191,8 +4191,8 @@
       "id": "node_kD4uzolP",
       "type": "calculation",
       "position": {
-        "x": 1602.351606280376,
-        "y": 17707.47501240583
+        "x": 1512.351606280376,
+        "y": 17662.47501240583
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -4212,8 +4212,8 @@
       "id": "node_WRR9WQZS",
       "type": "calculation",
       "position": {
-        "x": 1045.326757450734,
-        "y": 18784.225274591412
+        "x": 955.326757450734,
+        "y": 18739.225274591412
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4234,8 +4234,8 @@
       "id": "node_dyf3DNXn",
       "type": "calculation",
       "position": {
-        "x": 621.5342204173735,
-        "y": 18763.508543237283
+        "x": 531.5342204173735,
+        "y": 18718.508543237283
       },
       "data": {
         "functionName": "identity",
@@ -4268,8 +4268,8 @@
       "id": "node_0PqHg49x",
       "type": "calculation",
       "position": {
-        "x": 740.0846259223113,
-        "y": 15629.568091951904
+        "x": 650.0846259223113,
+        "y": 15584.568091951904
       },
       "data": {
         "functionName": "identity",
@@ -4302,8 +4302,8 @@
       "id": "node_f5QTGMYV",
       "type": "calculation",
       "position": {
-        "x": 1092.5696951286677,
-        "y": 15717.782670329809
+        "x": 1002.5696951286677,
+        "y": 15672.782670329809
       },
       "data": {
         "functionName": "blocks_to_sequence_number",
@@ -4334,8 +4334,8 @@
       "id": "node_0Eifk2yV",
       "type": "calculation",
       "position": {
-        "x": 1408.5201784575588,
-        "y": 15746.324180608503
+        "x": 1318.5201784575588,
+        "y": 15701.324180608503
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -4356,8 +4356,8 @@
       "id": "node_G48213OY",
       "type": "calculation",
       "position": {
-        "x": 834.9360720410027,
-        "y": 19879.097238092738
+        "x": 744.9360720410027,
+        "y": 19834.097238092738
       },
       "data": {
         "functionName": "identity",
@@ -4388,8 +4388,8 @@
       "id": "node_F0s9LTUS",
       "type": "calculation",
       "position": {
-        "x": 836.6510653208775,
-        "y": 20306.482548628144
+        "x": 746.6510653208775,
+        "y": 20261.482548628144
       },
       "data": {
         "functionName": "identity",
@@ -4423,8 +4423,8 @@
       "id": "node_zuKoaKNj",
       "type": "calculation",
       "position": {
-        "x": 821.2609208726103,
-        "y": 20708.279579355734
+        "x": 731.2609208726103,
+        "y": 20663.279579355734
       },
       "data": {
         "functionName": "identity",
@@ -4455,8 +4455,8 @@
       "id": "node_kSMnaG6A",
       "type": "calculation",
       "position": {
-        "x": 873.4248890806198,
-        "y": 22259.52081748516
+        "x": 783.4248890806198,
+        "y": 22214.52081748516
       },
       "data": {
         "functionName": "identity",
@@ -4487,8 +4487,8 @@
       "id": "node_uUpTVBuP",
       "type": "calculation",
       "position": {
-        "x": 793.6231192640776,
-        "y": 22723.73101363693
+        "x": 703.6231192640776,
+        "y": 22678.73101363693
       },
       "data": {
         "functionName": "identity",
@@ -4521,8 +4521,8 @@
       "id": "node_V1yaSjR7",
       "type": "calculation",
       "position": {
-        "x": 2596.0997877803534,
-        "y": 21001.344860315043
+        "x": 2506.0997877803534,
+        "y": 20956.344860315043
       },
       "data": {
         "functionName": "identity",
@@ -4553,8 +4553,8 @@
       "id": "node_alK7xTrE",
       "type": "calculation",
       "position": {
-        "x": 3261.8263386876374,
-        "y": 20308.156852201097
+        "x": 3171.8263386876374,
+        "y": 20263.156852201097
       },
       "data": {
         "functionName": "concat_all",
@@ -4608,8 +4608,8 @@
       "id": "node_DaZjhHyt",
       "type": "calculation",
       "position": {
-        "x": 5017.600993033606,
-        "y": 20698.775930099077
+        "x": 4927.600993033606,
+        "y": 20653.775930099077
       },
       "data": {
         "functionName": "concat_all",
@@ -4663,8 +4663,8 @@
       "id": "node_5K6KPxPZ",
       "type": "calculation",
       "position": {
-        "x": 6075.274433243458,
-        "y": 20484.63529385378
+        "x": 5985.274433243458,
+        "y": 20439.63529385378
       },
       "data": {
         "functionName": "concat_all",
@@ -4720,8 +4720,8 @@
       "id": "node_vA6px7Rm",
       "type": "calculation",
       "position": {
-        "x": 2001.589546957885,
-        "y": 20127.010914401046
+        "x": 1911.589546957885,
+        "y": 20082.010914401046
       },
       "data": {
         "functionName": "concat_all",
@@ -4869,8 +4869,8 @@
       "id": "node_vUSfnkZD",
       "type": "calculation",
       "position": {
-        "x": 7128.577816044353,
-        "y": 20349.36258540708
+        "x": 7038.577816044353,
+        "y": 20304.36258540708
       },
       "data": {
         "functionName": "concat_all",
@@ -5013,15 +5013,15 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
       "id": "node_oQxKEk5O",
       "type": "calculation",
       "position": {
-        "x": 1285.1537327146293,
-        "y": 20363.046460250636
+        "x": 1195.1537327146293,
+        "y": 20318.046460250636
       },
       "data": {
         "functionName": "encode_varint",
@@ -5041,8 +5041,8 @@
       "id": "node_78MViGvL",
       "type": "calculation",
       "position": {
-        "x": 1263.4800564982293,
-        "y": 22343.0143386623
+        "x": 1173.4800564982293,
+        "y": 22298.0143386623
       },
       "data": {
         "functionName": "encode_varint",
@@ -5062,8 +5062,8 @@
       "id": "node_GMmHu2qU",
       "type": "calculation",
       "position": {
-        "x": 1260.303236928345,
-        "y": 22809.0970361076
+        "x": 1170.303236928345,
+        "y": 22764.0970361076
       },
       "data": {
         "functionName": "satoshi_to_8_le",
@@ -5084,8 +5084,8 @@
       "id": "node_6Uwxwb7Z",
       "type": "calculation",
       "position": {
-        "x": 1280.4009600047361,
-        "y": 21148.52919293621
+        "x": 1190.4009600047361,
+        "y": 21103.52919293621
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5105,8 +5105,8 @@
       "id": "node_aub5UbTi",
       "type": "calculation",
       "position": {
-        "x": 3876.7264144831956,
-        "y": 20610.6104668246
+        "x": 3786.7264144831956,
+        "y": 20565.6104668246
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -5136,8 +5136,8 @@
       "id": "node_kDNcvJ84",
       "type": "calculation",
       "position": {
-        "x": 4373.25325506075,
-        "y": 20463.18811272929
+        "x": 4283.25325506075,
+        "y": 20418.18811272929
       },
       "data": {
         "functionName": "sign_as_bitcoin_core_low_r",
@@ -5176,8 +5176,8 @@
       "id": "node_5XXo6RPE",
       "type": "calculation",
       "position": {
-        "x": 6639.98200170872,
-        "y": 20647.8427748344
+        "x": 6549.98200170872,
+        "y": 20602.8427748344
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5197,8 +5197,8 @@
       "id": "node_s9Cyz9lZ",
       "type": "calculation",
       "position": {
-        "x": 8050.248164144217,
-        "y": 21536.39476249248
+        "x": 7960.248164144217,
+        "y": 21491.39476249248
       },
       "data": {
         "functionName": "double_sha256_hex",
@@ -5230,8 +5230,8 @@
       "id": "node_r1TThzov",
       "type": "calculation",
       "position": {
-        "x": 8470.236344134042,
-        "y": 21830.942630141286
+        "x": 8380.236344134042,
+        "y": 21785.942630141286
       },
       "data": {
         "functionName": "reverse_txid_bytes",
@@ -5253,8 +5253,8 @@
       "id": "node_suqEQez5",
       "type": "calculation",
       "position": {
-        "x": 5583.163080145021,
-        "y": 20611.68570067208
+        "x": 5493.163080145021,
+        "y": 20566.68570067208
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -5285,8 +5285,8 @@
       "id": "node_3n0CsZFY",
       "type": "calculation",
       "position": {
-        "x": 5651.505973500713,
-        "y": 20952.68775158007
+        "x": 5561.505973500713,
+        "y": 20907.68775158007
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -5317,8 +5317,8 @@
       "id": "node_dklaaaFD",
       "type": "calculation",
       "position": {
-        "x": 1285.021053291021,
-        "y": 20689.648662036325
+        "x": 1195.021053291021,
+        "y": 20644.648662036325
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5339,8 +5339,8 @@
       "id": "node_HkNy20oi",
       "type": "calculation",
       "position": {
-        "x": 1285.0976569665477,
-        "y": 19997.81397478242
+        "x": 1195.0976569665477,
+        "y": 19952.81397478242
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5361,8 +5361,8 @@
       "id": "node_FrAeEa7m",
       "type": "calculation",
       "position": {
-        "x": 2924.6085433810135,
-        "y": 20818.442388003805
+        "x": 2834.6085433810135,
+        "y": 20773.442388003805
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5383,8 +5383,8 @@
       "id": "node_qx46WTor",
       "type": "calculation",
       "position": {
-        "x": -78.99028239891277,
-        "y": 23781.75501546053
+        "x": -168.99028239891277,
+        "y": 23736.75501546053
       },
       "data": {
         "functionName": "public_key_from_private_key",
@@ -5405,8 +5405,8 @@
       "id": "node_0fThWlyH",
       "type": "calculation",
       "position": {
-        "x": 258.8438614177526,
-        "y": 23785.863362142936
+        "x": 168.84386141775258,
+        "y": 23740.863362142936
       },
       "data": {
         "functionName": "hash160_hex",
@@ -5436,8 +5436,8 @@
       "id": "node_IOXGJL9t",
       "type": "calculation",
       "position": {
-        "x": 1033.7203435383349,
-        "y": 23460.57141609569
+        "x": 943.7203435383349,
+        "y": 23415.57141609569
       },
       "data": {
         "functionName": "concat_all",
@@ -5495,8 +5495,8 @@
       "id": "node_sngfR9zz",
       "type": "opCodeNode",
       "position": {
-        "x": 627.7737047773121,
-        "y": 23363.47394243174
+        "x": 537.7737047773121,
+        "y": 23318.47394243174
       },
       "data": {
         "functionName": "op_code_select",
@@ -5517,8 +5517,8 @@
       "id": "node_0kQBJFMu",
       "type": "calculation",
       "position": {
-        "x": 622.6087353745265,
-        "y": 23640.991416772147
+        "x": 532.6087353745265,
+        "y": 23595.991416772147
       },
       "data": {
         "functionName": "encode_script_push_data",
@@ -5549,8 +5549,8 @@
       "id": "node_LJiCkkbN",
       "type": "opCodeNode",
       "position": {
-        "x": 597.8287518017992,
-        "y": 24008.824702834794
+        "x": 507.82875180179917,
+        "y": 23963.824702834794
       },
       "data": {
         "functionName": "op_code_select",
@@ -5571,8 +5571,8 @@
       "id": "node_BmfWrQk3",
       "type": "calculation",
       "position": {
-        "x": 1527.5713021113975,
-        "y": 23523.22469900343
+        "x": 1437.5713021113975,
+        "y": 23478.22469900343
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
@@ -5592,8 +5592,8 @@
       "id": "node_5uA96yYi",
       "type": "calculation",
       "position": {
-        "x": 970.5464532817555,
-        "y": 24599.97496118901
+        "x": 880.5464532817555,
+        "y": 24554.97496118901
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5614,8 +5614,8 @@
       "id": "node_Ju2WsdHo",
       "type": "calculation",
       "position": {
-        "x": 546.753916248395,
-        "y": 24579.25822983489
+        "x": 456.75391624839494,
+        "y": 24534.25822983489
       },
       "data": {
         "functionName": "identity",
@@ -5648,8 +5648,8 @@
       "id": "node_asJ5qzyx",
       "type": "calculation",
       "position": {
-        "x": 665.3043217533327,
-        "y": 21445.317778549503
+        "x": 575.3043217533327,
+        "y": 21400.317778549503
       },
       "data": {
         "functionName": "identity",
@@ -5682,8 +5682,8 @@
       "id": "node_5YKUFaQR",
       "type": "calculation",
       "position": {
-        "x": 1552.6009123732224,
-        "y": 21488.610022254612
+        "x": 1462.6009123732224,
+        "y": 21443.610022254612
       },
       "data": {
         "functionName": "uint32_to_little_endian_4_bytes",
@@ -5704,8 +5704,8 @@
       "id": "node_BvaYJsoN",
       "type": "calculation",
       "position": {
-        "x": -426.1223623296887,
-        "y": 23768.528812479275
+        "x": -516.1223623296887,
+        "y": 23723.528812479275
       },
       "data": {
         "functionName": "random_256",
@@ -5724,8 +5724,8 @@
       "id": "node_iZ8wV2KO",
       "type": "calculation",
       "position": {
-        "x": 953.2717653699469,
-        "y": 21472.260604550585
+        "x": 863.2717653699469,
+        "y": 21427.260604550585
       },
       "data": {
         "functionName": "hours_to_sequence_number",
@@ -5756,8 +5756,8 @@
       "id": "node_joI846sz",
       "type": "calculation",
       "position": {
-        "x": 1254.144279395398,
-        "y": 21490.236200008094
+        "x": 1164.144279395398,
+        "y": 21445.236200008094
       },
       "data": {
         "functionName": "encode_sequence_time_flag",
@@ -5788,8 +5788,8 @@
       "id": "node_iwv7AXAp",
       "type": "calculation",
       "position": {
-        "x": 330,
-        "y": 285
+        "x": 240,
+        "y": 240
       },
       "data": {
         "functionName": "hash160_to_p2pkh_address",
@@ -5822,11 +5822,11 @@
       "id": "node_nXWB3sMO",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -5718.268939521572,
-        "y": 370.2475611106571
+        "x": -5808.268939521572,
+        "y": 325.2475611106571
       },
       "data": {
-        "content": "# Bitcoin Timelocks: The Practical Map\n\nA fast, hands‑on overview of the four ways Bitcoin enforces time: absolute vs relative, and transaction‑level vs script‑level. Use this to choose the right lock for the job.\n\n## The Four Knobs\n\n| Granularity | Transaction‑level | Script‑level |\n|---|---|---|\n| **Absolute** | `nLocktime` | `OP_CHECKLOCKTIMEVERIFY` (CLTV) |\n| **Relative** | `nSequence` (BIP68) | `OP_CHECKSEQUENCEVERIFY` (CSV) |\n\n**Mental model:**\n- **Tx‑level** (nLocktime/nSequence) makes the **whole transaction non‑final**; standard mempools reject it until the lock matures. You’ll rebroadcast later\n- **Script‑level** (CLTV/CSV) **doesn’t delay funding**. The lock applies **when spending** the UTXO; mempools check “would this be valid next block?\n\n## Time Sources\n- **Absolute**: block height **or** timestamp. Timestamps use **Median‑Time‑Past (MTP)** per BIP113 (median of last 11 blocks)\n- **Relative**: age is measured from the **confirming block** of the UTXO (BIP68)\n\n## Quick Facts\n\n### nLocktime (absolute, tx‑level)\n- Field at the **end** of the tx\n- `< 500,000,000` ⇒ **block height** (inclusive). `≥ 500,000,000` ⇒ **Unix timestamp** (compared to MTP)\n- **Active unless** every input has `sequence = 0xffffffff` (final)\n\n### nSequence (relative, tx‑level; requires **version 2+**)\n- Per‑input delay; format uses **bit 22** for units (0=blocks, 1=time) and **bits 0–15** for value\n- **Bit 31 = 0** ⇒ BIP68 enabled (relative lock active). **Bit 31 = 1** ⇒ BIP68 disabled (but can still use nLocktime)\n- **RBF**: any sequence **< 0xfffffffe** opts in to BIP125\n\n### CLTV (absolute, script‑level)\n```\n<lock> OP_CHECKLOCKTIMEVERIFY OP_DROP\n```\n- Tx must set `nLocktime ≥ <lock>` and the input must **not** be final (`sequence ≠ 0xffffffff`). Types must match (height vs timestamp)\n\n### CSV (relative, script‑level)\n```\n<rel_lock> OP_CHECKSEQUENCEVERIFY OP_DROP\n```\n- Same encoding semantics as BIP68. Unit/type must match the spending input’s sequence\n\n## Minimal‑Push Rules (policy)\n- Small integers **must** use minimal opcodes:\n  - `0` → `OP_0 (0x00)`; `1..16` → `OP_1..OP_16 (0x51..0x60)`; `-1` → `OP_1NEGATE (0x4f)`\n- Non‑minimal pushes (e.g., `01 0a` for 10) are consensus‑valid but **non‑standard** (may not relay)\n\n## Patterns You’ll Use\n\n**HTLC (sketch):**\n```\nOP_IF\n  OP_SHA256 <payment_hash> OP_EQUALVERIFY\n  <recipient_pubkey> OP_CHECKSIG\nOP_ELSE\n  <timeout_height> OP_CHECKLOCKTIMEVERIFY OP_DROP\n  <sender_pubkey> OP_CHECKSIG\nOP_ENDIF\n```\n\n**Escrow w/ refund (sketch):**\n```\nOP_IF\n  2 <buyer> <seller> <arbiter> 3 OP_CHECKMULTISIG\nOP_ELSE\n  <delay_blocks> OP_CHECKSEQUENCEVERIFY OP_DROP\n  <buyer> OP_CHECKSIG\nOP_ENDIF\n```\n\n## Consensus vs Policy\n- **Consensus**: what makes a block valid.\n- **Policy**: what standard nodes/mempools accept. Non‑final or non‑minimal‑push txs may be rejected by policy even if consensus‑valid\n\n## Taproot Note\nSame time rules, better privacy/fees: time‑locked branches can stay hidden unless executed\n\n## TLDR\nPick **absolute** when you know the date/height; pick **relative** when the timer starts at funding. Decide **tx‑level** (pre‑signed, rebroadcast later) vs **script‑level** (programmable spend paths)\n",
+        "content": "# Bitcoin Timelocks: The Practical Map\n\nA fast, hands‑on overview of the four ways Bitcoin enforces time: absolute vs relative, and transaction‑level vs script‑level. Use this to choose the right lock for the job.\n\n## The Four Knobs\n\n| Granularity | Transaction‑level | Script‑level |\n|---|---|---|\n| **Absolute** | `nLocktime` | `OP_CHECKLOCKTIMEVERIFY` (CLTV) |\n| **Relative** | `nSequence` (BIP68) | `OP_CHECKSEQUENCEVERIFY` (CSV) |\n\n**Mental model:**\n- **Tx‑level** (nLocktime/nSequence) makes the **whole transaction non‑final**; standard mempools reject it until the lock matures. You’ll rebroadcast later\n- **Script‑level** (CLTV/CSV) **doesn’t delay funding**. The lock applies **when spending** the UTXO; mempools check “would this be valid next block?\"\n\n## Time Sources\n- **Absolute**: block height **or** timestamp. Timestamps use **Median‑Time‑Past (MTP)** per BIP113 (median of last 11 blocks)\n- **Relative**: age is measured from the **confirming block** of the UTXO (BIP68)\n\n## Quick Facts\n\n### nLocktime (absolute, tx‑level)\n- Field at the **end** of the tx\n- `< 500,000,000` ⇒ **block height**  `≥ 500,000,000` ⇒ **Unix timestamp** (compared to MTP)\n- **Active unless** every input has `sequence = 0xffffffff` (final)\n\n### nSequence (relative, tx‑level; requires **version 2+**)\n- Per‑input delay; format uses **bit 22** for units (0=blocks, 1=time) and **bits 0–15** for value\n- **Bit 31 = 0** ⇒ BIP68 enabled (relative lock active). **Bit 31 = 1** ⇒ BIP68 disabled (but can still use nLocktime)\n- **RBF**: any sequence **< 0xfffffffe** opts in to BIP125\n\n### CLTV (absolute, script‑level)\n```\n<lock> OP_CHECKLOCKTIMEVERIFY OP_DROP\n```\n- Tx must set `nLocktime ≥ <lock>` and the input must **not** be final (`sequence ≠ 0xffffffff`). Types must match (height vs timestamp)\n\n### CSV (relative, script‑level)\n```\n<rel_lock> OP_CHECKSEQUENCEVERIFY OP_DROP\n```\n- Same encoding semantics as BIP68. Unit/type must match the spending input’s sequence\n\n## Minimal‑Push Rules (policy)\n- Small integers **must** use minimal opcodes:\n  - `0` → `OP_0 (0x00)`; `1..16` → `OP_1..OP_16 (0x51..0x60)`; `-1` → `OP_1NEGATE (0x4f)`\n- Non‑minimal pushes (e.g., `01 0a` for 10) are consensus‑valid but **non‑standard** (may not relay)\n\n## Patterns You’ll Use\n\n**HTLC (sketch):**\n```\nOP_IF\n  OP_SHA256 <payment_hash> OP_EQUALVERIFY\n  <recipient_pubkey> OP_CHECKSIG\nOP_ELSE\n  <timeout_height> OP_CHECKLOCKTIMEVERIFY OP_DROP\n  <sender_pubkey> OP_CHECKSIG\nOP_ENDIF\n```\n\n**Escrow w/ refund (sketch):**\n```\nOP_IF\n  2 <buyer> <seller> <arbiter> 3 OP_CHECKMULTISIG\nOP_ELSE\n  <delay_blocks> OP_CHECKSEQUENCEVERIFY OP_DROP\n  <buyer> OP_CHECKSIG\nOP_ENDIF\n```\n\n## Consensus vs Policy\n- **Consensus**: what makes a block valid.\n- **Policy**: what standard nodes/mempools accept. Non‑final or non‑minimal‑push txs may be rejected by policy even if consensus‑valid\n\n## Taproot Note\nSame time rules, better privacy/fees: time‑locked branches can stay hidden unless executed\n\n## TLDR\nPick **absolute** when you know the date/height; pick **relative** when the timer starts at funding. Decide **tx‑level** (pre‑signed, rebroadcast later) vs **script‑level** (programmable spend paths)\n",
         "fontSize": 28,
         "width": 300,
         "height": 200,
@@ -5840,8 +5840,8 @@
       "id": "node_0i002oyO",
       "type": "calculation",
       "position": {
-        "x": 8235.370436457146,
-        "y": 2082.541324775385
+        "x": 8145.370436457146,
+        "y": 2037.541324775385
       },
       "data": {
         "functionName": "script_verification",
@@ -6041,8 +6041,8 @@
       "id": "node_m32ign0s",
       "type": "calculation",
       "position": {
-        "x": 8176.300411327045,
-        "y": 8405.13078833663
+        "x": 8086.300411327045,
+        "y": 8360.13078833663
       },
       "data": {
         "functionName": "script_verification",
@@ -6242,8 +6242,8 @@
       "id": "node_zuEu8yAa",
       "type": "calculation",
       "position": {
-        "x": 8026.409853596493,
-        "y": 14588.654567827474
+        "x": 7936.409853596493,
+        "y": 14543.654567827474
       },
       "data": {
         "functionName": "script_verification",
@@ -6443,8 +6443,8 @@
       "id": "node_s840E3hI",
       "type": "calculation",
       "position": {
-        "x": 7876.3179663548835,
-        "y": 20408.684488677703
+        "x": 7786.3179663548835,
+        "y": 20363.684488677703
       },
       "data": {
         "functionName": "script_verification",
@@ -6644,8 +6644,8 @@
       "id": "node_fk48fx13",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -3861.8757505378935,
-        "y": 369.8639482579788
+        "x": -3951.8757505378935,
+        "y": 324.8639482579788
       },
       "data": {
         "content": "# Lesson 3: Absolute and Relative Timelocks\n\n- Absolute lock by block height: set `nLocktime` to a future height.\n- Absolute lock by timestamp: set `nLocktime` to a Unix time (evaluated via Median Time Past).\n- Relative lock by blocks: use BIP68 semantics in `nSequence` so the spend is valid only after N blocks since confirmation.\n- Relative lock by time: use the time‑based BIP68 form (units of 512 seconds).\n- Activation details: set at least one input’s `nSequence` to a value less than `0xffffffff`; relative timelocks require transaction version 2.\n- Verification: transactions are valid but will be rejected as “non‑final” if broadcast before the lock expires.",
@@ -6662,11 +6662,11 @@
       "id": "node_iyd3f9SX",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -878.6694682497291,
-        "y": 1162.359516427481
+        "x": -968.6694682497291,
+        "y": 1117.359516427481
       },
       "data": {
-        "content": "# P2PKH with nLocktime (Block Height)\n\nCreate a tx that can’t be mined until a target **block height**. Great for one‑shot delays.\n\n## 1) Choose the Height\n```bash\nbitcoin-cli getblockcount  # e.g., 4545380\n```\nPick `+10` blocks ⇒ **spendable at** height `4545390`. Convert to LE‑4: `0x00455b6e` → `6e5b4500`\n\n## 2) Fields to Set\n- **Sequence** per input: `0xfffffffd` (LE in raw bytes: `fdffffff`)\n  - Not final ⇒ enables `nLocktime`\n  - Bit 31 = 1 ⇒ disables BIP68 (no relative lock)\n  - `< 0xfffffffe` ⇒ signals RBF\n- **nLocktime** (tx tail): `6e5b4500` (block **4545390**, inclusive)\n\n## 3) Test It\n```bash\nbitcoin-cli -testnet sendrawtransaction <signed_hex>\n```\nExpected: `-26: non-final`. That’s success—the lock is working. Retry once the chain height ≥ target\n\n## Key Points\n- Non‑final txs are **not** held in standard mempools—keep your hex offline and rebroadcast later\n- nLocktime is enforced if at least one input is non-final (< 0xffffffff)\n- If ALL inputs are 0xffffffff, nLocktime is ignored\n\n## ⚠️ Fee Planning\nPre‑signed tx fee is **fixed**. For long delays: overpay (3–10× current sat/vB), plan OOB (Out-of-band) miner fees, or prefer script‑level CLTV so fees are chosen at spend time\n",
+        "content": "# P2PKH with nLocktime (Block Height)\n\nCreate a tx that can’t be mined until a target **block height**. Great for one‑shot delays.\n\n## 1) Choose the Height\n```bash\nbitcoin-cli getblockcount  # e.g., 4545380\n```\nPick `+10` blocks ⇒ **spendable at** height `4545391`. Convert to LE‑4: `0x00455b6e` → `6e5b4500`\n\n## 2) Fields to Set\n- **Sequence** per input: `0xfffffffd` (LE in raw bytes: `fdffffff`)\n  - Not final ⇒ enables `nLocktime`\n  - Bit 31 = 1 ⇒ disables BIP68 (no relative lock)\n  - `< 0xfffffffe` ⇒ signals RBF\n- **nLocktime** (tx tail): `6e5b4500` (block **4545390**)\n\n## 3) Test It\n```bash\nbitcoin-cli -testnet sendrawtransaction <signed_hex>\n```\nExpected: `-26: non-final`. That’s success—the lock is working. Retry once the chain height > target\n\n## Key Points\n- Non‑final txs are **not** held in standard mempools—keep your hex offline and rebroadcast later\n- nLocktime is enforced if at least one input is non-final (< 0xffffffff)\n- If ALL inputs are 0xffffffff, nLocktime is ignored\n\n## ⚠️ Fee Planning\nPre‑signed tx fee is **fixed**. For long delays: overpay (3–10× current sat/vB), plan OOB (Out-of-band) miner fees, or prefer script‑level CLTV so fees are chosen at spend time\n",
         "fontSize": 28,
         "width": 300,
         "height": 200,
@@ -6680,11 +6680,11 @@
       "id": "node_mFrkGvR2",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -799.4807152358135,
-        "y": 7801.471732658378
+        "x": -889.4807152358135,
+        "y": 7756.471732658378
       },
       "data": {
-        "content": "# P2PKH with nLocktime (Timestamp / MTP)\n\nSame idea as block‑based, but lock to a **real‑world time** (compared to MTP).\n\n## 1) Know MTP\nMTP = median of the last 11 blocks (usually lags wall‑clock by ~1–2h). Your tx is valid when **MTP ≥ locktime**.\n\n## 2) Pick a Time and Encode\nOn macOS:\n```bash\n1 hour from now (UTC)\ndate -u -v+1H +\"%Y-%m-%dT%H:%M:%SZ\"\n```\nThen **Uint32 → LE‑4** and put it in `nLocktime`. Use a value **≥ 500,000,000** so it’s treated as a timestamp.\n\n## 3) Fields\n- **Sequence**: `0xfffffffd` (LE: `fdffffff`)—non‑final, RBF on, disables BIP68.\n- **nLocktime**: your LE‑4 timestamp \n\n## 4) Test\nImmediate broadcast should return `-26: non-final`. Monitor:\n```bash\nbitcoin-cli getblockchaininfo  # check \"mediantime\"\n```\nBroadcast succeeds once `mediantime ≥ locktime`\n\n## Notes\n- Timestamps compare to MTP, not your local clock.\n- Add buffer if you need a guaranteed “no earlier than” wall‑clock time\n",
+        "content": "# P2PKH with nLocktime (Timestamp / MTP)\n\nSame idea as block‑based, but lock to a **real‑world time** (compared to MTP).\n\n## 1) Know MTP\nMTP = median of the last 11 blocks (usually lags wall‑clock by ~1–2h). Your tx is valid when **MTP > locktime**.\n\n## 2) Pick a Time and Encode\nOn macOS:\n```bash\n#### 1 hour from now (UTC)\ndate -u -v+1H +\"%Y-%m-%dT%H:%M:%SZ\"\n```\nThen **Uint32 → LE‑4** and put it in `nLocktime`. Use a value **≥ 500,000,000** so it’s treated as a timestamp.\n\n## 3) Fields\n- **Sequence**: `0xfffffffd` (LE: `fdffffff`)—non‑final, RBF on, disables BIP68.\n- **nLocktime**: your LE‑4 timestamp \n\n## 4) Test\nImmediate broadcast should return `-26: non-final`. Monitor:\n```bash\nbitcoin-cli getblockchaininfo  # check \"mediantime\"\n```\nBroadcast succeeds once `mediantime > locktime`\n\n## Notes\n- Timestamps compare to MTP, not your local clock.\n- Add buffer if you need a guaranteed “no earlier than” wall‑clock time\n",
         "fontSize": 28,
         "width": 300,
         "height": 200,
@@ -6698,8 +6698,8 @@
       "id": "node_78e3fAEe",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -696.7570762262862,
-        "y": 13989.917400298873
+        "x": -786.7570762262862,
+        "y": 13944.917400298873
       },
       "data": {
         "content": "# Relative Lock with nSequence (Blocks)\n\nMake a tx valid only **X blocks after** the UTXO was confirmed. Great when the timer starts at funding\n\n## 1) Pick the Delay\n- Range: `0..65535` blocks (≈ up to 455 days)\n- Example: **200 blocks**\n\n## 2) Encode (BIP68)\n```\nversion ≥ 2\nbit 31 = 0  (enable BIP68)\nbit 22 = 0  (block units)\nvalue  = 200 (0x00c8)\nLE-4  = c8000000\n```\nSet each input’s **sequence** accordingly. `nLocktime` can be `00000000` or combined with other constraints\n\n## 3) Test\n1) Find the UTXO’s confirmation **height**.\n2) Spendable at `confirm_height + 200`.\n3) Early broadcast ⇒ `-26: non-BIP68-final`. Retry after maturity\n\n## nLocktime vs nSequence (at a glance)\n| Feature | nLocktime (Absolute) | nSequence (Relative) |\n|---|---|---|\n| Reference | fixed height/time | from UTXO confirmation |\n| Scope | whole tx | per input |\n| Max | ~9,500 years | ~455 days |\n| Requires | any version | **version 2+** |\n| Disable | all inputs `0xffffffff` | **bit 31 = 1** |\n\n**Tip:** RBF still applies if sequence `< 0xfffffffe`\n\n## Common Pitfalls\n1. **Wrong transaction version**: Using v1 silently ignores BIP 68\n2. **Bit confusion**: Setting bit 31 = 1 disables the relative lock\n3. **Time calculation**: Remember it's 512-second units, not seconds\n",
@@ -6716,11 +6716,11 @@
       "id": "node_JEdfNplL",
       "type": "shadcnTextInfo",
       "position": {
-        "x": -1063.3301573336025,
-        "y": 19836.58201310357
+        "x": -1153.3301573336025,
+        "y": 19791.58201310357
       },
       "data": {
-        "content": "# Relative Lock with nSequence (Time / MTP)\n\nUse human‑sized delays (\"~2 hours\"). Units are **512 seconds** per tick and compare MTP at confirm vs now\n\n## 1) Choose a Delay\n- Min granularity ≈ 8.5 min (1 unit)\n- Max ≈ 388 days (65,535 units)\n- **Rounds to nearest** unit for approximate timing *(no strict standard—wallets vary; some round up/down differently)*\n\n## 2) Encode\n```\nversion ≥ 2\nbit 31 = 0  (enable BIP68)\nbit 22 = 1  (time units)\nvalue  = units (0..65535)\n```\nExample **1.2 h**: 1.2×3600=4320 s → 4320/512=8.4375 → rounds to **8 units** (approximately 68 minutes).\n- Hex: `0x400008` → LE‑4: `08004000`\n\n(For guaranteed minimum, manually round up: 9 units ⇒ `0x400009` → LE‑4: `09004000`) \n\n## 3) Build & Test\n- Input **sequence** = your encoded value; `nLocktime` optional\n- Early broadcast ⇒ `-26: non-BIP68-final`\n- Monitor:\n```bash\nbitcoin-cli getblockchaininfo   # current MTP\n```\nSpend when `current_MTP ≥ confirm_MTP + units×512`\n\n## Quick Examples\n```\n0.5 h  → 4 units  → 0x400004 → LE: 04004000\n1.0 h  → 7 units  → 0x400007 → LE: 07004000\n1.2 h  → 8 units  → 0x400008 → LE: 08004000   (≈68 min)\n6.0 h  → 42 units → 0x40002a → LE: 2a004000\n24 h   → 169 units→ 0x4000a9 → LE: a9004000\n```\n\n## Pitfalls\n- Use **MTP** fields (not block header `time`)\n- Don't forget reserved bits (16–21 & 23–30) must be **zero**\n- Sequence `≥ 0xfffffffe` disables RBF; `< 0xfffffffe` opts in\n- Times are **approximate** due to 512-second granularity\n\n## Combining Locks\nAbsolute + relative must **both** be satisfied (e.g., \"not before Jan 2025 **and** at least 2 hours after funding\").\n",
+        "content": "# Relative Lock with nSequence (Time / MTP)\n\nUse human‑sized delays (\"~2 hours\"). Units are **512 seconds** per tick and compare MTP at confirm vs now\n\n## 1) Choose a Delay\n- Min granularity ≈ 8.5 min (1 unit)\n- Max ≈ 388 days (65,535 units)\n- **Rounds to nearest** unit for approximate timing *(no strict standard—wallets vary; some round up/down differently)*\n\n## 2) Encode\n```\nversion ≥ 2\nbit 31 = 0  (enable BIP68)\nbit 22 = 1  (time units)\nvalue  = units (0..65535)\n```\nExample **1.2 h**: 1.2×3600=4320 s → 4320/512=8.4375 → rounds to **8 units** (approximately 68 minutes).\n- Hex: `0x400008` → LE‑4: `08004000`\n\n(For guaranteed minimum, manually round up: 9 units ⇒ `0x400009` → LE‑4: `09004000`) \n\n## 3) Build & Test\n- Input **sequence** = your encoded value; `nLocktime` optional\n- Early broadcast ⇒ `-26: non-BIP68-final`\n- Monitor:\n```bash\nbitcoin-cli getblockchaininfo   # current MTP\n```\nSpend when `current_MTP ≥ confirm_MTP + units×512`\n\n## Quick Examples\n```\n0.5 h  → 4 units  → 0x400004 → LE: 04004000\n1.0 h  → 7 units  → 0x400007 → LE: 07004000\n1.2 h  → 8 units  → 0x400008 → LE: 08004000   (≈68 min)\n6.0 h  → 42 units → 0x40002a → LE: 2a004000\n24 h   → 169 units→ 0x4000a9 → LE: a9004000\n```\n\n## Pitfalls\n- Use **MTP** fields (not block header `time`)\n- Don't forget reserved bits (16–21 & 23–30) should be **zero**\n- Sequence `≥ 0xfffffffe` disables RBF; `< 0xfffffffe` opts in\n- Times are **approximate** due to 512-second granularity\n\n## Combining Locks\nAbsolute + relative must **both** be satisfied (e.g., \"not before Jan 2025 **and** at least 2 hours after funding\").\n",
         "fontSize": 28,
         "width": 300,
         "height": 200,
@@ -6734,14 +6734,14 @@
       "id": "node_mBtXir4D",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 4992.605561097173,
-        "y": 23199.318184331332
+        "x": 4902.605561097173,
+        "y": 23154.318184331332
       },
       "data": {
-        "content": "# Exercise — Staged Inheritance (Tx‑Level Locks)\n\nBuild one setup tx (broadcast now) and two **pre‑signed** time‑locked spends using `nLocktime`\n\n## Step 1 — Setup (broadcast)\n- **Input**: your funded P2PKH (e.g., 100,000 sats)\n- **Outputs**: 30,000 sats → Address A; 70,000 sats → Address B\n- **Fee**: ~5 sat/vB\n\n## Step 2 — Pre‑sign Two Inheritance Txes (do **not** broadcast)\n- **Tx A**: spends Output 1 → heir; `nLocktime = now + 6 months`; `sequence = 0xfffffffd`; fee ~15 sat/vB\n- **Tx B**: spends Output 2 → heir; `nLocktime = now + 2 years`; `sequence = 0xfffffffd`; fee ~20 sat/vB\n\n## Verify\n- Setup confirms normally.\n- Both pre‑signed txes return `-26: non-final` until their times.\n- Compute exact unlock dates; confirm you can still **revoke** by spending the setup outputs yourself before unlock\n\n## Reality Check (Limitations)\n1) 3 txes for 2 stages. 2) Heir stores files for years. 3) Heir learns amounts/schedule. 4) More stages ⇒ more complexity\n\n## Coming Next — Script‑Level Locks (CLTV/CSV)\nMove timing *inside* the spend script so the funding tx can confirm now while spends remain time‑gated:\n```\nOP_IF\n  <owner> OP_CHECKSIG                 # owner can spend anytime\nOP_ELSE\n  <heir> OP_CHECKSIGVERIFY\n  <lock> OP_CHECKLOCKTIMEVERIFY OP_DROP\nOP_ENDIF\n```\n**Why better**: single funding tx, no pre‑signed files to lose, multiple conditional paths, works with vaults/escrows/channels\n\n### Security note\nIn any 2‑party inheritance, the heir must know **what** and **when**—that visibility is an inherent trade‑off, not a bug\n",
+        "content": "# Exercise — Staged Inheritance (Tx‑Level Locks)\n\nBuild one setup tx (broadcast now) and two **pre‑signed** time‑locked spends using `nLocktime`\n\n## Step 1 — Setup (broadcast)\n- **Input**: your funded P2PKH (e.g., 100,000 sats)\n- **Outputs**: 30,000 sats → Address A; 70,000 sats → Address B\n- **Fee**: ~5 sat/vB\n\n## Step 2 — Pre‑sign Two Inheritance Txes (do **not** broadcast)\n- **Tx A**: spends Output 1 → heir; `nLocktime = now + 6 months`; `sequence = 0xfffffffd`; fee ~15 sat/vB\n- **Tx B**: spends Output 2 → heir; `nLocktime = now + 2 years`; `sequence = 0xfffffffd`; fee ~20 sat/vB\n\n## Verify\n- Setup confirms normally.\n- Both pre‑signed txes return `-26: non-final` until their lock passes. Remember: `nLocktime` is the **last invalid** height/time — the tx becomes final only once the chain moves past it\n- Compute exact unlock dates; confirm you can still **revoke** by spending the setup outputs yourself before unlock\n\n## Reality Check (Limitations)\n1) 3 txes for 2 stages. 2) Heir stores files for years. 3) Heir learns amounts/schedule. 4) More stages ⇒ more complexity\n\n## Coming Next — Script‑Level Locks (CLTV/CSV)\nMove timing *inside* the spend script so the funding tx can confirm now while spends remain time‑gated:\n```\nOP_IF\n  <owner_pubkey> OP_CHECKSIG\nOP_ELSE\n  <lock> OP_CHECKLOCKTIMEVERIFY OP_DROP\n  <heir_pubkey> OP_CHECKSIG\nOP_ENDIF\n```\nThe owner branch uses `OP_CHECKSIG` to leave TRUE on the stack. The heir branch first verifies the timelock (CLTV acts like a NOP on success, then DROP removes the lock value), then `OP_CHECKSIG` checks the heir's signature and leaves TRUE. Both branches end with exactly one truthy item on the stack.\n\n**Why better**: single funding tx, no pre‑signed files to lose, multiple conditional paths, works with vaults/escrows/channels\n\n### Security note\nIn any 2‑party inheritance, the heir must know **what** and **when** — that visibility is an inherent trade‑off, not a bug",
         "fontSize": 28,
-        "width": 300,
-        "height": 200,
+        "width": 1563,
+        "height": 1738,
         "title": "Text Info Node",
         "dirty": false
       },

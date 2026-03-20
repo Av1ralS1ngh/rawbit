@@ -1821,6 +1821,8 @@ export const allSidebarNodes: NodeTemplate[] = [
             label: "Message (hex):",
             rows: 2,
             placeholder: "<msg bytes>",
+            allowNull: true,
+            nullLabel: "null",
           },
           {
             index: 3,

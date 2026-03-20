@@ -2,7 +2,11 @@ import React, { useCallback } from "react";
 
 import { Handle, Position } from "@xyflow/react";
 
-import { SENTINEL_EMPTY, SENTINEL_FORCE00 } from "@/lib/nodes/constants";
+import {
+  SENTINEL_EMPTY,
+  SENTINEL_FORCE00,
+  SENTINEL_NULL,
+} from "@/lib/nodes/constants";
 
 export interface FieldWithHandleProps {
   handleId: string;
@@ -19,7 +23,9 @@ export interface FieldWithHandleProps {
   disableHandle?: boolean;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  allowNull?: boolean;
   emptyLabel?: string;
+  nullLabel?: string;
   comment?: string;
 }
 
@@ -45,7 +51,9 @@ function fieldWithHandlePropsAreEqual(
     prev.disableHandle === next.disableHandle &&
     prev.allowEmpty00 === next.allowEmpty00 &&
     prev.allowEmptyBlank === next.allowEmptyBlank &&
-    prev.emptyLabel === next.emptyLabel
+    prev.allowNull === next.allowNull &&
+    prev.emptyLabel === next.emptyLabel &&
+    prev.nullLabel === next.nullLabel
   );
 }
 
@@ -66,13 +74,19 @@ export const FieldWithHandle = React.memo(function FieldWithHandleComponent({
   disableHandle = false,
   allowEmpty00 = false,
   allowEmptyBlank = false,
+  allowNull = false,
   emptyLabel,
+  nullLabel,
 }: FieldWithHandleProps) {
   const displayValue =
-    value === SENTINEL_EMPTY || value === SENTINEL_FORCE00
+    value === SENTINEL_EMPTY ||
+    value === SENTINEL_FORCE00 ||
+    value === SENTINEL_NULL
       ? value === SENTINEL_EMPTY
         ? emptyLabel ?? "empty"
-        : "00"
+        : value === SENTINEL_FORCE00
+        ? "00"
+        : nullLabel ?? "null"
       : value;
 
   const toggle00 = useCallback(
@@ -85,8 +99,16 @@ export const FieldWithHandle = React.memo(function FieldWithHandleComponent({
     [onChange]
   );
 
+  const toggleNull = useCallback(
+    (checked: boolean) => onChange?.(checked ? SENTINEL_NULL : ""),
+    [onChange]
+  );
+
   const forceReadOnly =
-    connected || value === SENTINEL_FORCE00 || value === SENTINEL_EMPTY;
+    connected ||
+    value === SENTINEL_FORCE00 ||
+    value === SENTINEL_EMPTY ||
+    value === SENTINEL_NULL;
 
   return (
     <div className="relative mb-3">
@@ -117,11 +139,15 @@ export const FieldWithHandle = React.memo(function FieldWithHandleComponent({
         onLabelChange={onLabelChange}
         allowEmpty00={allowEmpty00}
         allowEmptyBlank={allowEmptyBlank}
+        allowNull={allowNull}
         emptyLabel={emptyLabel}
+        nullLabel={nullLabel}
         is00={value === SENTINEL_FORCE00}
         isBlank={value === SENTINEL_EMPTY}
+        isNull={value === SENTINEL_NULL}
         onToggle00={toggle00}
         onToggleBlank={toggleBlank}
+        onToggleNull={toggleNull}
       />
     </div>
   );

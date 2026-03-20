@@ -49,7 +49,7 @@ import { SelectField } from "./fields/SelectField";
 import { TerminalField } from "./fields/TerminalField";
 import { FieldSection } from "./sections/FieldSection";
 import { GroupSection } from "./sections/GroupSection";
-import { SENTINEL_EMPTY } from "@/lib/nodes/constants";
+import { SENTINEL_EMPTY, SENTINEL_NULL } from "@/lib/nodes/constants";
 import { canGrowGroup } from "@/lib/nodes/fieldUtils";
 import { INSTANCE_STRIDE, cn, getVal } from "@/lib/utils";
 import type {
@@ -113,6 +113,8 @@ type FieldDefinition = BaseFieldDefinition & {
   comment?: string;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  allowNull?: boolean;
+  nullLabel?: string;
 };
 
 type AsciiTreeNode = {
@@ -441,6 +443,8 @@ export function CalculationNodeView({
     const placeholder = connected
       ? rawValue === SENTINEL_EMPTY
         ? "--EMPTY--"
+        : rawValue === SENTINEL_NULL
+        ? "--NULL--"
         : !hasRawValue && meta?.error
         ? "Upstream error"
         : !hasRawValue && !hasUpstreamValue
@@ -466,6 +470,9 @@ export function CalculationNodeView({
       );
       const fieldLabel = data.customFieldLabels?.[fieldIndex] || field.label;
       const handleOffset = scope.startsWith("between-") ? -32 : -16;
+      const allowNull =
+        field.allowNull ||
+        (data.functionName === "musig2_nonce_gen" && fieldIndex === 2);
 
       if (field.options) {
         const current = rawValue ?? field.options[0];
@@ -496,14 +503,16 @@ export function CalculationNodeView({
           disableHandle={field.unconnectable}
           allowEmpty00={field.allowEmpty00}
           allowEmptyBlank={field.allowEmptyBlank}
+          allowNull={allowNull}
           emptyLabel={field.emptyLabel}
+          nullLabel={field.nullLabel}
           comment={field.comment}
           onChange={(value) =>
             mut.setFieldValue(
               fieldIndex,
               value,
               connected,
-              !!(field.allowEmpty00 || field.allowEmptyBlank)
+              !!(field.allowEmpty00 || field.allowEmptyBlank || allowNull)
             )
           }
           onLabelChange={(label) => mut.updateFieldLabel(fieldIndex, label)}
@@ -528,6 +537,9 @@ export function CalculationNodeView({
       field.placeholder
     );
     const fieldLabel = data.customFieldLabels?.[fieldIndex] || field.label;
+    const allowNull =
+      field.allowNull ||
+      (data.functionName === "musig2_nonce_gen" && fieldIndex === 2);
 
     if (field.options) {
       const current = rawValue ?? field.options[0];
@@ -559,13 +571,15 @@ export function CalculationNodeView({
         disableHandle={field.unconnectable}
         allowEmpty00={field.allowEmpty00}
         allowEmptyBlank={field.allowEmptyBlank}
+        allowNull={allowNull}
         emptyLabel={field.emptyLabel}
+        nullLabel={field.nullLabel}
         onChange={(value) =>
           mut.setFieldValue(
             fieldIndex,
             value,
             connected,
-            !!(field.allowEmpty00 || field.allowEmptyBlank)
+            !!(field.allowEmpty00 || field.allowEmptyBlank || allowNull)
           )
         }
         onLabelChange={(label) => mut.updateFieldLabel(fieldIndex, label)}

@@ -193,6 +193,8 @@ function FlowContent() {
   const loadingUndoRef = useRef(false);
   const isPastingRef = useRef(false);
   const welcomeCompleteRef = useRef(false);
+  const pendingExampleFitRef = useRef(false);
+  const exampleFitRetryTimeoutIdsRef = useRef<number[]>([]);
   const graphRev = useRef(0); // monotonically-increasing revision counter
   const [revTick, setRevTick] = useState(0);
   const incrementGraphRev = useCallback(() => {
@@ -775,6 +777,55 @@ function FlowContent() {
     releaseNodeRemovalSnapshotSkip,
   } = snapshotScheduler;
 
+  const clearExampleFitRetryTimers = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (exampleFitRetryTimeoutIdsRef.current.length === 0) return;
+    for (const timeoutId of exampleFitRetryTimeoutIdsRef.current) {
+      window.clearTimeout(timeoutId);
+    }
+    exampleFitRetryTimeoutIdsRef.current = [];
+  }, []);
+
+  const fitCurrentGraphIntoView = useCallback(
+    (options?: { allowEmpty?: boolean }) => {
+      const instance = flowInstanceRef.current;
+      if (!instance) return false;
+      const hasGraph = getNodes().length > 0 || getEdges().length > 0;
+      if (!hasGraph && !options?.allowEmpty) return false;
+      instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
+      return hasGraph;
+    },
+    [getEdges, getNodes]
+  );
+
+  const scheduleExampleFlowFit = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    clearExampleFitRetryTimers();
+    pendingExampleFitRef.current = true;
+    const retryDelays = [0, 24, 72, 140, 240, 380, 560, 800];
+
+    retryDelays.forEach((delay, index) => {
+      const timeoutId = window.setTimeout(() => {
+        if (!pendingExampleFitRef.current) return;
+
+        const fittedWithGraph = fitCurrentGraphIntoView({
+          allowEmpty: index === 0,
+        });
+        if (fittedWithGraph) {
+          pendingExampleFitRef.current = false;
+          clearExampleFitRetryTimers();
+          return;
+        }
+
+        if (index === retryDelays.length - 1) {
+          pendingExampleFitRef.current = false;
+        }
+      }, delay);
+      exampleFitRetryTimeoutIdsRef.current.push(timeoutId);
+    });
+  }, [clearExampleFitRetryTimers, fitCurrentGraphIntoView]);
+
   const resetToEmptyCanvas = useCallback(() => {
     restoreScriptSteps([]);
     setNodes(() => []);
@@ -858,20 +909,15 @@ function FlowContent() {
         );
       }
 
-      requestAnimationFrame(() => {
-        const instance = flowInstanceRef.current;
-        if (instance) {
-          instance.fitView({ padding: 0.2, maxZoom: 2, duration: 350 });
-        }
-      });
+      scheduleExampleFlowFit();
 
       return true;
     },
     [
       activeTabId,
       exampleFlowMap,
-      flowInstanceRef,
       refreshBanner,
+      scheduleExampleFlowFit,
       scheduleSnapshot,
       setEdges,
       setNodes,
@@ -888,10 +934,12 @@ function FlowContent() {
 
   const handleWelcomeLoadExample = useCallback(
     (flowId: string) => {
+      setShowWelcomeDialog(false);
       const loaded = loadExampleFlow(flowId);
       if (loaded) {
-        setShowWelcomeDialog(false);
         markWelcomeComplete();
+      } else {
+        setShowWelcomeDialog(true);
       }
     },
     [loadExampleFlow, markWelcomeComplete, setShowWelcomeDialog]
@@ -1674,6 +1722,10 @@ function FlowContent() {
           instance.fitView({ padding: 0.2 });
           setHasFitOnInitialLoad(true);
         }
+        if (pendingExampleFitRef.current && fitCurrentGraphIntoView()) {
+          pendingExampleFitRef.current = false;
+          clearExampleFitRetryTimers();
+        }
         setIsFlowVisible(true);
       });
 
@@ -1697,7 +1749,17 @@ function FlowContent() {
       activeTabId,
       hasFitOnInitialLoad,
       initialHydrationDone,
+      clearExampleFitRetryTimers,
+      fitCurrentGraphIntoView,
     ]
+  );
+
+  useEffect(
+    () => () => {
+      pendingExampleFitRef.current = false;
+      clearExampleFitRetryTimers();
+    },
+    [clearExampleFitRetryTimers]
   );
 
   const onMoveEnd = useCallback(

@@ -731,7 +731,7 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
@@ -2241,7 +2241,7 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {
@@ -3962,7 +3962,7 @@
         "unwiredCount": 0,
         "showComment": true,
         "comment": "bitcoin-cli -testnet sendrawtransaction <hex>",
-        "title": "Final Raw Transaction (ready to broadcast)"
+        "title": "Final Raw Transaction "
       }
     },
     {

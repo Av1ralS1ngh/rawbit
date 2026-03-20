@@ -43,9 +43,11 @@ export function FirstRunDialog({
   onOpenChange,
 }: FirstRunDialogProps) {
   const actionRef = useRef<"empty" | "example" | null>(null);
+  const desktopPreviewFlows = useMemo(() => flows.slice(0, 5), [flows]);
+  const selectableFlows = hideStartEmpty ? flows : desktopPreviewFlows;
   const defaultFlowId = useMemo(
-    () => flows[0]?.id ?? FALLBACK_FLOW_ID,
-    [flows]
+    () => selectableFlows[0]?.id ?? FALLBACK_FLOW_ID,
+    [selectableFlows]
   );
   const [selectedFlowId, setSelectedFlowId] = useState(defaultFlowId);
 
@@ -56,14 +58,14 @@ export function FirstRunDialog({
   }, [open]);
 
   useEffect(() => {
-    if (!flows.length) {
+    if (!selectableFlows.length) {
       setSelectedFlowId(FALLBACK_FLOW_ID);
       return;
     }
-    if (!flows.some((flow) => flow.id === selectedFlowId)) {
-      setSelectedFlowId(flows[0]?.id ?? FALLBACK_FLOW_ID);
+    if (!selectableFlows.some((flow) => flow.id === selectedFlowId)) {
+      setSelectedFlowId(selectableFlows[0]?.id ?? FALLBACK_FLOW_ID);
     }
-  }, [flows, selectedFlowId]);
+  }, [selectableFlows, selectedFlowId]);
 
   const handleStartEmpty = () => {
     actionRef.current = "empty";
@@ -99,7 +101,9 @@ export function FirstRunDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        className="inset-x-4 top-2 w-auto max-w-none grid-cols-1 translate-x-0 translate-y-0 max-h-[calc(100dvh-1rem)] overflow-y-auto p-4 sm:left-1/2 sm:right-auto sm:top-[50%] sm:w-full sm:max-w-lg sm:max-h-[85vh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:p-6"
+      >
         <DialogHeader>
           <DialogTitle>Welcome to raw₿it</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
@@ -139,14 +143,16 @@ export function FirstRunDialog({
                           aria-selected={selected}
                           onClick={() => setSelectedFlowId(flow.id)}
                           className={cn(
-                            "flex w-full items-center justify-between border-l-4 border-transparent px-3 py-2 text-left text-sm transition-colors",
+                            "flex w-full items-center gap-2 border-l-4 border-transparent px-3 py-2 text-left text-sm transition-colors",
                             selected
                               ? "bg-primary/10 text-foreground font-semibold border-primary"
                               : "hover:bg-muted/50"
                           )}
                         >
-                          <span className="truncate">{flow.label}</span>
-                          <span className="ml-3 flex h-4 w-4 items-center justify-center">
+                          <span className="min-w-0 flex-1 truncate">
+                            {flow.label}
+                          </span>
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                             {selected ? (
                               <Check className="h-4 w-4 text-primary" />
                             ) : null}
@@ -163,8 +169,13 @@ export function FirstRunDialog({
                     <SelectTrigger>
                       <SelectValue placeholder="Choose an example flow" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {flows.map((flow) => (
+                    <SelectContent
+                      side="bottom"
+                      align="start"
+                      sideOffset={4}
+                      avoidCollisions={false}
+                    >
+                      {desktopPreviewFlows.map((flow) => (
                         <SelectItem key={flow.id} value={flow.id}>
                           {flow.label}
                         </SelectItem>
@@ -179,6 +190,11 @@ export function FirstRunDialog({
                 >
                   Load example flow
                 </Button>
+                {!hideStartEmpty && flows.length > desktopPreviewFlows.length && (
+                  <p className="text-xs font-bold text-foreground">
+                    Check other flows in Flow Examples in the sidebar.
+                  </p>
+                )}
               </>
             ) : (
               <p className="text-sm text-muted-foreground">

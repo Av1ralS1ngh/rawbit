@@ -1,7 +1,8 @@
 // Shared markers for node field values. These must stay in sync with
-// backend/graph_logic.py so the API understands the UI's forced-empty/forced-"00" states.
+// backend/graph_logic.py so the API understands the UI's special sentinel states.
 export const SENTINEL_EMPTY = "__EMPTY__";
 export const SENTINEL_FORCE00 = "__FORCE00__";
+export const SENTINEL_NULL = "__NULL__";
 
 // Virtual list tuning for calculation node field renders.
 export const VIRTUALIZE_THRESHOLD = 40; // switch to virtualization when field count exceeds this

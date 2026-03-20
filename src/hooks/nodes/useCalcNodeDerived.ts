@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo } from "react";
 import { Edge, useStore } from "@xyflow/react";
 
 import { countVisibleInputs } from "@/lib/nodes/fieldUtils";
-import { SENTINEL_EMPTY, SENTINEL_FORCE00 } from "@/lib/nodes/constants";
+import {
+  SENTINEL_EMPTY,
+  SENTINEL_FORCE00,
+  SENTINEL_NULL,
+} from "@/lib/nodes/constants";
 import { INSTANCE_STRIDE, getVal } from "@/lib/utils";
 import type { FlowNode, NodeData } from "@/types";
 
@@ -72,7 +76,11 @@ export function useCalcNodeDerived(
 
     const hasSentinelValue = (index: number) => {
       const value = getVal(data.inputs?.vals, index);
-      return value === SENTINEL_FORCE00 || value === SENTINEL_EMPTY;
+      return (
+        value === SENTINEL_FORCE00 ||
+        value === SENTINEL_EMPTY ||
+        value === SENTINEL_NULL
+      );
     };
 
     const consider = (index: number | undefined, unconnectable?: boolean) => {

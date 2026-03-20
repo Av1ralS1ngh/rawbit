@@ -203,6 +203,15 @@ FLOW_SCENARIOS = [
         "script_node": "node_xlsj74j",
     },
     {
+        "name": "p13_Taproot_MultiSig.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p13_Taproot_MultiSig.json",
+        "node_changes": {
+            "node_FZ9oWjOJ": "187000",
+        },
+        "txid_node": "node_0d7XluIl",
+        "script_node": "node_KfX3PTyG",
+    },
+    {
         "name": "p14_MuSig2.json",
         "path": ROOT / "src" / "my_tx_flows" / "p14_MuSig2.json",
         "node_changes": {

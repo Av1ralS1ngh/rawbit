@@ -80,6 +80,7 @@ from config import (
 
 SENTINEL_EMPTY   = "__EMPTY__"
 SENTINEL_FORCE00 = "__FORCE00__"
+SENTINEL_NULL    = "__NULL__"
 
 
 # ───────────────────────────────────────────────────────────────
@@ -437,8 +438,9 @@ def _multi_common(node, edges, get_res):
     Precedence (highest → lowest):
         1. SENTINEL_FORCE00  – checkbox-forced “00”
         2. SENTINEL_EMPTY    – checkbox-forced empty
-        3. Cable value
-        4. Manual text
+        3. SENTINEL_NULL     – checkbox-forced null (function-specific)
+        4. Cable value
+        5. Manual text
     """
     nid          = node["id"]
     sparse_local = _to_sparse(node["data"].get("inputs", {}).get("vals", {}))
@@ -468,12 +470,16 @@ def _multi_common(node, edges, get_res):
             v = ""
             sparse_out[str(idx)] = SENTINEL_EMPTY
 
-        elif idx in edge_by:                       # ③
+        elif explicit == SENTINEL_NULL:            # ③
+            v = SENTINEL_NULL
+            sparse_out[str(idx)] = SENTINEL_NULL
+
+        elif idx in edge_by:                       # ④
             edge = edge_by[idx]
             v = _resolve_upstream(get_res, edge["source"], edge.get("sourceHandle"))
             sparse_out[str(idx)] = v               # keep for display
 
-        else:                                      # ④
+        else:                                      # ⑤
             v = explicit or ""
             if explicit:
                 sparse_out[str(idx)] = explicit
@@ -615,6 +621,12 @@ def bulk_calculate_logic(nodes, edges):
 
                 try:
                     inp_dict = builder(node, edges, node_map, get_res)
+                    if fn_name == "musig2_nonce_gen":
+                        vals = inp_dict.get("vals")
+                        if isinstance(vals, list) and len(vals) > 2 and vals[2] == SENTINEL_NULL:
+                            vals_copy = list(vals)
+                            vals_copy[2] = None
+                            inp_dict["vals"] = vals_copy
                     validate_inputs(fn_name, inp_dict)
 
                     # numeric casts according to spec

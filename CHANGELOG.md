@@ -98,3 +98,17 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 - `LICENSE-docs` now contains the full CC BY 4.0 legal text.
 - `package.json` now declares `"license": "MIT"`.
 - README flow list now includes Lessons 13 and 14.
+
+## [0.3.8] - 2026-03-20
+
+### Added
+
+- MuSig2 NonceGen now supports an explicit `null` message mode (`__NULL__`) for BIP327-aligned behavior.
+- Added backend regression coverage for Lesson 13 (`p13_Taproot_Multisig.json`) roundtrip execution.
+
+### Fixed
+
+- Mobile first-run dialog is now fully responsive on small/iPhone viewports (overflow and long-label issues resolved).
+- Loading example flows on mobile no longer risks a blank canvas due to mount/fit timing races.
+- Lesson content polish in L1/L3, including corrected locktime/CLTV wording and removal of stale “ready to broadcast” text in flows 1-3.
+- Improved Safari drag responsiveness in the paper skin by removing dashed-edge styling.

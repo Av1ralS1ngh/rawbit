@@ -386,7 +386,6 @@ body[data-large-drag="true"] .rf-node {
 
 [data-skin="paper"] .react-flow__edge-path {
   stroke-width: 1.4 !important;
-  stroke-dasharray: 9 5 !important;
   stroke-linecap: round !important;
 }
 

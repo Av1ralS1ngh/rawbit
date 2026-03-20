@@ -22,12 +22,16 @@ export interface TerminalFieldProps {
   onLabelChange?: (val: string) => void;
   allowEmpty00?: boolean;
   allowEmptyBlank?: boolean;
+  allowNull?: boolean;
   emptyLabel?: string;
+  nullLabel?: string;
   comment?: string;
   is00?: boolean;
   isBlank?: boolean;
+  isNull?: boolean;
   onToggle00?: (checked: boolean) => void;
   onToggleBlank?: (checked: boolean) => void;
+  onToggleNull?: (checked: boolean) => void;
 }
 
 import { EditableLabel } from "./EditableLabel";
@@ -45,16 +49,20 @@ function terminalFieldPropsAreEqual(
     prev.rows === next.rows &&
     prev.allowEmpty00 === next.allowEmpty00 &&
     prev.allowEmptyBlank === next.allowEmptyBlank &&
+    prev.allowNull === next.allowNull &&
     prev.emptyLabel === next.emptyLabel &&
+    prev.nullLabel === next.nullLabel &&
     prev.comment === next.comment &&
     prev.is00 === next.is00 &&
     prev.isBlank === next.isBlank &&
+    prev.isNull === next.isNull &&
     prev.onChange === next.onChange &&
     prev.onFocus === next.onFocus &&
     prev.onBlur === next.onBlur &&
     prev.onLabelChange === next.onLabelChange &&
     prev.onToggle00 === next.onToggle00 &&
-    prev.onToggleBlank === next.onToggleBlank
+    prev.onToggleBlank === next.onToggleBlank &&
+    prev.onToggleNull === next.onToggleNull
   );
 }
 
@@ -74,12 +82,16 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
   onLabelChange,
   allowEmpty00,
   allowEmptyBlank,
+  allowNull,
   emptyLabel,
+  nullLabel,
   comment,
   is00,
   isBlank,
+  isNull,
   onToggle00,
   onToggleBlank,
+  onToggleNull,
 }: TerminalFieldProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -147,6 +159,23 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                       {emptyLabel ?? "Ø"}
                     </div>
                   )}
+
+                  {allowNull && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 select-none",
+                        isNull && "opacity-70"
+                      )}
+                      onPointerDownCapture={(event) => event.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={isNull}
+                        onCheckedChange={(checked) => onToggleNull?.(!!checked)}
+                        className="h-4 w-4 rounded-sm border border-primary data-[state=checked]:bg-background data-[state=checked]:text-black dark:data-[state=checked]:text-white"
+                      />
+                      {nullLabel ?? "null"}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -156,7 +185,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
                   "nodrag w-full resize-none rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
                   "text-sm p-2 font-mono transition-colors",
                   small ? "w-32" : "w-full",
-                  (isBlank || is00) &&
+                  (isBlank || is00 || isNull) &&
                     "text-muted-foreground",
                   readOnly ? "border-input" : "border-dashed border-input"
                 )}
@@ -228,6 +257,23 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
               {emptyLabel ?? "Ø"}
             </div>
           )}
+
+          {allowNull && (
+            <div
+              className={cn(
+                "flex items-center gap-1 select-none",
+                isNull && "opacity-70"
+              )}
+              onPointerDownCapture={(event) => event.stopPropagation()}
+            >
+              <Checkbox
+                checked={isNull}
+                onCheckedChange={(checked) => onToggleNull?.(!!checked)}
+                className="h-4 w-4 rounded-sm border border-primary data-[state=checked]:bg-background data-[state=checked]:text-black dark:data-[state=checked]:text-white"
+              />
+              {nullLabel ?? "null"}
+            </div>
+          )}
         </div>
       </div>
 
@@ -237,7 +283,7 @@ export const TerminalField = React.memo(function TerminalFieldComponent({
           "nodrag w-full resize-none rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
           "text-sm p-2 font-mono transition-colors",
           small ? "w-32" : "w-full",
-          (is00 || isBlank) && "text-muted-foreground",
+          (is00 || isBlank || isNull) && "text-muted-foreground",
           readOnly ? "border-input" : "border-dashed border-input"
         )}
         placeholder={placeholder}

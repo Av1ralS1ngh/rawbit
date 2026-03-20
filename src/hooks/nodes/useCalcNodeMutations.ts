@@ -2,7 +2,11 @@ import { useCallback } from "react";
 
 import type { Edge } from "@xyflow/react";
 
-import { SENTINEL_EMPTY, SENTINEL_FORCE00 } from "@/lib/nodes/constants";
+import {
+  SENTINEL_EMPTY,
+  SENTINEL_FORCE00,
+  SENTINEL_NULL,
+} from "@/lib/nodes/constants";
 import type { SnapshotOptions } from "@/hooks/useSnapshotScheduler";
 import { setVal } from "@/lib/utils";
 import { removeScriptSteps } from "@/lib/share/scriptStepsCache";
@@ -45,8 +49,10 @@ export function useCalcNodeMutations(
           (value === "" ||
             value === "00" ||
             value === SENTINEL_EMPTY ||
-            value === SENTINEL_FORCE00)) ||
-        value === SENTINEL_EMPTY;
+            value === SENTINEL_FORCE00 ||
+            value === SENTINEL_NULL)) ||
+        value === SENTINEL_EMPTY ||
+        value === SENTINEL_NULL;
 
       if (!canWrite) return;
 
