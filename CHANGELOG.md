@@ -128,3 +128,10 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 - Shared-flow imports now use more resilient fit-view timing to avoid occasional blank/offscreen canvas states.
 - Redo no longer causes a visible canvas blink during history restore.
 - Lesson 3 cleanup: removed redundant “Resulting TXID” helper comments.
+
+## [0.4.1] - 2026-04-10
+
+### Added
+
+- Added a comprehensive public contribution guide for new contributors in `docu/contribute.md`, including project goals, high-value contribution areas, flow design principles, proposal expectations, and an idea bank.
+- Added the Discord community invite (`https://discord.gg/5vRnYSZc`)

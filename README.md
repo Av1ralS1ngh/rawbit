@@ -211,6 +211,8 @@ spec-mandated internal Sign self-check (`PartialSigVerifyInternal`).
 ## Contributing
 
 rawBit is a visual lab for Bitcoin transactions. The most useful contributions are **flows and lessons** that help others understand how things work.
+For a broader list of possible contribution directions, see [docu/contribute.md](docu/contribute.md).
+Community discussion: [Discord](https://discord.gg/5vRnYSZc).
 
 ### What we’re looking for
 
