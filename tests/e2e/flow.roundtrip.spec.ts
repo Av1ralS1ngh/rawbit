@@ -53,6 +53,15 @@ const FLOW_SCENARIOS: Scenario[] = [
     txidNode: 'node_0d7XluIl',
     scriptNode: 'node_KfX3PTyG',
   },
+  {
+    name: 'p15_CoinJoin_Equal_Output_Heuristics',
+    relativePath: path.join('src', 'my_tx_flows', 'p15_CoinJoin_Equal_Output_Heuristics.json'),
+    nodeChanges: {
+      node_outputs_csv: '100000,100000,100000,24500,31000,58000,62000,75000',
+    },
+    txidNode: 'node_equal_ratio',
+    scriptNode: 'node_privacy_check',
+  },
 ];
 
 test.describe.configure({ mode: 'serial' });

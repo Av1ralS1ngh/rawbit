@@ -6,6 +6,7 @@ import struct
 import binascii
 import json
 import secrets
+from collections import Counter
 from datetime import datetime
 from typing import Any, Union, List, Sequence
 
@@ -3087,3 +3088,152 @@ def check_result(vals: list[str]) -> str:
             return "false"
     
     return "true"
+
+
+_COINJOIN_MAX_SATS = 21_000_000 * 100_000_000
+
+
+def _parse_coinjoin_outputs(raw: str) -> list[int]:
+    text = str(raw).strip()
+    if not text:
+        raise ValueError("Output list cannot be empty")
+
+    tokens = [tok for tok in re.split(r"[\s,;]+", text) if tok]
+    if not tokens:
+        raise ValueError("Output list cannot be empty")
+
+    values: list[int] = []
+    for idx, token in enumerate(tokens, start=1):
+        if not _INT_DEC_RE.fullmatch(token):
+            raise ValueError(f"Output #{idx} is not a valid integer satoshi value")
+
+        sats = int(token, 10)
+        if sats <= 0:
+            raise ValueError(f"Output #{idx} must be greater than zero")
+        if sats > _COINJOIN_MAX_SATS:
+            raise ValueError(f"Output #{idx} exceeds max Bitcoin supply in sats")
+        values.append(sats)
+
+    return values
+
+
+def _parse_coinjoin_denom(raw: str) -> int:
+    token = str(raw).strip()
+    if not _INT_DEC_RE.fullmatch(token):
+        raise ValueError("Denomination must be an integer satoshi value")
+    denom = int(token, 10)
+    if denom <= 0:
+        raise ValueError("Denomination must be greater than zero")
+    return denom
+
+
+def coinjoin_detect_denomination(val: str) -> str:
+    """
+    Infer a likely CoinJoin denomination from output values.
+   
+    Heuristic:
+    - consider only repeated output amounts (count >= 2)
+    - pick the one with highest frequency
+    - tie-breaker: smaller amount wins (change is usually larger/random)
+    """
+    outputs = _parse_coinjoin_outputs(val)
+    counts = Counter(outputs)
+    repeated = [(amount, count) for amount, count in counts.items() if count >= 2]
+
+    if not repeated:
+        raise ValueError("No repeated output value found; cannot infer denomination")
+
+    amount, _ = min(repeated, key=lambda pair: (-pair[1], pair[0]))
+    return str(amount)
+
+
+def coinjoin_anonymity_set(vals: list[str]) -> str:
+    """
+    Return the count of outputs matching the selected denomination.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [outputs_csv, denomination]")
+
+    outputs = _parse_coinjoin_outputs(vals[0])
+    denom = _parse_coinjoin_denom(vals[1])
+    matches = sum(1 for value in outputs if value == denom)
+
+    if matches == 0:
+        raise ValueError("Selected denomination is not present in outputs")
+
+    return str(matches)
+
+
+def coinjoin_change_outputs_count(vals: list[str]) -> str:
+    """
+    Return how many outputs do NOT match the selected denomination.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [outputs_csv, denomination]")
+
+    outputs = _parse_coinjoin_outputs(vals[0])
+    denom = _parse_coinjoin_denom(vals[1])
+    matches = sum(1 for value in outputs if value == denom)
+
+    if matches == 0:
+        raise ValueError("Selected denomination is not present in outputs")
+
+    return str(len(outputs) - matches)
+
+
+def coinjoin_equal_output_ratio(vals: list[str]) -> str:
+    """
+    Return the equal-output ratio as a percentage string with 2 decimals.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [outputs_csv, denomination]")
+
+    outputs = _parse_coinjoin_outputs(vals[0])
+    denom = _parse_coinjoin_denom(vals[1])
+    matches = sum(1 for value in outputs if value == denom)
+
+    if matches == 0:
+        raise ValueError("Selected denomination is not present in outputs")
+
+    ratio = (matches / len(outputs)) * 100
+    return f"{ratio:.2f}"
+
+
+def coinjoin_summary_report(vals: list[str]) -> str:
+    """
+    Build a compact JSON summary for a candidate CoinJoin output set.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [outputs_csv, denomination]")
+
+    outputs = _parse_coinjoin_outputs(vals[0])
+    denom = _parse_coinjoin_denom(vals[1])
+
+    equal_outputs = [v for v in outputs if v == denom]
+    if not equal_outputs:
+        raise ValueError("Selected denomination is not present in outputs")
+
+    change_outputs = [v for v in outputs if v != denom]
+    equal_count = len(equal_outputs)
+    total_outputs = len(outputs)
+    ratio_percent = round((equal_count / total_outputs) * 100, 2)
+
+    report: dict[str, Any] = {
+        "total_outputs": total_outputs,
+        "denomination_sats": denom,
+        "equal_output_count": equal_count,
+        "change_output_count": len(change_outputs),
+        "equal_output_ratio_percent": ratio_percent,
+        "equal_output_pool_sats": denom * equal_count,
+        "total_output_value_sats": sum(outputs),
+    }
+
+    if change_outputs:
+        report.update(
+            {
+                "change_min_sats": min(change_outputs),
+                "change_max_sats": max(change_outputs),
+            }
+        )
+
+    return json.dumps(report, sort_keys=True)

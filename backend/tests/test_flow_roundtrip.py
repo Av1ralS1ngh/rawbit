@@ -224,6 +224,19 @@ FLOW_SCENARIOS = [
             "script": "48c39cd760a6bc86a269cee513e5d685f8b423250bf95b7641cba61b092035c52104c972a095fd8ae2e23ff240fa1c89b9265e1758214496949206b19f783716",
         },
     },
+    {
+        "name": "p15_CoinJoin_Equal_Output_Heuristics.json",
+        "path": ROOT / "src" / "my_tx_flows" / "p15_CoinJoin_Equal_Output_Heuristics.json",
+        "node_changes": {
+            "node_outputs_csv": "100000,100000,100000,24500,31000,58000,62000,75000",
+        },
+        "txid_node": "node_equal_ratio",
+        "script_node": "node_privacy_check",
+        "expected_results": {
+            "txid": "62.50",
+            "script": "true",
+        },
+    },
 ]
 
 

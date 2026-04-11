@@ -1,0 +1,883 @@
+{
+  "schemaVersion": 1,
+  "name": "flow-coinjoin-equal-output-heuristics",
+  "nodes": [
+    {
+      "id": "node_coinjoin_intro",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": -1500,
+        "y": -360
+      },
+      "data": {
+        "content": "# Lesson 15: CoinJoin Equal-Output Heuristics\n\nThis lesson is a **heuristic walkthrough**, not cryptographic proof. You are learning to read on-chain patterns — not to assert ground truth.\n\n## What Is CoinJoin?\n\nCoinJoin is a privacy technique where multiple independent users collaborate to combine their inputs and outputs into a single Bitcoin transaction. The key insight: if several outputs share the same amount, an analyst cannot tell which output belongs to which input contributor.\n\n## Why Equal Outputs Matter\n\nWhen a transaction contains N outputs of the exact same denomination (e.g., five outputs of exactly 100,000 sats), a blockchain analyst faces N equally plausible recipients. This is the **anonymity set** — the larger it is, the more ambiguous the spend. Without coordination, naturally occurring transactions almost never produce multiple identical outputs.\n\n## The Common Input Ownership Heuristic (CIOH)\n\nThe CIOH assumes that all inputs in a transaction are controlled by the same wallet. It is one of the most powerful chain-analysis heuristics. CoinJoin directly undermines it: inputs come from different users, so the CIOH leads analysts to a false conclusion.\n\n## Common Modeling Mistakes\n\n- **Equal outputs alone are not proof.** A wallet sending dust to many addresses produces equal outputs too.\n- **Ignoring change outputs misleads.** Non-denomination outputs can provide context, but they are not a direct participant count and may include other non-denomination outputs.\n- **Real CoinJoin variants differ.** Wasabi, JoinMarket, and Whirlpool each have different coordinator policies, denomination schedules, and change patterns.\n\n## How to Read This Canvas\n\n**Lane 1 — CoinJoin Branch** (top): Enter a CSV list of output amounts. The flow detects the denomination, computes the anonymity set, counts change outputs, and calculates the equal-output ratio. Two threshold checks (anonymity >= 5, ratio >= 60%) produce a pass/fail result. A summary JSON report aggregates all metrics.\n\n**Lane 2 — Normal Baseline** (middle): Enter a normal multi-party transaction's outputs and a reference amount. The same metrics are computed so you can compare directly.\n\n**Lane 3 — Comparison** (bottom): CoinJoin metrics are compared against the normal-tx baseline. If CoinJoin scores higher on both anonymity and ratio, the comparison check passes.\n\n## Backend Path\n\nUI → POST /bulk_calculate → graph_logic (topological sort + param extraction) → calc_func.py (coinjoin_* helpers) → JSON results back to nodes.",
+        "fontSize": 20,
+        "width": 1100,
+        "height": 860,
+        "title": "Text Info Node",
+        "dirty": false
+      },
+      "width": 1120,
+      "height": 880
+    },
+    {
+      "id": "node_compare_lane_notes",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 1450,
+        "y": 2860
+      },
+      "data": {
+        "content": "## Compare Lane — What to Look For\n\n**CoinJoin Anon > Normal**: If CoinJoin's equal-output count exceeds the normal transaction's equal-output count for the same reference amount, it demonstrates the meaningful ambiguity gain from coordination.\n\n**CoinJoin Ratio > Normal**: If the equal-output ratio (equal outputs / total outputs) is significantly higher in the CoinJoin lane, the transaction structure is more uniform — a strong heuristic signal.\n\nBoth comparisons together feed the final `check_result` node. **TRUE** means the CoinJoin pattern dominates the baseline on both measures.\n\n**Note on thresholds**: The threshold nodes in the CoinJoin lane (anonymity >= 5, ratio >= 60%) are industry-typical starting points used by tools like OXT and BlockSci. They are not consensus rules — analysts tune them per context.",
+        "fontSize": 18,
+        "width": 620,
+        "height": 480,
+        "title": "Text Info Node",
+        "dirty": false
+      },
+      "width": 640,
+      "height": 500
+    },
+    {
+      "id": "node_outputs_csv",
+      "type": "calculation",
+      "position": {
+        "x": 0,
+        "y": 200
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Output Amounts (sats CSV)",
+        "numInputs": 0,
+        "showField": true,
+        "value": "100000,100000,100000,100000,100000,24500,31000,58000",
+        "inputs": {
+          "val": "100000,100000,100000,100000,100000,24500,31000,58000"
+        },
+        "result": "100000,100000,100000,100000,100000,24500,31000,58000",
+        "dirty": false,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 3
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_denom_detected",
+      "type": "calculation",
+      "position": {
+        "x": 650,
+        "y": 200
+      },
+      "data": {
+        "functionName": "coinjoin_detect_denomination",
+        "title": "Detected Denomination (sats)",
+        "numInputs": 1,
+        "showField": false,
+        "inputs": {
+          "val": ""
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Heuristic: picks the most-repeated output amount. If no value repeats at least twice, this errors — meaning no CoinJoin denomination is detectable.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_anonymity_set",
+      "type": "calculation",
+      "position": {
+        "x": 1300,
+        "y": 80
+      },
+      "data": {
+        "functionName": "coinjoin_anonymity_set",
+        "title": "Anonymity Set (count)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Counts how many outputs exactly match the denomination. This is the anonymity set size — higher means more plausible recipients, so stronger privacy.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Denomination (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_change_count",
+      "type": "calculation",
+      "position": {
+        "x": 1300,
+        "y": 760
+      },
+      "data": {
+        "functionName": "coinjoin_change_outputs_count",
+        "title": "Non-Denomination Outputs (count)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Counts outputs that do NOT match the denomination — i.e., non-denomination outputs often treated as \"change\". This is descriptive context only, not a participant counter. Feeds into the summary report only (not the pass/fail check).",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Denomination (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_equal_ratio",
+      "type": "calculation",
+      "position": {
+        "x": 1300,
+        "y": 1440
+      },
+      "data": {
+        "functionName": "coinjoin_equal_output_ratio",
+        "title": "Equal Output Ratio (%)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "(equal outputs / total outputs) × 100. For the sample data: 5 equal out of 8 total = 62.5%. A ratio >= 60% is used as a heuristic threshold below.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Denomination (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_compare_anonymity",
+      "type": "calculation",
+      "position": {
+        "x": 1980,
+        "y": 80
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "Anonymity Set >= 5?",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ">=",
+            "2": "5"
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Threshold: anonymity set >= 5. Fewer than 5 equal outputs offers minimal cover — an analyst has at most a 1-in-5 guess, but in practice the bar is low.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Anonymity set (from left):",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Threshold (default 5):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_compare_ratio",
+      "type": "calculation",
+      "position": {
+        "x": 1980,
+        "y": 1440
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "Equal Output Ratio >= 60%?",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ">=",
+            "2": "60"
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Threshold: ratio >= 60%. If fewer than 60% of outputs share the denomination, the pattern is too mixed to be a reliable CoinJoin signal.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Equal output ratio % (from left):",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Threshold (default 60):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_privacy_check",
+      "type": "calculation",
+      "position": {
+        "x": 2660,
+        "y": 760
+      },
+      "data": {
+        "functionName": "check_result",
+        "title": "CoinJoin Heuristic Check",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "100": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "TRUE only if BOTH conditions pass: anonymity set >= 5 AND equal-output ratio >= 60%. Either failure returns FALSE. This is a heuristic signal, not proof.",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "true/false",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 12,
+              "minInstances": 1,
+              "title": "VALUES[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_coinjoin_report",
+      "type": "calculation",
+      "position": {
+        "x": 1980,
+        "y": 2140
+      },
+      "data": {
+        "functionName": "coinjoin_summary_report",
+        "title": "CoinJoin Summary Report (JSON)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Aggregates all metrics into one JSON object: total_outputs, denomination_sats, equal_output_count, change_output_count, equal_output_ratio_percent, equal_output_pool_sats, total_output_value_sats, change_min_sats, change_max_sats.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Denomination (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#22c55e",
+        "error": false
+      }
+    },
+    {
+      "id": "node_normal_outputs_csv",
+      "type": "calculation",
+      "position": {
+        "x": 0,
+        "y": 3700
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Normal Multi-Party Outputs (sats CSV)",
+        "numInputs": 0,
+        "showField": true,
+        "value": "152400,41320,98760,21500,36480,7920,44810,12670",
+        "inputs": {
+          "val": "152400,41320,98760,21500,36480,7920,44810,12670"
+        },
+        "result": "152400,41320,98760,21500,36480,7920,44810,12670",
+        "dirty": false,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 3
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "error": false
+      }
+    },
+    {
+      "id": "node_normal_reference_denom",
+      "type": "calculation",
+      "position": {
+        "x": 650,
+        "y": 3700
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Reference Output (Normal Tx)",
+        "numInputs": 0,
+        "showField": true,
+        "value": "152400",
+        "inputs": {
+          "val": "152400"
+        },
+        "result": "152400",
+        "dirty": false,
+        "showComment": true,
+        "comment": "Pick any one output amount from the normal transaction as the \"denomination\" reference. Here we use the largest output (152400 sats) — in a natural tx this is rarely repeated, so the anonymity set will be low.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "error": false
+      }
+    },
+    {
+      "id": "node_normal_anonymity_set",
+      "type": "calculation",
+      "position": {
+        "x": 1300,
+        "y": 3580
+      },
+      "data": {
+        "functionName": "coinjoin_anonymity_set",
+        "title": "Normal Tx: Equal-Output Count",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "Expected result: 1 (only one output matches 152400 in a normal tx). Compare this to the CoinJoin lane's anonymity set of 5.",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Reference amount (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "error": false
+      }
+    },
+    {
+      "id": "node_normal_equal_ratio",
+      "type": "calculation",
+      "position": {
+        "x": 1300,
+        "y": 4360
+      },
+      "data": {
+        "functionName": "coinjoin_equal_output_ratio",
+        "title": "Normal Tx Equal Ratio (%)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Output amounts (CSV):",
+              "rows": 3
+            },
+            {
+              "index": 1,
+              "label": "Reference amount (sats):",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "error": false
+      }
+    },
+    {
+      "id": "node_compare_anonymity_vs_normal",
+      "type": "calculation",
+      "position": {
+        "x": 1980,
+        "y": 3580
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "CoinJoin Anon > Normal",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ">",
+            "2": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#a855f7",
+        "error": false
+      }
+    },
+    {
+      "id": "node_compare_ratio_vs_normal",
+      "type": "calculation",
+      "position": {
+        "x": 1980,
+        "y": 4360
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "CoinJoin Ratio > Normal",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": ">",
+            "2": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#a855f7",
+        "error": false
+      }
+    },
+    {
+      "id": "node_coinjoin_vs_normal_check",
+      "type": "calculation",
+      "position": {
+        "x": 2660,
+        "y": 3920
+      },
+      "data": {
+        "functionName": "check_result",
+        "title": "CoinJoin vs Normal: Both Better?",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "100": ""
+          }
+        },
+        "result": "",
+        "dirty": true,
+        "showComment": true,
+        "comment": "TRUE if CoinJoin scores strictly higher than normal on BOTH anonymity set count AND equal-output ratio. This is the final comparative verdict — not an absolute threshold check.",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "true/false",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 12,
+              "minInstances": 1,
+              "title": "VALUES[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "borderColor": "#a855f7",
+        "error": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_outputs_to_denom",
+      "source": "node_outputs_csv",
+      "target": "node_denom_detected",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_outputs_to_anon",
+      "source": "node_outputs_csv",
+      "target": "node_anonymity_set",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_denom_to_anon",
+      "source": "node_denom_detected",
+      "target": "node_anonymity_set",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_outputs_to_change",
+      "source": "node_outputs_csv",
+      "target": "node_change_count",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_denom_to_change",
+      "source": "node_denom_detected",
+      "target": "node_change_count",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_outputs_to_ratio",
+      "source": "node_outputs_csv",
+      "target": "node_equal_ratio",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_denom_to_ratio",
+      "source": "node_denom_detected",
+      "target": "node_equal_ratio",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_anon_to_compare",
+      "source": "node_anonymity_set",
+      "target": "node_compare_anonymity",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_ratio_to_compare",
+      "source": "node_equal_ratio",
+      "target": "node_compare_ratio",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_compare_anon_to_check",
+      "source": "node_compare_anonymity",
+      "target": "node_privacy_check",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_compare_ratio_to_check",
+      "source": "node_compare_ratio",
+      "target": "node_privacy_check",
+      "targetHandle": "input-100"
+    },
+    {
+      "id": "edge_outputs_to_report",
+      "source": "node_outputs_csv",
+      "target": "node_coinjoin_report",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_denom_to_report",
+      "source": "node_denom_detected",
+      "target": "node_coinjoin_report",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_normal_outputs_to_anon",
+      "source": "node_normal_outputs_csv",
+      "target": "node_normal_anonymity_set",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_normal_ref_to_anon",
+      "source": "node_normal_reference_denom",
+      "target": "node_normal_anonymity_set",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_normal_outputs_to_ratio",
+      "source": "node_normal_outputs_csv",
+      "target": "node_normal_equal_ratio",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_normal_ref_to_ratio",
+      "source": "node_normal_reference_denom",
+      "target": "node_normal_equal_ratio",
+      "targetHandle": "input-1"
+    },
+    {
+      "id": "edge_coinjoin_anon_to_normal_compare",
+      "source": "node_anonymity_set",
+      "target": "node_compare_anonymity_vs_normal",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_normal_anon_to_compare",
+      "source": "node_normal_anonymity_set",
+      "target": "node_compare_anonymity_vs_normal",
+      "targetHandle": "input-2"
+    },
+    {
+      "id": "edge_coinjoin_ratio_to_normal_compare",
+      "source": "node_equal_ratio",
+      "target": "node_compare_ratio_vs_normal",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_normal_ratio_to_compare",
+      "source": "node_normal_equal_ratio",
+      "target": "node_compare_ratio_vs_normal",
+      "targetHandle": "input-2"
+    },
+    {
+      "id": "edge_compare_anon_vs_normal_to_check",
+      "source": "node_compare_anonymity_vs_normal",
+      "target": "node_coinjoin_vs_normal_check",
+      "targetHandle": "input-0"
+    },
+    {
+      "id": "edge_compare_ratio_vs_normal_to_check",
+      "source": "node_compare_ratio_vs_normal",
+      "target": "node_coinjoin_vs_normal_check",
+      "targetHandle": "input-100"
+    }
+  ]
+}

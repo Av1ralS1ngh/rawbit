@@ -50,6 +50,7 @@ def test_flows_catalog(client):
     assert "flows" in data
     assert isinstance(data["flows"], list)
     assert any(flow["slug"] == "p9_SegWit_P2WSH" for flow in data["flows"])
+    assert any(flow["slug"] == "p15_CoinJoin_Equal_Output_Heuristics" for flow in data["flows"])
     assert resp.headers["Cache-Control"] == "public, max-age=3600"
 
 

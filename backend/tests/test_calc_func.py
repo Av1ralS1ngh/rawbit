@@ -152,6 +152,47 @@ def test_identity_and_concat_all():
     assert calc.concat_all(["a", 1, "b"]) == "a1b"
 
 
+def test_coinjoin_detect_denomination_prefers_most_frequent():
+    outputs = "100000,100000,100000,100000,24500,31000,58000"
+    assert calc.coinjoin_detect_denomination(outputs) == "100000"
+
+
+def test_coinjoin_detect_denomination_tie_breaks_lower_amount():
+    outputs = "100000,100000,50000,50000,7500"
+    assert calc.coinjoin_detect_denomination(outputs) == "50000"
+
+
+def test_coinjoin_anonymity_and_change_counts():
+    vals = ["100000,100000,100000,24500,31000,58000", "100000"]
+    assert calc.coinjoin_anonymity_set(vals) == "3"
+    assert calc.coinjoin_change_outputs_count(vals) == "3"
+
+
+def test_coinjoin_equal_output_ratio():
+    vals = ["100000,100000,100000,24500,31000,58000", "100000"]
+    assert calc.coinjoin_equal_output_ratio(vals) == "50.00"
+
+
+def test_coinjoin_summary_report_contains_core_fields():
+    vals = ["100000,100000,100000,24500,31000,58000", "100000"]
+    report = json.loads(calc.coinjoin_summary_report(vals))
+
+    assert report["denomination_sats"] == 100000
+    assert report["equal_output_count"] == 3
+    assert report["change_output_count"] == 3
+    assert report["equal_output_ratio_percent"] == 50.0
+
+
+def test_coinjoin_detect_denomination_rejects_unique_only_outputs():
+    with pytest.raises(ValueError, match="No repeated output value found"):
+        calc.coinjoin_detect_denomination("11000,22000,33000")
+
+
+def test_coinjoin_anonymity_rejects_missing_denomination():
+    with pytest.raises(ValueError, match="not present in outputs"):
+        calc.coinjoin_anonymity_set(["11000,22000,33000", "100000"])
+
+
 def test_random_256_properties():
     priv = calc.random_256()
     assert len(priv) == 64

@@ -6,7 +6,7 @@ _rawBit is a visual, node-based editor for constructing and understanding Bitcoi
 
 ## Flow Examples
 
-rawBit ships with **14 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit and Taproot, but each is standalone — start anywhere.
+rawBit ships with **15 hands-on example lessons** you can load, tweak, and inspect. They progress from legacy to SegWit, Taproot, and privacy heuristics, but each is standalone — start anywhere.
 
 - **Lessons 1–2:** P2PKH, P2PK, multisig, and P2SH fundamentals
 - **Lessons 3–4:** Timelocks (nLockTime / nSequence), CLTV/CSV patterns
@@ -19,6 +19,7 @@ rawBit ships with **14 hands-on example lessons** you can load, tweak, and inspe
 - **Lesson 12:** Taproot script-path spend (taptree, control block, tapscript)
 - **Lesson 13:** Taproot script-path multisig (NUMS + `OP_CHECKSIGADD`)
 - **Lesson 14:** MuSig2 multisig (BIP327, aggregated Schnorr)
+- **Lesson 15:** CoinJoin basics + interactive normal-vs-CoinJoin heuristic comparison
 
 All example transactions were broadcast to **testnet3** and can be verified on explorers.
 
@@ -31,7 +32,7 @@ All example transactions were broadcast to **testnet3** and can be verified on e
 3. Open a script node → **step through** opcodes and inspect the stack.
 4. Copy a node’s **Python implementation** from the inspector to discuss/learn.
 
-**More lessons coming:** Lightning HTLCs, Miniscript, CoinJoin, PSBT workflows, and covenant proposals.
+**More lessons coming:** Lightning HTLCs, Miniscript, mining templates, PSBT workflows, and covenant proposals.
 
 ---
 

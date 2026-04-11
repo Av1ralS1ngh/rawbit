@@ -25,6 +25,13 @@ export async function gotoEditor(
     waitUntil = 'domcontentloaded',
   }: { timeoutMs?: number; waitUntil?: GotoWaitUntil } = {},
 ) {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem('rawbit.ui.welcomeSeen', '1');
+    } catch {
+      /* ignore storage failures in hardened browser contexts */
+    }
+  });
   await page.goto('/', { timeout: timeoutMs, waitUntil });
 }
 

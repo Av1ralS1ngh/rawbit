@@ -379,5 +379,36 @@ FUNCTION_SPECS = {
     "params": { "vals": { "type": "any", "required": True } }
 },
 
+"coinjoin_detect_denomination": {
+    "paramExtraction": "single_val",
+    "params": {
+        "val": {"type": "string", "required": True}
+    }
+},
+"coinjoin_anonymity_set": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_change_outputs_count": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_equal_output_ratio": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_summary_report": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+
 
 }

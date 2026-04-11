@@ -71,6 +71,11 @@ from calc_functions.calc_func import (
     address_to_scriptpubkey,
     bip67_sort_pubkeys,
     check_result,
+    coinjoin_detect_denomination,
+    coinjoin_anonymity_set,
+    coinjoin_change_outputs_count,
+    coinjoin_equal_output_ratio,
+    coinjoin_summary_report,
 )
 from calc_functions.function_specs import FUNCTION_SPECS
 from config import (
@@ -151,6 +156,11 @@ CALC_FUNCTIONS = {
     "address_to_scriptpubkey": address_to_scriptpubkey,
     "bip67_sort_pubkeys": bip67_sort_pubkeys,
     "check_result": check_result,
+    "coinjoin_detect_denomination": coinjoin_detect_denomination,
+    "coinjoin_anonymity_set": coinjoin_anonymity_set,
+    "coinjoin_change_outputs_count": coinjoin_change_outputs_count,
+    "coinjoin_equal_output_ratio": coinjoin_equal_output_ratio,
+    "coinjoin_summary_report": coinjoin_summary_report,
 }
 
 _NO_ERROR_FUNCTIONS = {"random_256"}

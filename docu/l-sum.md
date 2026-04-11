@@ -186,3 +186,15 @@ used once, destroyed. Nonce reuse across different transactions can expose the s
 A complete 3-of-3 MuSig2 key-path spend in six stages:
 
     SIGNERS → KEYAGG → PREIMAGE → ROUND 1 → ROUND 2 → TRANSACTION
+
+# Lesson 15: CoinJoin Equal-Output Heuristics
+
+This lesson introduces and demonstrates how CoinJoin-style equal-output patterns can be evaluated with practical heuristics and compared against a normal multi-party transaction baseline.
+
+- Flow 1 — CoinJoin: Enter output amounts, detect the repeated denomination, and compute anonymity set, change-output count, and equal-output ratio.
+- Flow 2 — Normal Baseline: Run the same metrics on a normal multi-party transaction using a reference amount to establish a control case.
+- Flow 3 — Comparison: Compare CoinJoin metrics against baseline metrics and produce a final comparative verdict.
+
+Threshold checks: The lesson includes configurable pass/fail checks (for example, anonymity >= 5 and equal-output ratio >= 60%) to mark when the CoinJoin lane exhibits a strong heuristic signal.
+
+Interpretation: These results are heuristic indicators, not cryptographic proof. Equal outputs alone are not sufficient, change behavior must be evaluated, and false positives/negatives remain possible.
