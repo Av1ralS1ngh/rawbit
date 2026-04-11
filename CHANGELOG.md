@@ -135,3 +135,9 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 
 - Added a comprehensive public contribution guide for new contributors in `docu/contribute.md`, including project goals, high-value contribution areas, flow design principles, proposal expectations, and an idea bank.
 - Added the Discord community invite (`https://discord.gg/5vRnYSZc`)
+
+## [0.4.2] - 2026-04-10
+
+### Fixed
+
+- `npm test` on a fresh clone: the test script no longer references a file that isn't shipped with the repo. Reported by @harsh04044.

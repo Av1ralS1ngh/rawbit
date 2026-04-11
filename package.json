@@ -1,6 +1,6 @@
 {
   "name": "rawbit",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -9,10 +9,9 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -b tsconfig.app.json tsconfig.worker.json tests/tsconfig.e2e.json",
     "preview": "vite preview",
-    "test": "vitest run && vitest run --config vitest.worker.config.ts",
+    "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:worker": "vitest run --config vitest.worker.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed --project=chromium"
   },
