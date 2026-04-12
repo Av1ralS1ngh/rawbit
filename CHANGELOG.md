@@ -141,3 +141,30 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 ### Fixed
 
 - `npm test` on a fresh clone: the test script no longer references a file that isn't shipped with the repo. Reported by @harsh04044.
+
+## [0.4.2-wip] - 2026-04-11
+
+### Changed
+
+- Lesson 15 (`p15_CoinJoin_Equal_Output_Heuristics.json`) was rebuilt as a full CoinJoin structural lesson with three case studies: 2-party clean CoinJoin, 5-party realistic CoinJoin with change, and a false-positive single-input batch payout.
+- The lesson now emphasizes participant/input-side structure first, then applies heuristics as supporting analysis.
+
+### Added
+
+- Added four CoinJoin calculation helpers in `backend/calc_functions/calc_func.py` and registered them in specs/dispatch:
+	- `coinjoin_build_tx_summary`
+	- `coinjoin_cioh_check`
+	- `coinjoin_false_positive_score`
+	- `coinjoin_describe_output_set`
+- Added backend unit-test coverage for the new CoinJoin helper functions in `backend/tests/test_calc_func.py`.
+
+## [0.4.3-wip] - 2026-04-11
+
+### Changed
+
+- Lesson 15 (`p15_CoinJoin_Equal_Output_Heuristics.json`) was revamped again into a flat lane-based layout to match the style of other lessons: removed all `shadcnGroup` container boxes and retained color as node-level highlights only.
+- Expanded Lesson 15 from 49 nodes to 96 nodes with additional participant, threshold, interpretation, and cross-case synthesis nodes while preserving the original three-case CoinJoin learning outcomes.
+
+### Fixed
+
+- Repositioned the rebuilt Lesson 15 nodes and verified a zero-overlap static layout in top-level space for the new flat architecture.

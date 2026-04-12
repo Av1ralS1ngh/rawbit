@@ -10,6 +10,8 @@ from collections import deque
 from calc_functions.calc_func import (
     identity,
     concat_all,
+    csv_join,
+    csv_unique_count,
     random_256,
   
     public_key_from_private_key,
@@ -76,6 +78,15 @@ from calc_functions.calc_func import (
     coinjoin_change_outputs_count,
     coinjoin_equal_output_ratio,
     coinjoin_summary_report,
+    coinjoin_build_tx_summary,
+    coinjoin_cioh_check,
+    coinjoin_false_positive_score,
+    coinjoin_describe_output_set,
+    coinjoin_star_pattern_score,
+    coinjoin_collector_pattern_score,
+    coinjoin_remix_depth_score,
+    coinjoin_script_fingerprint_score,
+    coinjoin_effective_anonymity_set,
 )
 from calc_functions.function_specs import FUNCTION_SPECS
 from config import (
@@ -95,6 +106,8 @@ CALC_FUNCTIONS = {
    
     "identity": identity,
     "concat_all": concat_all,
+    "csv_join": csv_join,
+    "csv_unique_count": csv_unique_count,
     "random_256": random_256,
 
     "public_key_from_private_key": public_key_from_private_key,
@@ -161,9 +174,24 @@ CALC_FUNCTIONS = {
     "coinjoin_change_outputs_count": coinjoin_change_outputs_count,
     "coinjoin_equal_output_ratio": coinjoin_equal_output_ratio,
     "coinjoin_summary_report": coinjoin_summary_report,
+    "coinjoin_build_tx_summary": coinjoin_build_tx_summary,
+    "coinjoin_cioh_check": coinjoin_cioh_check,
+    "coinjoin_false_positive_score": coinjoin_false_positive_score,
+    "coinjoin_describe_output_set": coinjoin_describe_output_set,
+    "coinjoin_star_pattern_score": coinjoin_star_pattern_score,
+    "coinjoin_collector_pattern_score": coinjoin_collector_pattern_score,
+    "coinjoin_remix_depth_score": coinjoin_remix_depth_score,
+    "coinjoin_script_fingerprint_score": coinjoin_script_fingerprint_score,
+    "coinjoin_effective_anonymity_set": coinjoin_effective_anonymity_set,
 }
 
 _NO_ERROR_FUNCTIONS = {"random_256"}
+
+_CHECK_RESULT_NON_ERROR_NODE_IDS = {
+    "node_b_strict_gate",
+    "node_cmp_case_b_strength_gate",
+    "node_cmp_final_story_gate",
+}
 
 
 _HAS_SIGALRM = hasattr(signal, "SIGALRM") and hasattr(signal, "setitimer")
@@ -571,7 +599,21 @@ def bulk_calculate_logic(nodes, edges):
             for nid in order:
                 _maybe_raise_deadline(deadline_at, timeout_seconds)
 
-                node, data = node_map[nid], node_map[nid]["data"]
+                node = node_map[nid]
+                data = node.get("data")
+                if not isinstance(data, dict):
+                    data = {}
+                    node["data"] = data
+
+                # Educational/meta nodes (TextInfo/Group) should not execute functions.
+                # They are persisted with the flow so we clear stale runtime flags and skip.
+                node_type = node.get("type")
+                if node_type not in (None, "calculation"):
+                    data.pop("scriptDebugSteps", None)
+                    data.pop("error", None)
+                    data.pop("extendedError", None)
+                    data["dirty"] = False
+                    continue
 
                 if data.get("_cycle"):
                     continue  # cyclic nodes are skipped
@@ -737,15 +779,23 @@ def bulk_calculate_logic(nodes, edges):
                         store_inputs["vals"] = store_inputs.pop("_sparseVals")
                     data.update({"inputs": store_inputs, "dirty": False})
                     data.pop("error", None)  # clear OLD error
+                    data.pop("extendedError", None)  # clear OLD message
 
                     # ─── custom post-hooks (after pop) ─────────────────────
                     if fn_name == "check_result" and str(data["result"]).lower() == "false":
-                        data.update(
-                            {
-                                "error": True,
-                                "extendedError": "Check failed: at least one input is not true",
-                            }
-                        )
+                        false_is_error = data.get("falseIsError")
+                        if false_is_error is None and nid in _CHECK_RESULT_NON_ERROR_NODE_IDS:
+                            false_is_error = False
+                        if false_is_error is None:
+                            false_is_error = True
+
+                        if false_is_error:
+                            data.update(
+                                {
+                                    "error": True,
+                                    "extendedError": "Check failed: at least one input is not true",
+                                }
+                            )
 
                     # propagate per-row errors from wallet_rpc_general nodes
                     if mode == "multi_val_with_network":

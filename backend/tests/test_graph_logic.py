@@ -518,6 +518,62 @@ def test_bulk_calculate_logic_happy_path():
     assert updated["dst"]["data"].get("dirty") is False
 
 
+def test_bulk_calculate_logic_ignores_non_calculation_nodes():
+    nodes = [
+        {
+            "id": "info",
+            "type": "shadcnTextInfo",
+            "data": {
+                "title": "Text Info Node",
+                "dirty": False,
+                "error": True,
+                "extendedError": "old error",
+            },
+        },
+        {
+            "id": "group",
+            "type": "shadcnGroup",
+            "data": {
+                "title": "Group",
+                "dirty": False,
+            },
+        },
+        {
+            "id": "src",
+            "type": "calculation",
+            "data": {
+                "functionName": "identity",
+                "value": "abc",
+                "dirty": True,
+            },
+        },
+        {
+            "id": "dst",
+            "type": "calculation",
+            "data": {
+                "functionName": "concat_all",
+                "dirty": True,
+                "inputStructure": {"ungrouped": [{"index": 0}, {"index": 1}]},
+                "inputs": {"vals": {"1": "manual"}},
+            },
+        },
+    ]
+    edges = [{"source": "src", "target": "dst", "targetHandle": "dst-0"}]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), edges)
+    updated = {node["id"]: node for node in updated_nodes}
+
+    assert errors == []
+    assert updated["src"]["data"]["result"] == "abc"
+    assert updated["dst"]["data"]["result"] == "abcmanual"
+
+    # Non-calculation nodes should be preserved but never executed as functions.
+    assert updated["info"]["data"].get("dirty") is False
+    assert "error" not in updated["info"]["data"]
+    assert "extendedError" not in updated["info"]["data"]
+    assert updated["group"]["data"].get("dirty") is False
+
+
 def test_bulk_calculate_logic_handles_unknown_source_edges():
     nodes = [
         {
@@ -1007,6 +1063,74 @@ def test_check_result_marks_error_in_graph():
     assert data["result"] == "false"
     assert data["error"] is True
     assert "Check failed" in data["extendedError"]
+
+
+def test_check_result_can_skip_error_when_false_is_not_error():
+    nodes = [
+        {
+            "id": "chk",
+            "data": {
+                "functionName": "check_result",
+                "dirty": True,
+                "falseIsError": False,
+                "inputStructure": {"ungrouped": [{"index": 0}, {"index": 1}]},
+                "inputs": {"vals": {"0": "true", "1": "false"}},
+            },
+        }
+    ]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
+    data = {node["id"]: node for node in updated_nodes}["chk"]["data"]
+
+    assert errors == []
+    assert data["result"] == "false"
+    assert "error" not in data
+    assert "extendedError" not in data
+
+
+def test_check_result_legacy_lesson_gate_ids_skip_error_without_flag():
+    nodes = [
+        {
+            "id": "node_b_strict_gate",
+            "data": {
+                "functionName": "check_result",
+                "dirty": True,
+                "inputStructure": {"ungrouped": [{"index": 0}, {"index": 1}]},
+                "inputs": {"vals": {"0": "true", "1": "false"}},
+            },
+        }
+    ]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
+    data = {node["id"]: node for node in updated_nodes}["node_b_strict_gate"]["data"]
+
+    assert errors == []
+    assert data["result"] == "false"
+    assert "error" not in data
+    assert "extendedError" not in data
+
+
+def test_successful_calculation_clears_stale_extended_error():
+    nodes = [
+        {
+            "id": "idn",
+            "data": {
+                "functionName": "identity",
+                "value": "ok",
+                "dirty": True,
+                "error": True,
+                "extendedError": "stale message",
+            },
+        }
+    ]
+
+    updated_nodes, errors = graph_logic.bulk_calculate_logic(copy.deepcopy(nodes), [])
+    data = {node["id"]: node for node in updated_nodes}["idn"]["data"]
+
+    assert errors == []
+    assert data["result"] == "ok"
+    assert "error" not in data
+    assert "extendedError" not in data
 
 
 def test_show_field_bypasses_unwired_guard():

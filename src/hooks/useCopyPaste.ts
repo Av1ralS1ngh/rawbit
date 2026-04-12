@@ -9,6 +9,7 @@ import { Edge, useReactFlow, XYPosition } from "@xyflow/react";
 import { log } from "@/lib/logConfig";
 import type { FlowNode, ScriptExecutionResult } from "@/types";
 import { importWithFreshIds } from "@/lib/idUtils";
+import { offsetImportedTopLevelNodes } from "@/lib/flow/overlap";
 import {
   getScriptSteps,
   setScriptSteps,
@@ -203,6 +204,9 @@ export function useCopyPaste() {
         } as FlowNode;
       });
 
+      const currentNodes = getNodes() as FlowNode[];
+      const offsetNodes = offsetImportedTopLevelNodes(rawNodes, currentNodes);
+
       // 2) Stable batch-rename + edge remap (handles included); always rename on paste.
       const {
         nodes: newNodes,
@@ -212,9 +216,9 @@ export function useCopyPaste() {
         FlowNode,
         Edge
       >({
-        currentNodes: getNodes() as FlowNode[],
+        currentNodes,
         currentEdges: getEdges() as Edge[],
-        importNodes: rawNodes,
+        importNodes: offsetNodes,
         importEdges: copiedEdges as Edge[],
         dedupeEdges: true,
         renameMode: "collision",

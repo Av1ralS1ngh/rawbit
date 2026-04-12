@@ -54,6 +54,10 @@ import {
   remapProtocolDiagramLayout,
   sanitizeProtocolDiagramLayout,
 } from "@/lib/protocolDiagram/layoutPersistence";
+import {
+  offsetImportedTopLevelNodes,
+  resolveNodePosition,
+} from "@/lib/flow/overlap";
 
 /* ------------------------------------------------------------------ */
 /*  Types & tiny utils                                                */
@@ -334,8 +338,8 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
       const relX = absX - groupAbs.x;
       const relY = absY - groupAbs.y;
 
-      setNodes((nds) =>
-        nds.map((n) =>
+      setNodes((nds) => {
+        const parentedNodes = nds.map((n) =>
           n.id === nodeId && n.type !== "shadcnGroup"
             ? {
                 ...n,
@@ -344,8 +348,34 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
                 position: { x: relX, y: relY },
               }
             : n
-        )
-      );
+        );
+
+        const parentedNode = parentedNodes.find((n) => n.id === nodeId);
+        if (!parentedNode || parentedNode.type === "shadcnGroup") {
+          return parentedNodes;
+        }
+
+        const resolvedPosition = resolveNodePosition(
+          parentedNode,
+          parentedNodes.filter((n) => n.id !== nodeId)
+        );
+
+        if (
+          resolvedPosition.x === parentedNode.position.x &&
+          resolvedPosition.y === parentedNode.position.y
+        ) {
+          return parentedNodes;
+        }
+
+        return parentedNodes.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                position: resolvedPosition,
+              }
+            : n
+        );
+      });
 
       // Defer until state is committed & internals updated
       requestAnimationFrame(() => {
@@ -381,10 +411,14 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
       const [sanitizedNode] = ingestScriptSteps([newNode]);
 
       setNodes((nds) => {
+        const positionedNode: FlowNode = {
+          ...sanitizedNode,
+          position: resolveNodePosition(sanitizedNode, nds),
+        };
         const deselect = nds.map((n) => ({ ...n, selected: false }));
         return type === "shadcnGroup"
-          ? [sanitizedNode, ...deselect]
-          : [...deselect, sanitizedNode];
+          ? [positionedNode, ...deselect]
+          : [...deselect, positionedNode];
       });
 
       pendingIds.current.add(newId);
@@ -483,7 +517,11 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
         const sanitizedSub = ingestScriptSteps(sub);
 
         const currentNodes = rf.getNodes() as FlowNode[];
-        const nextNodes = [...currentNodes, ...sanitizedSub];
+        const placedSub = offsetImportedTopLevelNodes(
+          sanitizedSub,
+          currentNodes
+        );
+        const nextNodes = [...currentNodes, ...placedSub];
         const importedLayout = sanitizeProtocolDiagramLayout(
           (maybeFlowData as FlowData).protocolDiagramLayout,
           collectGroupNodeIds((maybeFlowData as FlowData).nodes)
@@ -506,11 +544,11 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
         }
 
         // ③ append to canvas
-        setNodes((nds) => [...nds, ...sanitizedSub]);
+        setNodes((nds) => [...nds, ...placedSub]);
         setEdges((eds) => [...eds, ...subE]);
 
         // ④ downstream: adopt parenting + resize groups (unchanged)
-        sanitizedSub.forEach((n) => {
+        placedSub.forEach((n) => {
           pendingIds.current.add(n.id);
           if (n.parentId) groupsToResize.current.add(n.parentId);
         });
@@ -622,17 +660,80 @@ export function useNodeOperations(options: UseNodeOperationsOptions = {}) {
         }
       }
 
-      if (!parentsNeedingResize.size) return;
-
-      const parents = Array.from(parentsNeedingResize);
-      requestAnimationFrame(() => {
-        parents.forEach((parentId) => {
-          rf.updateNodeInternals?.(parentId);
-          requestAnimationFrame(() =>
-            fitGroupToChildren(parentId, rf, setNodes)
-          );
+      if (parentsNeedingResize.size) {
+        const parents = Array.from(parentsNeedingResize);
+        requestAnimationFrame(() => {
+          parents.forEach((parentId) => {
+            rf.updateNodeInternals?.(parentId);
+            requestAnimationFrame(() =>
+              fitGroupToChildren(parentId, rf, setNodes)
+            );
+          });
         });
-      });
+      }
+
+      if (selected.length >= 1) {
+        const selectedIds = new Set(selected.map((node) => node.id));
+
+        requestAnimationFrame(() => {
+          const latestNodes = rf.getNodes() as FlowNode[];
+          const draggedNodes = latestNodes.filter((node) =>
+            selectedIds.has(node.id)
+          );
+
+          if (!draggedNodes.length) return;
+
+          const nonDragged = latestNodes.filter(
+            (node) => !selectedIds.has(node.id)
+          );
+          const resolvedPositions = new Map<string, { x: number; y: number }>();
+          const movedParentIds = new Set<string>();
+          const workingNodes = [...nonDragged];
+
+          draggedNodes.forEach((draggedNode) => {
+            const nextPos = resolveNodePosition(draggedNode, workingNodes);
+
+            if (
+              nextPos.x !== draggedNode.position.x ||
+              nextPos.y !== draggedNode.position.y
+            ) {
+              resolvedPositions.set(draggedNode.id, nextPos);
+              if (draggedNode.parentId) {
+                movedParentIds.add(draggedNode.parentId);
+              }
+            }
+
+            workingNodes.push({
+              ...draggedNode,
+              position: nextPos,
+            });
+          });
+
+          if (!resolvedPositions.size) return;
+
+          setNodes((nodesState) =>
+            nodesState.map((node) => {
+              const resolved = resolvedPositions.get(node.id);
+              if (!resolved) return node;
+              return {
+                ...node,
+                position: resolved,
+              };
+            })
+          );
+
+          if (movedParentIds.size) {
+            requestAnimationFrame(() => {
+              movedParentIds.forEach((parentId) => {
+                rf.updateNodeInternals?.(parentId);
+                requestAnimationFrame(() =>
+                  fitGroupToChildren(parentId, rf, setNodes)
+                );
+              });
+            });
+          }
+        });
+      }
     },
     [rf, setNodes]
   );

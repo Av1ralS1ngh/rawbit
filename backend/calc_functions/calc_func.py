@@ -1633,6 +1633,32 @@ def concat_all(vals: list) -> str:
     return "".join(str(v) for v in vals)
 
 
+def csv_join(vals: list) -> str:
+    """Build a comma-separated string from one or more scalar or CSV-like inputs."""
+    parts = []
+    for v in vals:
+        if v is None:
+            continue
+
+        raw = str(v).strip()
+        if raw == "" or raw == "__EMPTY__":
+            continue
+
+        for piece in raw.split(","):
+            piece = piece.strip()
+            if piece:
+                parts.append(piece)
+
+    return ",".join(parts)
+
+
+def csv_unique_count(val: str) -> str:
+    """Count unique comma-separated items in a CSV string."""
+    raw = "" if val is None else str(val)
+    items = [part.strip() for part in raw.split(",") if part.strip() and part.strip() != "__EMPTY__"]
+    return str(len(set(items)))
+
+
 def random_256() -> str:
     """
     Return 256 bits (32 bytes) of valid secp256k1 private key as hex.
@@ -3237,3 +3263,505 @@ def coinjoin_summary_report(vals: list[str]) -> str:
         )
 
     return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_build_tx_summary(vals: list[str]) -> str:
+    """
+    Build a CoinJoin transaction structural summary from inputs and outputs.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Comma-separated input amounts in satoshis (e.g. "100000,100000").
+    vals[1] : str
+        Comma-separated output amounts in satoshis (e.g. "99500,99500").
+
+    Returns
+    -------
+    str
+        JSON object (sort_keys=True) with keys:
+          input_count, output_count, total_input_sats, total_output_sats,
+          fee_sats, denomination_sats (int or null),
+          equal_output_count, change_output_count, equal_output_ratio_percent.
+
+    Examples
+    --------
+    vals = ["100000,100000", "99500,99500"]
+    -> '{"change_output_count": 0, "denomination_sats": 99500,
+         "equal_output_count": 2, "equal_output_ratio_percent": 100.0,
+         "fee_sats": 1000, "input_count": 2, "output_count": 2,
+         "total_input_sats": 200000, "total_output_sats": 199000}'
+
+        vals = ["110900,110900,110900,110900,110900",
+            "99500,99500,99500,99500,99500,8200,14300,31000"]
+    -> '{"change_output_count": 3, "denomination_sats": 99500,
+         "equal_output_count": 5, "equal_output_ratio_percent": 62.5,
+         "fee_sats": 3500, "input_count": 5, "output_count": 8,
+            "total_input_sats": 554500, "total_output_sats": 551000}'
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [inputs_csv, outputs_csv]")
+
+    inputs = _parse_coinjoin_outputs(vals[0])
+    outputs = _parse_coinjoin_outputs(vals[1])
+
+    total_input_sats = sum(inputs)
+    total_output_sats = sum(outputs)
+    fee_sats = total_input_sats - total_output_sats
+    if fee_sats < 0:
+        raise ValueError("Outputs exceed inputs: fee cannot be negative")
+
+    denomination_sats: int | None = None
+    equal_output_count = 0
+
+    counts = Counter(outputs)
+    repeated = [(amount, count) for amount, count in counts.items() if count >= 2]
+    if repeated:
+        denomination_sats, _ = min(repeated, key=lambda pair: (-pair[1], pair[0]))
+        equal_output_count = sum(1 for value in outputs if value == denomination_sats)
+
+    change_output_count = len(outputs) - equal_output_count
+    equal_output_ratio_percent = round((equal_output_count / len(outputs)) * 100, 2)
+
+    report: dict[str, Any] = {
+        "input_count": len(inputs),
+        "output_count": len(outputs),
+        "total_input_sats": total_input_sats,
+        "total_output_sats": total_output_sats,
+        "fee_sats": fee_sats,
+        "denomination_sats": denomination_sats,
+        "equal_output_count": equal_output_count,
+        "change_output_count": change_output_count,
+        "equal_output_ratio_percent": equal_output_ratio_percent,
+    }
+    return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_cioh_check(val: str) -> str:
+    """
+    Check whether the Common Input Ownership Heuristic (CIOH) applies to inputs.
+
+    Heuristic: if ALL input amounts are identical, a naive analyst concludes
+    they came from one wallet (CIOH holds). A genuine CoinJoin will exhibit
+    this in some coordinator rounds that enforce equal input amounts, even
+    though the inputs can still come from independent wallets.
+
+    A single-input transaction always returns "true" (trivially one owner).
+
+    Parameters
+    ----------
+    val : str
+        Comma-separated input amounts in satoshis.
+
+    Returns
+    -------
+    str
+        "true"  -> all inputs same value (CIOH holds superficially)
+        "false" -> inputs vary (CIOH clearly broken)
+
+    Examples
+    --------
+    val = "100000,100000,100000,100000,100000"  -> "true"
+    val = "500000"                               -> "true"
+    val = "82400,100000,63500,100000,97200"     -> "false"
+    """
+    inputs = _parse_coinjoin_outputs(val)
+    return "true" if len(set(inputs)) == 1 else "false"
+
+
+def coinjoin_false_positive_score(vals: list[str]) -> str:
+    """
+    Estimate the false-positive risk for equal-output transactions.
+
+    Heuristics applied in priority order:
+    1. HIGH_FP_RISK if input_count == 1
+       (single payer, definitively a batch payout or fan-out)
+     2. HIGH_FP_RISK if input_count < 3 AND equal_output_ratio >= 95%
+         AND inputs are not all equal
+       (tiny set with near-perfect output uniformity)
+    3. MEDIUM_FP_RISK if equal_output_ratio >= 70% AND all inputs are equal
+       (ambiguous small-round signature)
+    4. LOW_FP_RISK otherwise
+       (more consistent with genuine multi-party CoinJoin structure)
+
+    Parameters
+    ----------
+    vals[0] : str
+        Comma-separated input amounts in satoshis.
+    vals[1] : str
+        Comma-separated output amounts in satoshis.
+
+    Returns
+    -------
+    str
+        One of: "HIGH_FP_RISK", "MEDIUM_FP_RISK", "LOW_FP_RISK"
+
+    Examples
+    --------
+    vals = ["500000", "99500,99500,99500,99500,99500"]
+    -> "HIGH_FP_RISK"
+
+    vals = ["100000,100000", "99500,99500"]
+    -> "MEDIUM_FP_RISK"
+
+    vals = ["100000,100000,100000,100000,100000",
+            "99500,99500,99500,99500,99500,8200,14300,31000"]
+    -> "LOW_FP_RISK"
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [inputs_csv, outputs_csv]")
+
+    inputs = _parse_coinjoin_outputs(vals[0])
+    outputs = _parse_coinjoin_outputs(vals[1])
+
+    input_count = len(inputs)
+    all_inputs_equal = len(set(inputs)) == 1
+
+    counts = Counter(outputs)
+    repeated = [(amount, count) for amount, count in counts.items() if count >= 2]
+    equal_output_ratio = 0.0
+    if repeated:
+        denom, _ = min(repeated, key=lambda pair: (-pair[1], pair[0]))
+        equal_output_count = sum(1 for value in outputs if value == denom)
+        equal_output_ratio = (equal_output_count / len(outputs)) * 100
+
+    # 95% indicates near-perfect output uniformity in very small input sets.
+    high_ratio_threshold_percent = 95.0
+    # 70% marks ambiguous but still strong equal-output concentration.
+    medium_ratio_threshold_percent = 70.0
+
+    if input_count == 1:
+        return "HIGH_FP_RISK"
+
+    if (
+        input_count < 3
+        and equal_output_ratio >= high_ratio_threshold_percent
+        and not all_inputs_equal
+    ):
+        return "HIGH_FP_RISK"
+
+    if equal_output_ratio >= medium_ratio_threshold_percent and all_inputs_equal:
+        return "MEDIUM_FP_RISK"
+
+    return "LOW_FP_RISK"
+
+
+def coinjoin_describe_output_set(vals: list[str]) -> str:
+    """
+    Return a human-readable one-line description of a transaction's outputs.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Comma-separated output amounts in satoshis.
+    vals[1] : str
+        Denomination in satoshis (the equal output amount).
+
+    Returns
+    -------
+    str
+        Formatted description. Examples:
+        "5x 99500 sats (equal) | 3x change [8200, 14300, 31000 sats]"
+        "2x 99500 sats (equal) | no change"
+
+    Examples
+    --------
+    vals = ["99500,99500,99500,99500,99500,8200,14300,31000", "99500"]
+    -> "5x 99500 sats (equal) | 3x change [8200, 14300, 31000 sats]"
+
+    vals = ["99500,99500", "99500"]
+    -> "2x 99500 sats (equal) | no change"
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [outputs_csv, denomination]")
+
+    outputs = _parse_coinjoin_outputs(vals[0])
+    denom = _parse_coinjoin_denom(vals[1])
+
+    equal_outputs = [value for value in outputs if value == denom]
+    if not equal_outputs:
+        raise ValueError("Selected denomination is not present in outputs")
+
+    change_outputs = sorted(value for value in outputs if value != denom)
+
+    if change_outputs:
+        change_str = f"{len(change_outputs)}x change [{', '.join(str(v) for v in change_outputs)} sats]"
+    else:
+        change_str = "no change"
+
+    return f"{len(equal_outputs)}x {denom} sats (equal) | {change_str}"
+
+
+def _parse_coinjoin_labels(raw: str, *, name: str) -> list[str]:
+    text = str(raw).strip()
+    if not text:
+        raise ValueError(f"{name} cannot be empty")
+
+    parsed_labels: list[str] = []
+
+    try:
+        parsed = json.loads(text)
+    except Exception:
+        parsed = None
+
+    if isinstance(parsed, list):
+        parsed_labels = [str(item).strip() for item in parsed if str(item).strip()]
+    elif isinstance(parsed, dict) and isinstance(parsed.get("labels"), list):
+        parsed_labels = [str(item).strip() for item in parsed["labels"] if str(item).strip()]
+    else:
+        parsed_labels = [tok for tok in re.split(r"[\s,;|]+", text) if tok]
+
+    if not parsed_labels:
+        raise ValueError(f"{name} cannot be empty")
+
+    return parsed_labels
+
+
+def _parse_non_negative_int(raw: str, *, name: str) -> int:
+    token = str(raw).strip()
+    if not _INT_DEC_RE.fullmatch(token):
+        raise ValueError(f"{name} must be an integer")
+    value = int(token, 10)
+    if value < 0:
+        raise ValueError(f"{name} must be non-negative")
+    return value
+
+
+def coinjoin_star_pattern_score(vals: list[str]) -> str:
+    """
+    Estimate pre-mix anonymity loss from shared input funding sources.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Apparent anonymity set from equal outputs.
+    vals[1] : str
+        Funding source labels (CSV or JSON list), one label per input.
+
+    Returns
+    -------
+    str
+        JSON report with apparent/effective anonymity and star-pattern risk.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [apparent_anonymity_set, input_source_labels]")
+
+    apparent_set = _parse_non_negative_int(vals[0], name="apparent anonymity set")
+    if apparent_set == 0:
+        raise ValueError("apparent anonymity set must be greater than zero")
+
+    source_labels = _parse_coinjoin_labels(vals[1], name="input source labels")
+    normalized_sources = [label.lower() for label in source_labels]
+
+    unique_source_count = len(set(normalized_sources))
+    effective_set = min(apparent_set, unique_source_count)
+    has_star_pattern = unique_source_count < len(source_labels)
+    reduction_percent = round(((apparent_set - effective_set) / apparent_set) * 100, 2)
+
+    if effective_set <= 1:
+        risk_level = "SEVERE"
+    elif reduction_percent > 0:
+        risk_level = "ELEVATED"
+    else:
+        risk_level = "LOW"
+
+    report: dict[str, Any] = {
+        "apparent_anonymity_set": apparent_set,
+        "observed_input_count": len(source_labels),
+        "unique_funding_sources": unique_source_count,
+        "effective_anonymity_set": effective_set,
+        "has_star_pattern": has_star_pattern,
+        "reduction_percent": reduction_percent,
+        "risk_level": risk_level,
+    }
+    return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_collector_pattern_score(vals: list[str]) -> str:
+    """
+    Estimate post-mix anonymity loss from downstream output co-spending.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Apparent anonymity set from the originating CoinJoin.
+    vals[1] : str
+        Downstream owner/cluster labels for the mixed outputs.
+
+    Returns
+    -------
+    str
+        JSON report with apparent/effective anonymity and collector-pattern risk.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [apparent_anonymity_set, downstream_owner_labels]")
+
+    apparent_set = _parse_non_negative_int(vals[0], name="apparent anonymity set")
+    if apparent_set == 0:
+        raise ValueError("apparent anonymity set must be greater than zero")
+
+    owner_labels = _parse_coinjoin_labels(vals[1], name="downstream owner labels")
+    normalized_owners = [label.lower() for label in owner_labels]
+
+    unique_owner_count = len(set(normalized_owners))
+    effective_set = min(apparent_set, unique_owner_count)
+    co_spend_links = max(0, len(owner_labels) - unique_owner_count)
+    has_collector_pattern = co_spend_links > 0
+    reduction_percent = round(((apparent_set - effective_set) / apparent_set) * 100, 2)
+
+    if effective_set <= 1:
+        risk_level = "SEVERE"
+    elif reduction_percent > 0:
+        risk_level = "ELEVATED"
+    else:
+        risk_level = "LOW"
+
+    report: dict[str, Any] = {
+        "apparent_anonymity_set": apparent_set,
+        "observed_output_count": len(owner_labels),
+        "unique_downstream_clusters": unique_owner_count,
+        "effective_anonymity_set": effective_set,
+        "has_collector_pattern": has_collector_pattern,
+        "co_spend_links": co_spend_links,
+        "reduction_percent": reduction_percent,
+        "risk_level": risk_level,
+    }
+    return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_remix_depth_score(vals: list[str]) -> str:
+    """
+    Summarize remix depth quality from per-input remix depth observations.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Remix depth values (CSV or JSON list) for observed inputs.
+
+    Returns
+    -------
+    str
+        JSON report with max/average depth and remix strength label.
+    """
+    if len(vals) < 1:
+        raise ValueError("Need [remix_depth_values]")
+
+    depth_tokens = _parse_coinjoin_labels(vals[0], name="remix depth values")
+    depths = [_parse_non_negative_int(token, name="remix depth") for token in depth_tokens]
+
+    max_depth = max(depths)
+    avg_depth = round(sum(depths) / len(depths), 2)
+    fresh_input_count = sum(1 for depth in depths if depth == 0)
+    remixed_input_count = len(depths) - fresh_input_count
+
+    if max_depth >= 3 and avg_depth >= 2.0:
+        remix_strength = "STRONG"
+    elif max_depth >= 1:
+        remix_strength = "MEDIUM"
+    else:
+        remix_strength = "WEAK"
+
+    report: dict[str, Any] = {
+        "observed_inputs": len(depths),
+        "fresh_input_count": fresh_input_count,
+        "remixed_input_count": remixed_input_count,
+        "max_remix_depth": max_depth,
+        "avg_remix_depth": avg_depth,
+        "remix_strength": remix_strength,
+    }
+    return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_script_fingerprint_score(vals: list[str]) -> str:
+    """
+    Summarize script-type fingerprint signals for CoinJoin candidate transactions.
+
+    Parameters
+    ----------
+    vals[0] : str
+        Input script-type labels (CSV or JSON list), e.g. p2wpkh,p2wpkh.
+    vals[1] : str
+        Output script-type labels (CSV or JSON list).
+
+    Returns
+    -------
+    str
+        JSON report with native-segwit and script-mix indicators.
+    """
+    if len(vals) < 2:
+        raise ValueError("Need [input_script_types, output_script_types]")
+
+    input_types = [label.lower() for label in _parse_coinjoin_labels(vals[0], name="input script types")]
+    output_types = [label.lower() for label in _parse_coinjoin_labels(vals[1], name="output script types")]
+    all_types = input_types + output_types
+
+    native_segwit_types = {"p2wpkh", "p2wsh", "p2tr"}
+    is_native_segwit = all(script_type in native_segwit_types for script_type in all_types)
+    is_homogeneous = len(set(all_types)) == 1
+
+    input_counter = Counter(input_types)
+    output_counter = Counter(output_types)
+
+    dominant_script_type = input_counter.most_common(1)[0][0] if input_counter else "unknown"
+
+    if is_native_segwit and is_homogeneous and dominant_script_type == "p2wpkh":
+        fingerprint_label = "NATIVE_SEGWIT_P2WPKH"
+    elif is_native_segwit:
+        fingerprint_label = "NATIVE_SEGWIT_MIXED"
+    elif len(set(all_types)) > 1:
+        fingerprint_label = "MIXED_SCRIPT_FAMILIES"
+    else:
+        fingerprint_label = "INCONCLUSIVE"
+
+    report: dict[str, Any] = {
+        "input_script_counts": dict(input_counter),
+        "output_script_counts": dict(output_counter),
+        "is_native_segwit": is_native_segwit,
+        "is_homogeneous": is_homogeneous,
+        "dominant_input_script_type": dominant_script_type,
+        "fingerprint_label": fingerprint_label,
+    }
+    return json.dumps(report, sort_keys=True)
+
+
+def coinjoin_effective_anonymity_set(vals: list[str]) -> str:
+    """
+    Derive an effective anonymity set by taking the tightest available bound.
+
+    Supported value inputs:
+    - integer strings (e.g., "5")
+    - JSON reports containing key "effective_anonymity_set"
+    """
+    if not vals:
+        raise ValueError("Need at least one anonymity bound")
+
+    bounds: list[int] = []
+
+    for raw in vals:
+        token = str(raw).strip()
+        if not token:
+            continue
+
+        if _INT_DEC_RE.fullmatch(token):
+            value = int(token, 10)
+            if value > 0:
+                bounds.append(value)
+            continue
+
+        try:
+            payload = json.loads(token)
+        except Exception:
+            continue
+
+        if not isinstance(payload, dict):
+            continue
+
+        if "effective_anonymity_set" in payload:
+            value = _parse_non_negative_int(payload["effective_anonymity_set"], name="effective anonymity set")
+            if value > 0:
+                bounds.append(value)
+
+    if not bounds:
+        raise ValueError("No usable anonymity bound provided")
+
+    return str(min(bounds))

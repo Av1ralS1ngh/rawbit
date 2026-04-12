@@ -15,6 +15,20 @@ FUNCTION_SPECS = {
         }
     },
 
+    "csv_join": {
+        "paramExtraction": "multi_val",
+        "params": {
+            "vals": {"type": "any", "required": True}
+        }
+    },
+
+    "csv_unique_count": {
+        "paramExtraction": "single_val",
+        "params": {
+            "val": {"type": "string", "required": True}
+        }
+    },
+
     # No params => "random_256" => paramExtraction: "none"
     "random_256": {
         "paramExtraction": "none",
@@ -404,6 +418,60 @@ FUNCTION_SPECS = {
     }
 },
 "coinjoin_summary_report": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_build_tx_summary": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_cioh_check": {
+    "paramExtraction": "single_val",
+    "params": {
+        "val": {"type": "string", "required": True}
+    }
+},
+"coinjoin_false_positive_score": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_describe_output_set": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_star_pattern_score": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_collector_pattern_score": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_remix_depth_score": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_script_fingerprint_score": {
+    "paramExtraction": "multi_val",
+    "params": {
+        "vals": {"type": "any", "required": True}
+    }
+},
+"coinjoin_effective_anonymity_set": {
     "paramExtraction": "multi_val",
     "params": {
         "vals": {"type": "any", "required": True}

@@ -193,6 +193,182 @@ def test_coinjoin_anonymity_rejects_missing_denomination():
         calc.coinjoin_anonymity_set(["11000,22000,33000", "100000"])
 
 
+def test_coinjoin_build_tx_summary_two_party_clean_round():
+    vals = ["100000,100000", "99500,99500"]
+    report = json.loads(calc.coinjoin_build_tx_summary(vals))
+
+    assert report["input_count"] == 2
+    assert report["output_count"] == 2
+    assert report["total_input_sats"] == 200000
+    assert report["total_output_sats"] == 199000
+    assert report["fee_sats"] == 1000
+    assert report["denomination_sats"] == 99500
+    assert report["equal_output_count"] == 2
+    assert report["change_output_count"] == 0
+    assert report["equal_output_ratio_percent"] == 100.0
+
+
+def test_coinjoin_build_tx_summary_realistic_round_with_change():
+    vals = [
+        "110900,110900,110900,110900,110900",
+        "99500,99500,99500,99500,99500,8200,14300,31000",
+    ]
+    report = json.loads(calc.coinjoin_build_tx_summary(vals))
+
+    assert report["input_count"] == 5
+    assert report["output_count"] == 8
+    assert report["total_input_sats"] == 554500
+    assert report["total_output_sats"] == 551000
+    assert report["fee_sats"] == 3500
+    assert report["denomination_sats"] == 99500
+    assert report["equal_output_count"] == 5
+    assert report["change_output_count"] == 3
+    assert report["equal_output_ratio_percent"] == 62.5
+
+
+def test_coinjoin_build_tx_summary_rejects_negative_fee():
+    with pytest.raises(ValueError, match="fee cannot be negative"):
+        calc.coinjoin_build_tx_summary(["100000", "99500,99500"])
+
+
+def test_coinjoin_cioh_check_truth_table():
+    assert calc.coinjoin_cioh_check("100000,100000,100000") == "true"
+    assert calc.coinjoin_cioh_check("500000") == "true"
+    assert calc.coinjoin_cioh_check("82400,100000,63500,100000,97200") == "false"
+
+
+def test_coinjoin_false_positive_score_classifications():
+    assert (
+        calc.coinjoin_false_positive_score(["500000", "99500,99500,99500,99500,99500"])
+        == "HIGH_FP_RISK"
+    )
+    assert calc.coinjoin_false_positive_score(["100000,100000", "99500,99500"]) == "MEDIUM_FP_RISK"
+    assert (
+        calc.coinjoin_false_positive_score(
+            [
+                "100000,100000,100000,100000,100000",
+                "99500,99500,99500,99500,99500,8200,14300,31000",
+            ]
+        )
+        == "LOW_FP_RISK"
+    )
+
+
+def test_coinjoin_false_positive_score_detects_tiny_uniform_non_equal_inputs():
+    vals = ["130000,70000", "99500,99500"]
+    assert calc.coinjoin_false_positive_score(vals) == "HIGH_FP_RISK"
+
+
+def test_coinjoin_describe_output_set_formats_human_readable_string():
+    with_change = calc.coinjoin_describe_output_set(
+        ["99500,99500,99500,99500,99500,8200,14300,31000", "99500"]
+    )
+    no_change = calc.coinjoin_describe_output_set(["99500,99500", "99500"])
+
+    assert with_change == "5x 99500 sats (equal) | 3x change [8200, 14300, 31000 sats]"
+    assert no_change == "2x 99500 sats (equal) | no change"
+
+
+def test_coinjoin_describe_output_set_rejects_missing_denomination():
+    with pytest.raises(ValueError, match="not present in outputs"):
+        calc.coinjoin_describe_output_set(["99500,99500", "100000"])
+
+
+def test_coinjoin_star_pattern_score_distinct_sources():
+    report = json.loads(
+        calc.coinjoin_star_pattern_score(["5", "wallet_a,wallet_b,wallet_c,wallet_d,wallet_e"])
+    )
+
+    assert report["apparent_anonymity_set"] == 5
+    assert report["unique_funding_sources"] == 5
+    assert report["effective_anonymity_set"] == 5
+    assert report["has_star_pattern"] is False
+    assert report["risk_level"] == "LOW"
+
+
+def test_coinjoin_star_pattern_score_detects_source_clustering():
+    report = json.loads(
+        calc.coinjoin_star_pattern_score(["5", "binance,binance,binance,cold_1,cold_2"])
+    )
+
+    assert report["apparent_anonymity_set"] == 5
+    assert report["unique_funding_sources"] == 3
+    assert report["effective_anonymity_set"] == 3
+    assert report["has_star_pattern"] is True
+    assert report["risk_level"] == "ELEVATED"
+
+
+def test_coinjoin_collector_pattern_score_detects_cospend_links():
+    report = json.loads(
+        calc.coinjoin_collector_pattern_score(["5", "alice,alice,bob,charlie,charlie"])
+    )
+
+    assert report["apparent_anonymity_set"] == 5
+    assert report["unique_downstream_clusters"] == 3
+    assert report["effective_anonymity_set"] == 3
+    assert report["has_collector_pattern"] is True
+    assert report["co_spend_links"] == 2
+
+
+def test_coinjoin_collector_pattern_score_distinct_downstream_clusters():
+    report = json.loads(
+        calc.coinjoin_collector_pattern_score(["4", "u1,u2,u3,u4"])
+    )
+
+    assert report["effective_anonymity_set"] == 4
+    assert report["has_collector_pattern"] is False
+    assert report["risk_level"] == "LOW"
+
+
+def test_coinjoin_remix_depth_score_classifies_strength():
+    weak = json.loads(calc.coinjoin_remix_depth_score(["0,0,0"]))
+    medium = json.loads(calc.coinjoin_remix_depth_score(["0,1,2,3"]))
+    strong = json.loads(calc.coinjoin_remix_depth_score(["2,2,3"]))
+
+    assert weak["remix_strength"] == "WEAK"
+    assert medium["remix_strength"] == "MEDIUM"
+    assert strong["remix_strength"] == "STRONG"
+
+
+def test_coinjoin_script_fingerprint_score_native_p2wpkh():
+    report = json.loads(
+        calc.coinjoin_script_fingerprint_score([
+            "p2wpkh,p2wpkh,p2wpkh",
+            "p2wpkh,p2wpkh,p2wpkh",
+        ])
+    )
+
+    assert report["is_native_segwit"] is True
+    assert report["is_homogeneous"] is True
+    assert report["fingerprint_label"] == "NATIVE_SEGWIT_P2WPKH"
+
+
+def test_coinjoin_script_fingerprint_score_mixed_scripts():
+    report = json.loads(
+        calc.coinjoin_script_fingerprint_score([
+            "p2pkh,p2wpkh",
+            "p2wpkh,p2tr",
+        ])
+    )
+
+    assert report["is_native_segwit"] is False
+    assert report["fingerprint_label"] == "MIXED_SCRIPT_FAMILIES"
+
+
+def test_coinjoin_effective_anonymity_set_uses_tightest_bound():
+    mixed_bounds = [
+        "5",
+        '{"effective_anonymity_set": 3, "risk_level": "ELEVATED"}',
+        "4",
+    ]
+    assert calc.coinjoin_effective_anonymity_set(mixed_bounds) == "3"
+
+
+def test_coinjoin_effective_anonymity_set_rejects_empty_bounds():
+    with pytest.raises(ValueError, match="No usable anonymity bound"):
+        calc.coinjoin_effective_anonymity_set(["", "{}"])
+
+
 def test_random_256_properties():
     priv = calc.random_256()
     assert len(priv) == 64
