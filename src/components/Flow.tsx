@@ -2299,7 +2299,10 @@ function FlowContent() {
             onStartEmpty={handleWelcomeStartEmpty}
             onLoadExample={handleWelcomeLoadExample}
             hideStartEmpty={isMobileReadOnly}
-            onOpenChange={setShowWelcomeDialog}
+            onOpenChange={(open) => {
+              setShowWelcomeDialog(open);
+              if (!open) markWelcomeComplete();
+            }}
           />
         </div>
       </FlowActionsProvider>
