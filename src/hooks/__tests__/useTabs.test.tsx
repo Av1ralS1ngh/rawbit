@@ -142,6 +142,26 @@ describe("useTabs", () => {
     expect(sawTabOne).toBe(true);
   });
 
+  it("names new tabs from currently open tab count after closing", () => {
+    const { result } = renderTabs();
+
+    act(() => {
+      result.current.addTab();
+      result.current.requestCloseTab("tab-2");
+    });
+
+    act(() => {
+      result.current.confirmCloseTab();
+    });
+
+    act(() => {
+      result.current.addTab();
+    });
+
+    const reopened = result.current.tabs.find((t) => t.id === "tab-3");
+    expect(reopened?.title).toBe("Flow 2");
+  });
+
   it("updates tooltip and transform", () => {
     const { result } = renderTabs();
 

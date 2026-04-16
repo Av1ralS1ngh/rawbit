@@ -704,9 +704,20 @@ export function useTabs({
     const newIndex = tabCounter + 1;
     setTabCounter(newIndex);
     const newId = `tab-${newIndex}`;
+
+    const usedTitles = new Set(
+      tabs.map((tab) => tab.title.trim().toLowerCase())
+    );
+    let titleIndex = tabs.length + 1;
+    let nextTitle = `Flow ${titleIndex}`;
+    while (usedTitles.has(nextTitle.toLowerCase())) {
+      titleIndex += 1;
+      nextTitle = `Flow ${titleIndex}`;
+    }
+
     const newTab: FlowTab = {
       id: newId,
-      title: `Flow ${newIndex}`,
+      title: nextTitle,
       version: 0,
       transform: { x: 0, y: 0, zoom: 1 },
     };
@@ -745,6 +756,7 @@ export function useTabs({
     setProtocolDiagramLayout,
     setActiveTabCtx,
     persistTabCompressed,
+    tabs,
     tabCounter,
   ]);
 
