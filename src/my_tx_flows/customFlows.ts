@@ -19,6 +19,7 @@ import Taproot_Intro from "@/my_tx_flows/p11_Taproot_intro.json";
 import Taproot_Script from "@/my_tx_flows/p12_Taproot_script.json";
 import Taproot_MultiSig from "@/my_tx_flows/p13_Taproot_MultiSig.json";
 import MuSig2 from "@/my_tx_flows/p14_MuSig2.json";
+import CoinJoin_Construction from "@/my_tx_flows/p15_CoinJoin_Construction.json";
 
 // Then build the array, casting each import to FlowData:
 export const customFlows = [
@@ -92,5 +93,10 @@ export const customFlows = [
     id: "flow-14",
     label: "MuSig2",
     data: MuSig2 as unknown as FlowData,
+  },
+  {
+    id: "flow-15",
+    label: "CoinJoin Construction",
+    data: CoinJoin_Construction as unknown as FlowData,
   },
 ];

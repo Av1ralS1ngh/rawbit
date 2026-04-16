@@ -1,0 +1,1106 @@
+{
+  "name": "flow-1776374777128",
+  "schemaVersion": 1,
+  "runtimeSemantics": {
+    "version": 1,
+    "inputResolution": {
+      "precedence": [
+        "__FORCE00__",
+        "__EMPTY__",
+        "__NULL__",
+        "edge value",
+        "manual text"
+      ],
+      "sentinels": {
+        "__FORCE00__": "Forces effective input value to the hex string '00'.",
+        "__EMPTY__": "Forces effective input value to an empty string.",
+        "__NULL__": "Marker value interpreted by function-specific runtime rules."
+      },
+      "functionSpecificRules": [
+        "musig2_nonce_gen: vals[2] '__NULL__' is translated to null before function call."
+      ]
+    },
+    "typeCoercion": {
+      "integerParams": "Parameters declared as 'integer' in function specs are cast to int when non-empty.",
+      "numberParams": "Parameters declared as 'number' in function specs are cast to float when non-empty."
+    }
+  },
+  "nodes": [
+    {
+      "id": "g0",
+      "type": "shadcnGroup",
+      "position": {
+        "x": -327.80260932839997,
+        "y": 288.6023051046533
+      },
+      "data": {
+        "title": "G0 · UTXOS",
+        "borderColor": "#22c55e",
+        "comment": "Each participant pastes their complete funding transaction hex. No private keys here.",
+        "fontSize": 14,
+        "width": 1106,
+        "height": 1347,
+        "dirty": false
+      },
+      "width": 1106,
+      "height": 1347
+    },
+    {
+      "id": "g1",
+      "type": "shadcnGroup",
+      "position": {
+        "x": 1172,
+        "y": 281
+      },
+      "data": {
+        "title": "G1 · DECOMP",
+        "borderColor": "#0ea5e9",
+        "comment": "Decompose each funding TX into 4 fields: TXID, vout index, amount, scriptPubKey.",
+        "fontSize": 14,
+        "width": 1799,
+        "height": 2433,
+        "dirty": false
+      },
+      "width": 1799,
+      "height": 2433
+    },
+    {
+      "id": "g2",
+      "type": "shadcnGroup",
+      "position": {
+        "x": 3183.219012998222,
+        "y": 266.6208263200474
+      },
+      "data": {
+        "title": "G2 · EQUAL OUTPUTS",
+        "borderColor": "#f97316",
+        "comment": "Both outputs MUST be equal. This structural constraint is where the CoinJoin privacy comes from.",
+        "fontSize": 14,
+        "width": 1226,
+        "height": 1111,
+        "dirty": false
+      },
+      "width": 1226,
+      "height": 1111
+    },
+    {
+      "id": "g3",
+      "type": "shadcnGroup",
+      "position": {
+        "x": 4509.219012998222,
+        "y": 266.6208263200474
+      },
+      "data": {
+        "title": "G3 · SIGNING",
+        "borderColor": "#10b981",
+        "comment": "Key material and explanation. Alice signs only her input; Bob only his. Zero cross-wiring — enforced by the graph itself.",
+        "fontSize": 14,
+        "width": 900,
+        "height": 1000,
+        "dirty": false
+      },
+      "width": 900,
+      "height": 1000
+    },
+    {
+      "id": "g4",
+      "type": "shadcnGroup",
+      "position": {
+        "x": 5509.219012998222,
+        "y": 266.6208263200474
+      },
+      "data": {
+        "title": "G4 · TX + VERIFY",
+        "borderColor": "#a855f7",
+        "comment": "Final SegWit v0 CoinJoin transaction. Both inputs verified independently without sharing keys.",
+        "fontSize": 14,
+        "width": 862,
+        "height": 1090,
+        "dirty": false
+      },
+      "width": 862,
+      "height": 1090
+    },
+    {
+      "id": "g5",
+      "type": "shadcnGroup",
+      "position": {
+        "x": 6509.219012998222,
+        "y": 266.6208263200474
+      },
+      "data": {
+        "title": "G5 · INTERPRET",
+        "borderColor": "#64748b",
+        "comment": "Read the transaction. Confirm equal outputs. Observe that the analyst cannot link inputs to outputs.",
+        "fontSize": 14,
+        "width": 713,
+        "height": 919,
+        "dirty": false
+      },
+      "width": 713,
+      "height": 919
+    },
+    {
+      "id": "node_alice_tx",
+      "type": "calculation",
+      "position": {
+        "x": 473.43201663439663,
+        "y": 93.51318276331801
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "Alice Funding TX",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": ""
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Raw TX Hex:",
+                  "placeholder": "<paste full funding TX hex here>",
+                  "rows": 4
+                }
+              ],
+              "maxInstances": 30,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 1
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [0]
+        },
+        "baseHeight": 80,
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Alice's P2WPKH UTXO. Paste the complete raw hex of the funding transaction. G1 will extract TXID, vout, amount, and scriptPubKey from this.",
+        "dirty": false,
+        "borderColor": "#22c55e",
+        "error": false
+      },
+      "parentId": "g0",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_tx",
+      "type": "calculation",
+      "position": {
+        "x": 475.3346531870602,
+        "y": 697.9796635835579
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "Bob Funding TX",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": ""
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Raw TX Hex:",
+                  "placeholder": "<paste full funding TX hex here>",
+                  "rows": 4
+                }
+              ],
+              "maxInstances": 30,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 1
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [0]
+        },
+        "baseHeight": 80,
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Bob's P2WPKH UTXO. Same format as Alice's. Amounts should be approximately equal to satisfy the denomination constraint.",
+        "dirty": false,
+        "borderColor": "#22c55e",
+        "error": false
+      },
+      "parentId": "g0",
+      "extent": "parent"
+    },
+    {
+      "id": "node_g0_text",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 40.07099792070039,
+        "y": 402.8966074424693
+      },
+      "data": {
+        "title": "CoinJoin Starts Here",
+        "content": "CoinJoin starts when two participants each bring a UTXO. These are complete funding transactions — no private keys, just raw hex anyone can verify on-chain.\n\nIn a real CoinJoin round, both UTXOs are submitted to a coordinator who checks they meet the denomination requirement before building the shared transaction.",
+        "dirty": false,
+        "width": 382,
+        "height": 291
+      },
+      "parentId": "g0",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_txid",
+      "type": "calculation",
+      "position": {
+        "x": 103.26617179250002,
+        "y": 73.37815482504544
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Alice TXID",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "txid",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Big-endian TXID. Will be byte-reversed for outpoint serialization in the full implementation.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_vout",
+      "type": "calculation",
+      "position": {
+        "x": 110.34740190913635,
+        "y": 698.3024390239545
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Alice Vout Index",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vin.vout",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Which output index Alice is spending from her funding TX.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_amount",
+      "type": "calculation",
+      "position": {
+        "x": 83.1311438542275,
+        "y": 1384.7404694493177
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Alice Amount (sats)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vout.value",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Amount in satoshis. Will feed satoshi_to_8_le for LE8 serialization in the full implementation.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_spk",
+      "type": "calculation",
+      "position": {
+        "x": 513.1047618806397,
+        "y": 1794.3852388752225
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Alice scriptPubKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vout.scriptPubKey",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "P2WPKH witness program (OP_0 + 20-byte pubkey hash). Feeds script_verification directly in the full implementation.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_txid",
+      "type": "calculation",
+      "position": {
+        "x": 789.3294033626576,
+        "y": 41.65647207791346
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Bob TXID",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "txid",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Bob's TXID — same extraction, same byte-reversal note.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_vout",
+      "type": "calculation",
+      "position": {
+        "x": 787.8760207598943,
+        "y": 682.1711648735953
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Bob Vout Index",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vin.vout",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Output index of Bob's UTXO.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_amount",
+      "type": "calculation",
+      "position": {
+        "x": 954.6702934452951,
+        "y": 1348.3873658700288
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Bob Amount (sats)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vout.value",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Bob's UTXO value in satoshis.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_spk",
+      "type": "calculation",
+      "position": {
+        "x": 1377.0176027584653,
+        "y": 1805
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Bob scriptPubKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "",
+            "1": "vout.scriptPubKey",
+            "2": "0"
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "rows": 1,
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 0,
+        "showComment": true,
+        "comment": "Bob's P2WPKH witness program.",
+        "dirty": false,
+        "borderColor": "#0ea5e9",
+        "error": false
+      },
+      "parentId": "g1",
+      "extent": "parent"
+    },
+    {
+      "id": "node_denom",
+      "type": "calculation",
+      "position": {
+        "x": 48.233532163738346,
+        "y": 63.374164674972235
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Denomination (sats)",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "690000"
+          }
+        },
+        "result": "690000",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Both outputs MUST be this exact amount. Even 1 sat of difference breaks the equality and removes the privacy. Equal value = equal outputs = ambiguity for a chain analyst.",
+        "dirty": false,
+        "borderColor": "#f97316",
+        "error": false
+      },
+      "parentId": "g2",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_addr",
+      "type": "calculation",
+      "position": {
+        "x": 592.135859225361,
+        "y": 66.86127680311517
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Alice Receive Address",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "tb1q0xcsfncsm35nqtlhfzsmhf00n0c0r5xp7pf2wy"
+          }
+        },
+        "result": "tb1q0xcsfncsm35nqtlhfzsmhf00n0c0r5xp7pf2wy",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Alice's output address — where she wants to receive her 690 000 sats. In the full implementation this is converted to a scriptPubKey via address_to_scriptpubkey.",
+        "dirty": false,
+        "borderColor": "#f97316",
+        "error": false
+      },
+      "parentId": "g2",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_addr",
+      "type": "calculation",
+      "position": {
+        "x": 76.73496414950023,
+        "y": 567.6248806678532
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Bob Receive Address",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "tb1q7t5p4mgam04sux5tqzjzawajzszlz77t4l7mqp"
+          }
+        },
+        "result": "tb1q7t5p4mgam04sux5tqzjzawajzszlz77t4l7mqp",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Bob's output address. Same denomination, different destination.",
+        "dirty": false,
+        "borderColor": "#f97316",
+        "error": false
+      },
+      "parentId": "g2",
+      "extent": "parent"
+    },
+    {
+      "id": "node_ambiguity",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 532.7578759216904,
+        "y": 588.11485676752
+      },
+      "data": {
+        "title": "Ambiguity Set = 2",
+        "content": "Two outputs, both worth 690 000 sats.\n\nAn analyst sees:\n  Input 0 → Output 0  or  Output 1?\n  Input 1 → Output 0  or  Output 1?\n\nNeither answer is provable from the transaction alone. Ambiguity set = 2.\n\nThe privacy is not computed by a function — it is placed. You put two equal-value nodes here. That act is what makes linkage ambiguous.",
+        "dirty": false,
+        "width": 590,
+        "height": 316
+      },
+      "parentId": "g2",
+      "extent": "parent"
+    },
+    {
+      "id": "node_alice_key",
+      "type": "calculation",
+      "position": {
+        "x": 32.620015118634,
+        "y": 60.13716013558218
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Alice PrivKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          }
+        },
+        "result": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "⚠️ Testnet throwaway key — placeholder only. Replace before any real use.\nZero edges lead from this node to Bob's signing path.",
+        "dirty": false,
+        "borderColor": "#10b981",
+        "error": false
+      },
+      "parentId": "g3",
+      "extent": "parent"
+    },
+    {
+      "id": "node_bob_key",
+      "type": "calculation",
+      "position": {
+        "x": 449.7396522714089,
+        "y": 76.8173717964637
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Bob PrivKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
+          }
+        },
+        "result": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT VALUE:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "⚠️ Testnet throwaway key — placeholder only.\nZero edges lead from this node to Alice's signing path.",
+        "dirty": false,
+        "borderColor": "#10b981",
+        "error": false
+      },
+      "parentId": "g3",
+      "extent": "parent"
+    },
+    {
+      "id": "node_key_isolation",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 50,
+        "y": 580
+      },
+      "data": {
+        "title": "Key Isolation",
+        "content": "In a CoinJoin, each participant signs only their own input. Alice's key never touches Bob's input — enforced by the wiring (zero edges connecting them).\n\nThe full BIP143 chain built here in the next iteration:\n  privkey → pubkey → HASH160 → scriptCode\n  → BIP143 preimage (10 fields)\n  → append SIGHASH_ALL\n  → double_sha256 → sighash\n  → sign_as_bitcoin_core_low_r\n  → witness assembly (sig + pubkey)\n\nEach lane is completely isolated.",
+        "dirty": false,
+        "width": 593,
+        "height": 306
+      },
+      "parentId": "g3",
+      "extent": "parent"
+    },
+    {
+      "id": "node_final_tx",
+      "type": "calculation",
+      "position": {
+        "x": 84.759969762732,
+        "y": 75.0342900338955
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "Final CoinJoin TX",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": ""
+          }
+        },
+        "result": "",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Placeholder:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 1,
+        "unwiredCount": 1,
+        "showComment": true,
+        "comment": "Full 16-handle SegWit v0 assembly wired in next iteration:\nnVersion[4] | marker[1] | flag[1] | input_count | outpoint_0[36] | scriptSig_0 (empty) | seq_0[4] | outpoint_1[36] | scriptSig_1 (empty) | seq_1[4] | output_count | txout_0 | txout_1 | witness_0 (Alice) | witness_1 (Bob) | nLocktime[4]",
+        "dirty": false,
+        "borderColor": "#a855f7",
+        "error": false
+      },
+      "parentId": "g4",
+      "extent": "parent"
+    },
+    {
+      "id": "node_tx_assembly",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 196.48844400008147,
+        "y": 625.8026433221706
+      },
+      "data": {
+        "title": "Transaction Assembly",
+        "content": "The final CoinJoin TX is a standard SegWit v0 transaction:\n\n  nVersion (4B)\n  Marker + Flag (SegWit signal)\n  2 inputs — empty scriptSig, witness spends\n  2 equal-value outputs\n  witness[0] = Alice sig + pubkey\n  witness[1] = Bob sig + pubkey\n  nLocktime (4B)\n\nBoth inputs are verified independently using script_verification. Each check confirms the signature matches the scriptPubKey — without requiring the other participant's key.",
+        "dirty": false,
+        "width": 504,
+        "height": 246
+      },
+      "parentId": "g4",
+      "extent": "parent"
+    },
+    {
+      "id": "node_privacy_reading",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 50,
+        "y": 80
+      },
+      "data": {
+        "title": "Privacy Reading",
+        "content": "Output 0 = 690 000 sats\nOutput 1 = 690 000 sats\nEqual: true  →  Ambiguity set = 2\n\nAn analyst inspecting this transaction cannot determine:\n  — Which input funded which output\n  — Which output belongs to Alice vs Bob\n\nHeuristics that fail here:\n  • CIOH (Common Input Ownership) — suggests shared ownership, but that's wrong\n  • Change detection — both outputs are equal, neither looks like change\n  • Address clustering — links inputs together, but cannot follow outputs",
+        "dirty": false,
+        "width": 543,
+        "height": 338
+      },
+      "parentId": "g5",
+      "extent": "parent"
+    },
+    {
+      "id": "node_what_makes_this",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 59.93141993220888,
+        "y": 468.47726596602297
+      },
+      "data": {
+        "title": "What Makes This Work",
+        "content": "The privacy guarantee is structural, not computational.\n\nYou did not run a privacy function. You placed two equal-value outputs in G2. Equal outputs break the analyst's ability to apply heuristics.\n\nIn the full implementation, the cryptographic chain ensures:\n  • Alice signs only her input (key isolation)\n  • Bob signs only his input\n  • Neither can spend the other's UTXO\n  • The TX is invalid if either signature is wrong\n\nBut the privacy — the ambiguity — is simply the two equal numbers you chose in G2.",
+        "dirty": false,
+        "width": 612,
+        "height": 310
+      },
+      "parentId": "g5",
+      "extent": "parent"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "node_alice_tx",
+      "target": "node_alice_txid",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e2",
+      "source": "node_alice_tx",
+      "target": "node_alice_vout",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e3",
+      "source": "node_alice_tx",
+      "target": "node_alice_amount",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e4",
+      "source": "node_alice_tx",
+      "target": "node_alice_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e5",
+      "source": "node_bob_tx",
+      "target": "node_bob_txid",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e6",
+      "source": "node_bob_tx",
+      "target": "node_bob_vout",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e7",
+      "source": "node_bob_tx",
+      "target": "node_bob_amount",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e8",
+      "source": "node_bob_tx",
+      "target": "node_bob_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    }
+  ]
+}
