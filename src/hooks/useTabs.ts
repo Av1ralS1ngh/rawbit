@@ -384,6 +384,10 @@ interface CloseDialogState {
   open: boolean;
 }
 
+interface SaveTabDataOptions {
+  force?: boolean;
+}
+
 export interface UseTabsResult {
   tabs: FlowTab[];
   activeTabId: string;
@@ -403,7 +407,7 @@ export interface UseTabsResult {
     title: string,
     options?: { onlyIfEmpty?: boolean }
   ) => void;
-  saveTabData: (tabId: string) => void;
+  saveTabData: (tabId: string, options?: SaveTabDataOptions) => void;
   setTabsExternal: Dispatch<SetStateAction<FlowTab[]>>;
   setActiveTabId: Dispatch<SetStateAction<string>>;
   bumpTabCounter: () => void;
@@ -571,10 +575,11 @@ export function useTabs({
   );
 
   const saveTabData = useCallback(
-    (tabId: string) => {
+    (tabId: string, options?: SaveTabDataOptions) => {
       if (!initialHydrationDoneRef.current) return;
       const idx = getTabIndex(tabId);
       if (idx < 0) return;
+      const force = options?.force === true;
 
       const currentNodes = getNodes();
       const currentEdges = getEdges();
@@ -588,7 +593,9 @@ export function useTabs({
         entry.raw?.protocolDiagramLayout,
         currentLayout
       );
-      if (tabs[idx].version === graphRevRef.current && !layoutChanged) return;
+      if (!force && tabs[idx].version === graphRevRef.current && !layoutChanged) {
+        return;
+      }
 
       const nodeIds = new Set(currentNodes.map((node) => node.id));
       const tabScriptSteps = snapshotScriptSteps().filter(([id]) =>
@@ -647,7 +654,7 @@ export function useTabs({
       if (tabId === activeTabId) return;
       skipLoadRef.current = true;
       const previousTabId = activeTabId;
-      saveTabData(previousTabId);
+      saveTabData(previousTabId, { force: true });
       if (previousTabId !== tabId) {
         const previousEntry = archiveRef.current.get(previousTabId);
         if (previousEntry?.compressed) {
@@ -699,7 +706,7 @@ export function useTabs({
 
   const addTab = useCallback((): string => {
     skipLoadRef.current = true;
-    saveTabData(activeTabId);
+    saveTabData(activeTabId, { force: true });
 
     const newIndex = tabCounter + 1;
     setTabCounter(newIndex);

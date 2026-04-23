@@ -1617,6 +1617,7 @@ function FlowContent() {
 
     const snap = history[pointer];
     loadingUndoRef.current = true;
+    restoreScriptSteps(snap.scriptSteps ?? []);
 
     // Prevent an "After calc" snapshot right after history loads
     pendingSnapshotRef.current = false;

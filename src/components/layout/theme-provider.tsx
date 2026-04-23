@@ -19,6 +19,8 @@ const VALID_SKINS: readonly Skin[] = [
   "midnight",
 ];
 
+const DEFAULT_SKIN: Skin = "paper";
+
 function normalizeSkin(value: string | null): Skin {
   if (value === "default") {
     return "shadcn";
@@ -26,7 +28,7 @@ function normalizeSkin(value: string | null): Skin {
   if (value && VALID_SKINS.includes(value as Skin)) {
     return value as Skin;
   }
-  return "shadcn";
+  return DEFAULT_SKIN;
 }
 
 // This script will run before your React app mounts
@@ -37,6 +39,7 @@ const setInitialTheme = (
   skinStorageKey: string
 ) => {
   const validSkins = JSON.stringify(VALID_SKINS);
+  const defaultSkin = DEFAULT_SKIN;
   // This function will be converted to a string and injected into a script tag
   return `(function() {
     const getStoredTheme = () => localStorage.getItem('${storageKey}');
@@ -56,7 +59,7 @@ const setInitialTheme = (
     var validSkins = ${validSkins};
     var rawSkin = localStorage.getItem('${skinStorageKey}');
     var migratedSkin = rawSkin === 'default' ? 'shadcn' : rawSkin;
-    var skin = validSkins.includes(migratedSkin) ? migratedSkin : 'shadcn';
+    var skin = validSkins.includes(migratedSkin) ? migratedSkin : '${defaultSkin}';
     if (skin !== rawSkin) {
       localStorage.setItem('${skinStorageKey}', skin);
     }

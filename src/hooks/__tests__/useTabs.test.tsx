@@ -119,6 +119,42 @@ describe("useTabs", () => {
     expect(sawTabOne).toBe(true);
   });
 
+  it("persists selection-only updates when switching tabs", async () => {
+    const { result } = renderTabs();
+
+    await waitFor(() => expect(result.current.initialHydrationDone).toBe(true));
+
+    const selectedNode = { ...makeNode("persist-node"), selected: true };
+
+    act(() => {
+      nodesState = [selectedNode];
+      graphRevRef.current = 1;
+      result.current.saveTabData("tab-1");
+    });
+
+    await waitFor(() => {
+      const tab = result.current.tabs.find((t) => t.id === "tab-1");
+      expect(tab?.version).toBe(1);
+    });
+
+    act(() => {
+      nodesState = [{ ...selectedNode, selected: false }];
+      result.current.addTab();
+    });
+
+    baseSetNodes.mockClear();
+
+    act(() => {
+      result.current.selectTab("tab-1");
+    });
+
+    const restoredNodes = baseSetNodes.mock.calls.at(-1)?.[0] as
+      | FlowNode[]
+      | undefined;
+    expect(Array.isArray(restoredNodes)).toBe(true);
+    expect(restoredNodes?.[0]?.selected).toBe(false);
+  });
+
   it("requests and confirms close", () => {
     const { result } = renderTabs();
 

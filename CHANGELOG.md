@@ -141,3 +141,15 @@ and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/
 ### Fixed
 
 - `npm test` on a fresh clone: the test script no longer references a file that isn't shipped with the repo. Reported by @harsh04044.
+
+## [0.4.3] - 2026-04-23
+
+### Added
+
+- Paper Ledger is now the default skin for new sessions when no saved skin preference exists.
+
+### Fixed
+
+- Verify Script debug steps are now preserved when loading history snapshots across tab switches and when importing templates that require ID remapping on collision.
+- Tab switching now persists selection-only graph updates, preventing pasted-node deselection state from being lost when moving between tabs.
+- Opcode node UI surfaces now follow skin styling tokens consistently (borders/text/search/list panels), improving visual consistency across themes.

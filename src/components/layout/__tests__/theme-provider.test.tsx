@@ -13,11 +13,14 @@ import { ensureMatchMedia, mockMatchMedia } from "@/test-utils/dom";
 import type { MockCleanup } from "@/test-utils/dom";
 
 function ThemeConsumer() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, skin } = useTheme();
   return (
-    <button data-testid="theme-toggle" onClick={() => setTheme("light")}>
-      <span data-testid="theme-value">{theme}</span>
-    </button>
+    <>
+      <button data-testid="theme-toggle" onClick={() => setTheme("light")}>
+        <span data-testid="theme-value">{theme}</span>
+      </button>
+      <span data-testid="skin-value">{skin}</span>
+    </>
   );
 }
 
@@ -106,6 +109,19 @@ describe("ThemeProvider", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(true);
 
     restoreMatchMedia?.();
+  });
+
+  it("defaults skin to paper when no saved skin exists", async () => {
+    render(
+      <ThemeProvider storageKey={STORAGE_KEY} defaultTheme="light">
+        <ThemeConsumer />
+      </ThemeProvider>
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("skin-value")).toHaveTextContent("paper")
+    );
+    expect(document.documentElement.dataset.skin).toBe("paper");
   });
 
   it("throws when useTheme is called outside ThemeProvider", () => {
