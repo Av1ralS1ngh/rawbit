@@ -1,0 +1,2449 @@
+{
+  "name": "flow-1776932030030",
+  "schemaVersion": 1,
+  "runtimeSemantics": {
+    "version": 1,
+    "inputResolution": {
+      "precedence": [
+        "__FORCE00__",
+        "__EMPTY__",
+        "__NULL__",
+        "edge value",
+        "manual text"
+      ],
+      "sentinels": {
+        "__FORCE00__": "Forces effective input value to the hex string '00'.",
+        "__EMPTY__": "Forces effective input value to an empty string.",
+        "__NULL__": "Marker value interpreted by function-specific runtime rules."
+      },
+      "functionSpecificRules": [
+        "musig2_nonce_gen: vals[2] '__NULL__' is translated to null before function call."
+      ]
+    },
+    "typeCoercion": {
+      "integerParams": "Parameters declared as 'integer' in function specs are cast to int when non-empty.",
+      "numberParams": "Parameters declared as 'number' in function specs are cast to float when non-empty."
+    }
+  },
+  "nodes": [
+    {
+      "id": "cc01_intro",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 330,
+        "y": 150
+      },
+      "data": {
+        "content": "# Non-Standard P2SH: Validity vs. Relay Policy\n## Competence Check - Aviral Singh\n\nThis lesson walks a complete Bitcoin transaction flow on **testnet3**:\n\n1. **Create a P2PKH address** from a private key\n2. **Analyze a funding TX** using TX Field Extract nodes\n3. **Build a non-standard P2SH redeemScript** (math puzzle: X + 2 = 5)\n4. **Construct the spending transaction** structure (P2PKH -> P2SH)\n5. **Verify the P2SH unlock** - VerifyScript returns TRUE\n6. **Explain why broadcast fails** - relay policy != consensus validity\n\n**Key Insight:** A transaction can be *consensus valid* yet still be *rejected by relay nodes*. This distinction is fundamental to Bitcoin's two-layer enforcement architecture.\n\n---\n*Private key used for demonstration only. Never use example keys on mainnet.*",
+        "fontSize": 24,
+        "width": 626,
+        "height": 752,
+        "title": "Lesson Overview",
+        "dirty": false
+      },
+      "width": 952,
+      "height": 780
+    },
+    {
+      "id": "cc02_privkey",
+      "type": "calculation",
+      "position": {
+        "x": 2108.617465317897,
+        "y": 535.1530831840822
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Private Key",
+        "showField": true,
+        "numInputs": 0,
+        "value": "a1322cd573b5df00ec636d98276777b7d87f8b46df40cb4f97ae11e40502f76d",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a1322cd573b5df00ec636d98276777b7d87f8b46df40cb4f97ae11e40502f76d"
+        },
+        "result": "a1322cd573b5df00ec636d98276777b7d87f8b46df40cb4f97ae11e40502f76d",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Private Key (hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#f97316",
+        "showComment": true,
+        "comment": "32-byte secp256k1 scalar - keep secret!",
+        "error": false
+      }
+    },
+    {
+      "id": "cc03_pubkey",
+      "type": "calculation",
+      "position": {
+        "x": 2574.933024774309,
+        "y": 587.843286489306
+      },
+      "data": {
+        "functionName": "public_key_from_private_key",
+        "title": "Compressed Public Key",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a1322cd573b5df00ec636d98276777b7d87f8b46df40cb4f97ae11e40502f76d"
+        },
+        "result": "02ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Private Key (hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#3b82f6",
+        "showComment": true,
+        "comment": "33 bytes (02/03 prefix = even/odd Y)",
+        "error": false
+      }
+    },
+    {
+      "id": "cc04_h160",
+      "type": "calculation",
+      "position": {
+        "x": 3074.9330247743055,
+        "y": 587.843286489306
+      },
+      "data": {
+        "functionName": "hash160_hex",
+        "title": "HASH160(pubkey)",
+        "paramExtraction": "single_val",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "02ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51"
+        },
+        "result": "20d0afaa02179ee086043dbb3a0af65496d4665a",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Pubkey (hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#8b5cf6",
+        "showComment": true,
+        "comment": "RIPEMD160(SHA256(pubkey)) - 20 bytes",
+        "error": false
+      }
+    },
+    {
+      "id": "cc05_addr",
+      "type": "calculation",
+      "position": {
+        "x": 3574.9330247743055,
+        "y": 587.843286489306
+      },
+      "data": {
+        "functionName": "hash160_to_p2pkh_address",
+        "title": "P2PKH Address",
+        "numInputs": 1,
+        "showField": false,
+        "networkDependent": true,
+        "selectedNetwork": "testnet",
+        "dirty": false,
+        "groupInstances": {},
+        "result": "miWTuxpD2hJ33sFirAMLHR44TTqSHUvBA1",
+        "inputs": {
+          "val": "20d0afaa02179ee086043dbb3a0af65496d4665a",
+          "selectedNetwork": "testnet"
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "HASH160:",
+              "placeholder": "20-byte hash",
+              "rows": 2
+            }
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "Fund this from https://coinfaucet.eu/en/btc-testnet/",
+        "error": false
+      }
+    },
+    {
+      "id": "cc06_76",
+      "type": "calculation",
+      "position": {
+        "x": 1737.7051771474398,
+        "y": 790.3938233939194
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_DUP",
+        "showField": true,
+        "numInputs": 0,
+        "value": "76",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "76"
+        },
+        "result": "76",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc07_a9",
+      "type": "calculation",
+      "position": {
+        "x": 1459.2253857934738,
+        "y": 1030.1566581085951
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_HASH160",
+        "showField": true,
+        "numInputs": 0,
+        "value": "a9",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a9"
+        },
+        "result": "a9",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc08_14",
+      "type": "calculation",
+      "position": {
+        "x": 1758.1173084508737,
+        "y": 1221.8051833223237
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "push 20 bytes",
+        "showField": true,
+        "numInputs": 0,
+        "value": "14",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "14"
+        },
+        "result": "14",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc09_88",
+      "type": "calculation",
+      "position": {
+        "x": 1467.97344206637,
+        "y": 1483.4381587192477
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_EQUALVERIFY",
+        "showField": true,
+        "numInputs": 0,
+        "value": "88",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "88"
+        },
+        "result": "88",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc10_ac",
+      "type": "calculation",
+      "position": {
+        "x": 1896.628199438448,
+        "y": 1695.4988152364087
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_CHECKSIG",
+        "showField": true,
+        "numInputs": 0,
+        "value": "ac",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "ac"
+        },
+        "result": "ac",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc11_p2pkh_spk",
+      "type": "calculation",
+      "position": {
+        "x": 3823.883475578874,
+        "y": 1092.9631587647239
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "P2PKH scriptPubKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 6,
+        "inputs": {
+          "vals": {
+            "0": "76",
+            "100": "a9",
+            "200": "14",
+            "300": "20d0afaa02179ee086043dbb3a0af65496d4665a",
+            "400": "88",
+            "500": "ac"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 6
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300,
+            400,
+            500
+          ]
+        },
+        "baseHeight": 80,
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "OP_DUP OP_HASH160 <hash160> OP_EQUALVERIFY OP_CHECKSIG",
+        "error": false,
+        "totalInputs": 6,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc12_fund_title",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 5267.784047732455,
+        "y": 477.7636460963553
+      },
+      "data": {
+        "content": "# Step 2: Fund the P2PKH Address (Testnet3 Faucet)\n\nAfter funding our P2PKH address, we receive a raw transaction hex.\n\n**TX Field Extract** nodes parse it to reveal four key fields:\n\n| Extract | Purpose |\n|---------|--------|\n| **txid** | Unique identifier - needed as `prev_txid` in the next TX |\n| **vin.scriptSig** | P2PKH unlock the faucet used - shows `<DER_sig> <pubkey>` format |\n| **vout.value** | Satoshis we received (50 000 sats) |\n| **vout.scriptPubKey** | Locking script - should equal our P2PKH scriptPubKey  |\n\nThe **compare_equal** node at the right confirms the funding TX truly pays to our derived address.",
+        "fontSize": 24,
+        "width": 1344,
+        "height": 541,
+        "title": "Fund the Address",
+        "dirty": false
+      },
+      "width": 1056,
+      "height": 600
+    },
+    {
+      "id": "cc13_fund_tx",
+      "type": "calculation",
+      "position": {
+        "x": 6378.720911277065,
+        "y": 1074.1180249148185
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Funding TX (from faucet)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000"
+        },
+        "result": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX hex:",
+              "rows": 4
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#f59e0b",
+        "showComment": true,
+        "comment": "Version 2 tx, 1 input (P2PKH), 1 output (P2PKH to our address), 50000 sats",
+        "error": false
+      }
+    },
+    {
+      "id": "cc14_ex_txid",
+      "type": "calculation",
+      "position": {
+        "x": 6988.5888706804035,
+        "y": 483.37351419357253
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract: TXID",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427",
+        "inputs": {
+          "vals": {
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "1": "txid"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "Needed as prev_txid input in TX1 (after byte-reversal in Section 4)",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc15_ex_vout",
+      "type": "calculation",
+      "position": {
+        "x": 7748.627056967387,
+        "y": 797.8692182362869
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract: Input scriptSig (P2PKH unlock by faucet)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62df",
+        "inputs": {
+          "vals": {
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "1": "vin.scriptSig",
+            "2": "0"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "Shows the DER sig + pubkey the faucet sender used to unlock their P2PKH - format: <sig> <pubkey>",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc16_ex_amount",
+      "type": "calculation",
+      "position": {
+        "x": 7128.720911277065,
+        "y": 1174.1180249148185
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract: Output Value (satoshis)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "50000",
+        "inputs": {
+          "vals": {
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "1": "vout.value",
+            "2": "0"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "We received 50 000 sats; TX1 output will be 45 000 (minus 5 000 fee)",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc17_ex_spk",
+      "type": "calculation",
+      "position": {
+        "x": 7748.605656044405,
+        "y": 1624.5272453334312
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract: scriptPubKey (P2PKH lock)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac",
+        "inputs": {
+          "vals": {
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "1": "vout.scriptPubKey",
+            "2": "0"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "Should match the P2PKH spk built in Section 1 above",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc18_redeem_title",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 9431.710108409045,
+        "y": 469.73748916801037
+      },
+      "data": {
+        "content": "# Step 3: Non-Standard P2SH RedeemScript\n\n**Pay-to-Script-Hash (P2SH)** allows any script as the locking condition. The output stores only the *hash*; the actual script is revealed when spending.\n\n## Our RedeemScript: A Math Puzzle\n\nThe redeemScript *bytes* are:\n- `52` = OP_2 (the nodes showing 52/55 are these opcode bytes *inside* the redeemScript)\n- `93` = OP_ADD\n- `55` = OP_5\n- `87` = OP_EQUAL\n\nConcatenated: `52935587`\n\nThe puzzle `X + 2 = 5` is solved by pushing **3** (`0x53`) in the *scriptSig* before the redeemScript.\n\n## Why Is This Non-Standard?\n\nBitcoin Core's standard templates: P2PK, **P2PKH**, P2MS, **P2SH**, P2WPKH, P2WSH, OP_RETURN, P2TR\n\nThe P2SH *output* (`OP_HASH160 <hash> OP_EQUAL`) **IS standard** \n\nBut `AreInputsStandard()` checks the *inner redeemScript* when spending.\n`OP_2 OP_ADD OP_5 OP_EQUAL` matches **no template** -> **NONSTANDARD** ",
+        "fontSize": 24,
+        "width": 924,
+        "height": 720,
+        "title": "Non-Standard RedeemScript",
+        "dirty": false
+      },
+      "width": 924,
+      "height": 720
+    },
+    {
+      "id": "cc19_op52",
+      "type": "calculation",
+      "position": {
+        "x": 10713.42532890338,
+        "y": 804.0547846847783
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_2",
+        "showField": true,
+        "numInputs": 0,
+        "value": "52",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "52"
+        },
+        "result": "52",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "Pushes integer 2 onto stack",
+        "error": false
+      }
+    },
+    {
+      "id": "cc20_op93",
+      "type": "calculation",
+      "position": {
+        "x": 10397.494953819583,
+        "y": 1082.0199722266768
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_ADD",
+        "showField": true,
+        "numInputs": 0,
+        "value": "93",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "93"
+        },
+        "result": "93",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "Pops top 2 items, pushes their sum",
+        "error": false
+      }
+    },
+    {
+      "id": "cc21_op55",
+      "type": "calculation",
+      "position": {
+        "x": 10090.85664859119,
+        "y": 1385.5383518709416
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_5",
+        "showField": true,
+        "numInputs": 0,
+        "value": "55",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "55"
+        },
+        "result": "55",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "Pushes integer 5 onto stack",
+        "error": false
+      }
+    },
+    {
+      "id": "cc22_op87",
+      "type": "calculation",
+      "position": {
+        "x": 10485.769617445938,
+        "y": 1596.1360329611482
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_EQUAL",
+        "showField": true,
+        "numInputs": 0,
+        "value": "87",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "87"
+        },
+        "result": "87",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "Returns 1 if top two stack items are equal",
+        "error": false
+      }
+    },
+    {
+      "id": "cc23_redeem",
+      "type": "calculation",
+      "position": {
+        "x": 11286.655503541895,
+        "y": 1041.621518166539
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "redeemScript: OP_2 OP_ADD OP_5 OP_EQUAL",
+        "paramExtraction": "multi_val",
+        "numInputs": 4,
+        "inputs": {
+          "vals": {
+            "0": "52",
+            "100": "93",
+            "200": "55",
+            "300": "87"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "52935587",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 4
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
+        },
+        "baseHeight": 80,
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "NON-STANDARD: no known script template matches this",
+        "error": false,
+        "totalInputs": 4,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc24_rh160",
+      "type": "calculation",
+      "position": {
+        "x": 11836.655503541895,
+        "y": 1041.621518166539
+      },
+      "data": {
+        "functionName": "hash160_hex",
+        "title": "HASH160 (redeemScript)",
+        "paramExtraction": "single_val",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "52935587"
+        },
+        "result": "8e9a55016b5f68f07aa9f1d8bef929b1f0b48547",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "RedeemScript (hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#8b5cf6",
+        "showComment": true,
+        "comment": "This hash goes into the P2SH scriptPubKey",
+        "error": false
+      }
+    },
+    {
+      "id": "cc25_pa9",
+      "type": "calculation",
+      "position": {
+        "x": 10413.3904410994,
+        "y": 2279.796538216632
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_HASH160",
+        "showField": true,
+        "numInputs": 0,
+        "value": "a9",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a9"
+        },
+        "result": "a9",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc26_p14",
+      "type": "calculation",
+      "position": {
+        "x": 10766.449763338522,
+        "y": 1998.04138209883
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "push 20 bytes",
+        "showField": true,
+        "numInputs": 0,
+        "value": "14",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "14"
+        },
+        "result": "14",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc27_p87",
+      "type": "calculation",
+      "position": {
+        "x": 10766.449763338522,
+        "y": 2525.2295993193957
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_EQUAL",
+        "showField": true,
+        "numInputs": 0,
+        "value": "87",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "87"
+        },
+        "result": "87",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#6b7280",
+        "error": false
+      }
+    },
+    {
+      "id": "cc28_p2sh_spk",
+      "type": "calculation",
+      "position": {
+        "x": 12257.63954732731,
+        "y": 1724.158804145278
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "P2SH scriptPubKey (OP_HASH160 <hash> OP_EQUAL)",
+        "paramExtraction": "multi_val",
+        "numInputs": 4,
+        "inputs": {
+          "vals": {
+            "0": "a9",
+            "100": "14",
+            "200": "8e9a55016b5f68f07aa9f1d8bef929b1f0b48547",
+            "300": "87"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 4
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
+        },
+        "baseHeight": 80,
+        "borderColor": "#ef4444",
+        "showComment": true,
+        "comment": "a9 14 <20-byte-hash> 87 - 23 bytes total",
+        "error": false,
+        "totalInputs": 4,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc29_p2sh_addr",
+      "type": "calculation",
+      "position": {
+        "x": 12429.578046240555,
+        "y": 1156.8587531554301
+      },
+      "data": {
+        "functionName": "hash160_to_p2sh_address",
+        "title": "P2SH Address",
+        "numInputs": 1,
+        "showField": false,
+        "networkDependent": true,
+        "selectedNetwork": "testnet",
+        "dirty": false,
+        "groupInstances": {},
+        "result": "2N6FEphioV2nrTaHtSkExF665HUSZnqkqDh",
+        "inputs": {
+          "val": "8e9a55016b5f68f07aa9f1d8bef929b1f0b48547",
+          "selectedNetwork": "testnet"
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "HASH160:",
+              "placeholder": "20-byte hash",
+              "rows": 2
+            }
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "The P2SH address to fund - send Tx1 output here",
+        "error": false
+      }
+    },
+    {
+      "id": "cc30_ns_text",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 8338.65520388365,
+        "y": 1730.5616591140745
+      },
+      "data": {
+        "content": "## How Bitcoin Checks Standardness\n\nWhen a node relays a transaction spending P2SH:\n\n1. Parse the **scriptSig**: last push = redeemScript\n2. Call `Solver(redeemScript)` -> returns `TxoutType`\n3. If `TxoutType::NONSTANDARD` -> `AreInputsStandard()` returns **false**\n4. `IsStandardTx()` returns **false** -> TX **dropped**\n\nOur redeemScript `52935587` triggers:\n```\nSolver(52935587) -> NONSTANDARD\n```\n\n**Standard redeemScript types accepted:**\n- `P2PK` - single pubkey\n- `P2PKH` - single pubkey hash\n- `P2MS` - 1-of-3 multisig\n- `P2WPKH` / `P2WSH` - segwit\n\nArithmetic scripts like `OP_ADD`, `OP_EQUAL` are **not** in this list.\n\n*Source: `bitcoin/src/script/solver.cpp`*",
+        "fontSize": 22,
+        "width": 840,
+        "height": 680,
+        "title": "Standardness Check",
+        "dirty": false
+      },
+      "width": 840,
+      "height": 680
+    },
+    {
+      "id": "cc31_tx1_title",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 13830.65550354191,
+        "y": 435.62151816653056
+      },
+      "data": {
+        "content": "# Step 4: Construct Spending TX (P2PKH -> P2SH)\n\nWe now build the raw transaction that:\n- **Spends** the P2PKH UTXO from the faucet funding\n- **Outputs** to our non-standard P2SH address\n\n## Transaction Structure\n\n| Field | Value |\n|-------|-------|\n| Version | `02000000` (LE4) |\n| Input count | `01` |\n| Prev TXID | (reversed from extract node) |\n| Prev vout | `00000000` (index 0) |\n| scriptSig | *[NOTE: Requires signing - see below]* |\n| Sequence | `fdffffff` |\n| Output count | `01` |\n| Output amount | 45000 sats (50000 - 5000 fee) |\n| Output scriptPubKey | P2SH scriptPubKey (from Section 3) |\n| Locktime | `00000000` |\n\n## [NOTE] P2PKH scriptSig Requires Signing\n\nThe scriptSig = `<DER_sig+SIGHASH_ALL> <compressed_pubkey>`\n\nThis needs: serialize unsigned tx -> dSHA256 sighash -> ECDSA sign -> DER encode.\n\nSee **Lesson 1 (Intro P2PKH)** for the full signing flow!",
+        "fontSize": 22,
+        "width": 1088,
+        "height": 800,
+        "title": "Spending TX1 Structure",
+        "dirty": false
+      },
+      "width": 1088,
+      "height": 800
+    },
+    {
+      "id": "cc32_version",
+      "type": "calculation",
+      "position": {
+        "x": 14653.14537181954,
+        "y": 1351.1235445110044
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Version (LE4)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "02000000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "02000000"
+        },
+        "result": "02000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "4-byte LE hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc33_in_count",
+      "type": "calculation",
+      "position": {
+        "x": 14303.031381244642,
+        "y": 1462.7208390853968
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Input Count (varint)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "01",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "01"
+        },
+        "result": "01",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VarInt hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc34_txid_rev",
+      "type": "calculation",
+      "position": {
+        "x": 15049.807615934425,
+        "y": 1113.4791361920063
+      },
+      "data": {
+        "functionName": "reverse_txid_bytes",
+        "title": "Prev TXID -> Reversed (for tx serialization)",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427"
+        },
+        "result": "0f6bb553b7e597855c170eeb7bde55b9246581aee1b7ae5ff923fd1f9b81fbba",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "TXID (display order):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "Bitcoin stores TXIDs reversed in serialized tx",
+        "error": false
+      }
+    },
+    {
+      "id": "cc35_vout_le",
+      "type": "calculation",
+      "position": {
+        "x": 13965.839588990211,
+        "y": 1698.695323790417
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Output Index (vout=0)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "00000000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "00000000"
+        },
+        "result": "00000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "4-byte LE hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "Spending the first output (index 0) of the funding tx",
+        "error": false
+      }
+    },
+    {
+      "id": "cc36_ss_len",
+      "type": "calculation",
+      "position": {
+        "x": 14489.460969303263,
+        "y": 2580.4471620255295
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "scriptSig Length",
+        "showField": true,
+        "numInputs": 0,
+        "value": "6a",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "6a"
+        },
+        "result": "6a",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VarInt hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#f97316",
+        "showComment": true,
+        "comment": "Typical P2PKH scriptSig = 106 bytes (71-byte DER sig + 33-byte pubkey + opcodes)",
+        "error": false
+      }
+    },
+    {
+      "id": "cc37_ss_placeholder",
+      "type": "calculation",
+      "position": {
+        "x": 14483.432180740097,
+        "y": 1988.142386396737
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "[NOTE] P2PKH scriptSig (PLACEHOLDER - needs signing)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": ""
+        },
+        "result": "",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "scriptSig hex:",
+              "rows": 3
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#f97316",
+        "showComment": true,
+        "comment": "Replace with: <DER sig + SIGHASH_ALL byte> <compressed pubkey>",
+        "error": false
+      }
+    },
+    {
+      "id": "cc38_sequence",
+      "type": "calculation",
+      "position": {
+        "x": 13914.353105797229,
+        "y": 2234.27209748011
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Sequence",
+        "showField": true,
+        "numInputs": 0,
+        "value": "fdffffff",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "fdffffff"
+        },
+        "result": "fdffffff",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "4-byte LE hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc39_out_count",
+      "type": "calculation",
+      "position": {
+        "x": 13917.318039816833,
+        "y": 2675.5901695387047
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Output Count",
+        "showField": true,
+        "numInputs": 0,
+        "value": "01",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "01"
+        },
+        "result": "01",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VarInt hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc40_amount_sats",
+      "type": "calculation",
+      "position": {
+        "x": 14123.480238641832,
+        "y": 3082.0083839771755
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Output Amount",
+        "showField": true,
+        "numInputs": 0,
+        "value": "45000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "45000"
+        },
+        "result": "45000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Satoshis:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "50000 received - 5000 fee = 45000 sats to P2SH output",
+        "error": false
+      }
+    },
+    {
+      "id": "cc41_amount_le",
+      "type": "calculation",
+      "position": {
+        "x": 14903.163340698866,
+        "y": 2947.907002479777
+      },
+      "data": {
+        "functionName": "satoshi_to_8_le",
+        "title": "Amount -> 8-byte LE",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "45000"
+        },
+        "result": "c8af000000000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Satoshis:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc42_spk_varint",
+      "type": "calculation",
+      "position": {
+        "x": 12947.50450205318,
+        "y": 1817.5503977245864
+      },
+      "data": {
+        "functionName": "varint_encoded_byte_length",
+        "title": "P2SH scriptPubKey Length (VarInt)",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787"
+        },
+        "result": "17",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex data:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "P2SH spk = 23 bytes → VarInt = 17",
+        "error": false
+      }
+    },
+    {
+      "id": "cc43_locktime",
+      "type": "calculation",
+      "position": {
+        "x": 14637.204699769714,
+        "y": 3235.6408123301726
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "Locktime",
+        "showField": true,
+        "numInputs": 0,
+        "value": "00000000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "00000000"
+        },
+        "result": "00000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "4-byte LE hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "cc44_tx1_raw",
+      "type": "calculation",
+      "position": {
+        "x": 15780.65550354191,
+        "y": 1685.6215181665304
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "Raw TX1 Body (P2PKH → P2SH) — UNSIGNED STRUCTURE",
+        "paramExtraction": "multi_val",
+        "numInputs": 12,
+        "inputs": {
+          "vals": {
+            "0": "02000000",
+            "100": "01",
+            "200": "0f6bb553b7e597855c170eeb7bde55b9246581aee1b7ae5ff923fd1f9b81fbba",
+            "300": "00000000",
+            "400": "6a",
+            "500": "",
+            "600": "fdffffff",
+            "700": "01",
+            "800": "c8af000000000000",
+            "900": "17",
+            "1000": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+            "1100": "00000000"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 12
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300,
+            400,
+            500,
+            600,
+            700,
+            800,
+            900,
+            1000,
+            1100
+          ]
+        },
+        "baseHeight": 80,
+        "borderColor": "#ec4899",
+        "showComment": true,
+        "comment": "Replace placeholder scriptSig (index 500) with actual signed P2PKH scriptSig to get broadcastable tx",
+        "error": false,
+        "totalInputs": 12,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc45_unlock_title",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 17058.13727769819,
+        "y": 485.53776911573584
+      },
+      "data": {
+        "content": "# Step 5: Spend the P2SH Output (Math Puzzle Unlock)\n\nTo spend a P2SH output, the **scriptSig** must:\n1. Push the preimage arguments (our answer: **3**)\n2. Push the **redeemScript** itself (revealed here for the first time)\n\n## P2SH scriptSig Construction\n\n`OP_3` + `OP_PUSHBYTES_4` + `<redeemScript>`\n\n- `53` = OP_3 → pushes integer **3** (puzzle answer: 3 + 2 = 5)\n- `04` = push 4 bytes (length of redeemScript)\n- `52935587` = the redeemScript bytes\n\n## Script Execution Trace\n\n| Step | Opcode | Stack After |\n|------|--------|-------------|\n| scriptSig | OP_3 | [**3**] |\n| P2SH check | hash(redeemScript) == spk hash | [**3**]  |\n| redeemScript | OP_2 | [3, **2**] |\n| redeemScript | OP_ADD | [**5**] |\n| redeemScript | OP_5 | [5, **5**] |\n| redeemScript | OP_EQUAL | [**1**]  |\n\n**VerifyScript() → TRUE** — consensus valid!",
+        "fontSize": 22,
+        "width": 1224,
+        "height": 820,
+        "title": "P2SH Spending",
+        "dirty": false
+      },
+      "width": 1224,
+      "height": 820
+    },
+    {
+      "id": "cc46_op3",
+      "type": "calculation",
+      "position": {
+        "x": 17508.13727769819,
+        "y": 1385.5377691157357
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "OP_3",
+        "showField": true,
+        "numInputs": 0,
+        "value": "53",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "53"
+        },
+        "result": "53",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Opcode hex:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "Our answer: 3 + 2 = 5",
+        "error": false
+      }
+    },
+    {
+      "id": "cc47_push_op",
+      "type": "calculation",
+      "position": {
+        "x": 16957.15748120423,
+        "y": 1866.1256470121136
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Push opcode for redeemScript",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "52935587"
+        },
+        "result": "04",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "rows": 2,
+              "placeholder": "redeemScript hex"
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "04 = push exactly 4 bytes (the redeemScript length)",
+        "error": false
+      }
+    },
+    {
+      "id": "cc48_p2sh_ss",
+      "type": "calculation",
+      "position": {
+        "x": 17988.539829720008,
+        "y": 1450.0372374445244
+      },
+      "data": {
+        "functionName": "concat_all",
+        "title": "P2SH scriptSig: OP_3 <push_op> <redeemScript>",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "53",
+            "100": "04",
+            "200": "52935587"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "530452935587",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 3
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200
+          ]
+        },
+        "baseHeight": 80,
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "530452935587 — P2SH scriptSig: push answer (3) + reveal redeemScript",
+        "error": false,
+        "totalInputs": 3,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "cc49_tx2_hex",
+      "type": "calculation",
+      "position": {
+        "x": 17351.543019747274,
+        "y": 2320.5218189793923
+      },
+      "data": {
+        "functionName": "identity",
+        "title": "TX2: P2SH Spend -> P2PKH (dummy prev TXID for demo)",
+        "showField": true,
+        "numInputs": 0,
+        "value": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000"
+        },
+        "result": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX hex:",
+              "rows": 4
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#f59e0b",
+        "showComment": true,
+        "comment": "scriptSig=530452935587, output=40000 sats to P2PKH. Uses zero TXID for demo (replace with real TX1 TXID)",
+        "error": false
+      }
+    },
+    {
+      "id": "cc50_verify",
+      "type": "calculation",
+      "position": {
+        "x": 18854.53557635031,
+        "y": 1988.7156515933377
+      },
+      "data": {
+        "functionName": "script_verification",
+        "title": "Script Verification: P2SH Spend (VerifyScript)",
+        "paramExtraction": "multi_val",
+        "numInputs": 6,
+        "inputs": {
+          "vals": {
+            "0": "530452935587",
+            "1": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+            "2": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+            "3": "0",
+            "4": "",
+            "5": "40000"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "scriptSig_hex",
+              "rows": 3,
+              "placeholder": "Hex-encoded scriptSig",
+              "allowEmptyBlank": true
+            },
+            {
+              "index": 1,
+              "label": "scriptPubKey_hex",
+              "rows": 3,
+              "placeholder": "Hex-encoded scriptPubKey"
+            },
+            {
+              "index": 2,
+              "label": "tx_hex",
+              "rows": 3,
+              "placeholder": "Hex-encoded Transaction"
+            },
+            {
+              "index": 3,
+              "label": "input_index_to_verify",
+              "rows": 1,
+              "placeholder": "0",
+              "unconnectable": true
+            },
+            {
+              "index": 4,
+              "label": "exclude_flags",
+              "rows": 1,
+              "placeholder": "e.g., WITNESS,CLEANSTACK",
+              "unconnectable": true
+            },
+            {
+              "index": 5,
+              "label": "spent_amount_sats",
+              "rows": 1,
+              "placeholder": "Amount in satoshis",
+              "allowEmptyBlank": true
+            }
+          ],
+          "groups": [],
+          "afterGroups": []
+        },
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "VerifyScript checks consensus validity. P2SH: hash(redeemScript) matches spk -> redeemScript executes -> TRUE",
+        "error": false,
+        "totalInputs": 6,
+        "unwiredCount": 0,
+        "dirty": false,
+        "result": "True (isValid: true)",
+        "version": 0
+      }
+    },
+    {
+      "id": "cc51_relay_main",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 19527.891423800807,
+        "y": 224.23794187068995
+      },
+      "data": {
+        "content": "# Step 6: Why Relay/Broadcast Fails\n\n## Two Separate Validation Layers in Bitcoin\n\n### Layer 1: Consensus Rules — `VerifyScript()`\n- Enforced by **every full node**\n- Determines if a transaction is **protocol-valid**\n- Our P2SH spend: VerifyScript() = **TRUE**  (consensus valid)\n\n### Layer 2: Relay Policy — `IsStandardTx()` + `AreInputsStandard()`\n- Default behavior of most nodes (Bitcoin Core)\n- Determines if a transaction will be **forwarded to peers**\n- Our P2SH spend: AreInputsStandard() = **FALSE**  (dropped!)\n\n## Why Relay Policy Exists\n\nRelay policy protects the network from:\n- **DoS attacks** using expensive custom scripts\n- **UTXO bloat** with unusual output formats\n- **Scripts that bypass lightweight client validation shortcuts**\n\nIt is a **conservative safety layer** — not a consensus rule. Miners can override it.\n\n## The Propagation Problem\n\nBecause most relay nodes drop non-standard txs, the transaction **never reaches miners**. Even though a miner *could* include it (it's consensus valid), they won't see it through normal P2P gossip.",
+        "fontSize": 22,
+        "width": 840,
+        "height": 900,
+        "title": "Relay Policy Explanation",
+        "dirty": false
+      },
+      "width": 840,
+      "height": 900
+    },
+    {
+      "id": "cc52_comparison",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 20639.726566648937,
+        "y": 218.75071598774477
+      },
+      "data": {
+        "content": "## Validity vs. Relay: Side-by-Side\n\n| Check | Result | Enforced By |\n|-------|--------|-------------|\n| `VerifyScript()` |  TRUE | All nodes (consensus) |\n| `IsStandardTx()` |  FALSE | Relay nodes (policy) |\n| `AreInputsStandard()` |  FALSE | Relay nodes (policy) |\n| Can be mined? |  YES | Miners can include |\n| Will relay normally? |  NO | Most nodes reject |\n| Network propagation |  STUCK | Never reaches miners |\n\n## The Code Path (Bitcoin Core)\n\n```\n// policy/policy.cpp\nbool AreInputsStandard(tx, coins):\n  for each input:\n    if is_p2sh(scriptPubKey):\n      redeemScript = extract_last_push(scriptSig)\n      txtype = Solver(redeemScript)  // classifies script\n      if txtype == NONSTANDARD:\n        return false  // ← Our tx fails here\n  return true\n```\n\n`Solver(52935587)` → `TxoutType::NONSTANDARD`\n\n## To Use Non-Standard Scripts\n\n- **Testnet**: default `-acceptnonstandardtxs=1` \n- **Mainnet**: submit directly to pool APIs\n- **Or**: use Taproot script paths (always standard)\n- **Or**: propose a BIP to add your template",
+        "fontSize": 20,
+        "width": 1350,
+        "height": 900,
+        "title": "Comparison & Code Path",
+        "dirty": false
+      },
+      "width": 1350,
+      "height": 900
+    },
+    {
+      "id": "cc53_key_insight",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 19578.448971794256,
+        "y": 1460.856194757859
+      },
+      "data": {
+        "content": "## Key Insight: Bitcoin's Two-Layer Architecture\n\n```\nBroadcast TX\n     ↓\n[Relay Policy — IsStandardTx()]\n  Non-standard? → DROPPED  ← Our math-puzzle P2SH tx stops here\n  Standard?     → forwarded to peers\n     ↓\n[Mempool — fee, dust limits, etc.]\n     ↓\n[Miner includes in block]\n     ↓\n[Consensus Rules — VerifyScript()]\n  Fails?  → INVALID BLOCK (all nodes reject)\n  Passes? → CONFIRMED \n```\n\nOur transaction is dropped at the **first layer** — relay policy.\nIf it magically reached a miner, it would confirm at the **last layer** — consensus.\n\n**This distinction matters for:**\n- Lightning Network (used non-standard scripts before standardization)\n- Covenant schemes (OP_CTV, OP_CAT proposals)\n- Hash puzzle competitions and research\n- Custom scripts that need miner relationships",
+        "fontSize": 22,
+        "width": 980,
+        "height": 700,
+        "title": "Two-Layer Architecture",
+        "dirty": false
+      },
+      "width": 980,
+      "height": 700
+    },
+    {
+      "id": "cc54_summary",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 20639.726566648937,
+        "y": 1518.7507159877448
+      },
+      "data": {
+        "content": "## Lesson Summary\n\n**What we demonstrated:**\n\n1.  **P2PKH Address** derived from private key `0x01` on testnet3\n2.  **TX Field Extract** parsed funding TX → txid, vout, amount, scriptPubKey\n3.  **Non-Standard RedeemScript** `OP_2 OP_ADD OP_5 OP_EQUAL` built and hashed\n4.  **P2SH scriptPubKey** `a914<hash>87` constructed from the hash\n5.  **TX1 structure** shown: P2PKH input → P2SH output (signing is the missing piece)\n6.  **P2SH scriptSig** `530452935587` = OP_3 + push(redeemScript)\n7.  **Script verification** = TRUE (VerifyScript passes)\n8.  **Relay fails** because `AreInputsStandard()` calls `Solver()` → NONSTANDARD\n\n**The Math Puzzle:**\n```\nscriptSig:     OP_3       → stack: [3]\nredeemScript:  OP_2       → stack: [3, 2]\n               OP_ADD     → stack: [5]\n               OP_5       → stack: [5, 5]\n               OP_EQUAL   → stack: [1] ← TRUE\n```\n\n*Made with rawBit — the Bitcoin transaction educational tool.*",
+        "fontSize": 22,
+        "width": 1050,
+        "height": 700,
+        "title": "Summary",
+        "dirty": false
+      },
+      "width": 1050,
+      "height": 700
+    },
+    {
+      "id": "cc_compare_spk",
+      "type": "calculation",
+      "position": {
+        "x": 8408.936879611296,
+        "y": 903.7669295202613
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Verify: Funding TX scriptPubKey == Our P2PKH scriptPubKey ✓",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "76a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac",
+            "100": "76a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "true",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "VALUES[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 2,
+              "maxInstances": 12,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex or text>",
+                  "rows": 2
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "If true: the faucet really did pay to our P2PKH address. Both values should be 76a914751e...88ac",
+        "error": false,
+        "totalInputs": 2,
+        "unwiredCount": 0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_cc02_cc03",
+      "source": "cc02_privkey",
+      "target": "cc03_pubkey",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc03_cc04",
+      "source": "cc03_pubkey",
+      "target": "cc04_h160",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc04_cc05",
+      "source": "cc04_h160",
+      "target": "cc05_addr",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc06_cc11",
+      "source": "cc06_76",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc07_cc11",
+      "source": "cc07_a9",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc08_cc11",
+      "source": "cc08_14",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc04_cc11",
+      "source": "cc04_h160",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_cc09_cc11",
+      "source": "cc09_88",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-400",
+      "selected": false
+    },
+    {
+      "id": "e_cc10_cc11",
+      "source": "cc10_ac",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-500",
+      "selected": false
+    },
+    {
+      "id": "e_cc13_cc14",
+      "source": "cc13_fund_tx",
+      "target": "cc14_ex_txid",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc13_cc15",
+      "source": "cc13_fund_tx",
+      "target": "cc15_ex_vout",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc13_cc16",
+      "source": "cc13_fund_tx",
+      "target": "cc16_ex_amount",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc13_cc17",
+      "source": "cc13_fund_tx",
+      "target": "cc17_ex_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc19_cc23",
+      "source": "cc19_op52",
+      "target": "cc23_redeem",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc20_cc23",
+      "source": "cc20_op93",
+      "target": "cc23_redeem",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc21_cc23",
+      "source": "cc21_op55",
+      "target": "cc23_redeem",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc22_cc23",
+      "source": "cc22_op87",
+      "target": "cc23_redeem",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_cc23_cc24",
+      "source": "cc23_redeem",
+      "target": "cc24_rh160",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc25_cc28",
+      "source": "cc25_pa9",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc26_cc28",
+      "source": "cc26_p14",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc24_cc28",
+      "source": "cc24_rh160",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc27_cc28",
+      "source": "cc27_p87",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_cc24_cc29",
+      "source": "cc24_rh160",
+      "target": "cc29_p2sh_addr",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc28_cc42",
+      "source": "cc28_p2sh_spk",
+      "target": "cc42_spk_varint",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc14_cc34",
+      "source": "cc14_ex_txid",
+      "target": "cc34_txid_rev",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc40_cc41",
+      "source": "cc40_amount_sats",
+      "target": "cc41_amount_le",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc34_cc44",
+      "source": "cc34_txid_rev",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc41_cc44",
+      "source": "cc41_amount_le",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-800",
+      "selected": false
+    },
+    {
+      "id": "e_cc42_cc44",
+      "source": "cc42_spk_varint",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-900",
+      "selected": false
+    },
+    {
+      "id": "e_cc28_cc44",
+      "source": "cc28_p2sh_spk",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-1000",
+      "selected": false
+    },
+    {
+      "id": "e_cc23_cc47",
+      "source": "cc23_redeem",
+      "target": "cc47_push_op",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc46_cc48",
+      "source": "cc46_op3",
+      "target": "cc48_p2sh_ss",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc47_cc48",
+      "source": "cc47_push_op",
+      "target": "cc48_p2sh_ss",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc23_cc48",
+      "source": "cc23_redeem",
+      "target": "cc48_p2sh_ss",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc48_cc50",
+      "source": "cc48_p2sh_ss",
+      "target": "cc50_verify",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc28_cc50",
+      "source": "cc28_p2sh_spk",
+      "target": "cc50_verify",
+      "targetHandle": "input-1",
+      "selected": false
+    },
+    {
+      "id": "e_cc49_cc50",
+      "source": "cc49_tx2_hex",
+      "target": "cc50_verify",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_cc32_version_cc44_tx1_raw",
+      "source": "cc32_version",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc33_in_count_cc44_tx1_raw",
+      "source": "cc33_in_count",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc35_vout_le_cc44_tx1_raw",
+      "source": "cc35_vout_le",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_cc36_ss_len_cc44_tx1_raw",
+      "source": "cc36_ss_len",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-400",
+      "selected": false
+    },
+    {
+      "id": "e_cc37_ss_placeholder_cc44_tx1_raw",
+      "source": "cc37_ss_placeholder",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-500",
+      "selected": false
+    },
+    {
+      "id": "e_cc38_sequence_cc44_tx1_raw",
+      "source": "cc38_sequence",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-600",
+      "selected": false
+    },
+    {
+      "id": "e_cc39_out_count_cc44_tx1_raw",
+      "source": "cc39_out_count",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-700",
+      "selected": false
+    },
+    {
+      "id": "e_cc43_locktime_cc44_tx1_raw",
+      "source": "cc43_locktime",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-1100",
+      "selected": false
+    },
+    {
+      "id": "e_cc11_compare",
+      "source": "cc11_p2pkh_spk",
+      "target": "cc_compare_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_cc17_compare",
+      "source": "cc17_ex_spk",
+      "target": "cc_compare_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    }
+  ]
+}
