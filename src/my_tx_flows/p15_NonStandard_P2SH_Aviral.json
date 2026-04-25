@@ -1,5 +1,5 @@
 {
-  "name": "flow-1776932030030",
+  "name": "flow-1777161723893",
   "schemaVersion": 1,
   "runtimeSemantics": {
     "version": 1,
@@ -30,11 +30,11 @@
       "id": "cc01_intro",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 330,
-        "y": 150
+        "x": 450,
+        "y": 270
       },
       "data": {
-        "content": "# Non-Standard P2SH: Validity vs. Relay Policy\n## Competence Check - Aviral Singh\n\nThis lesson walks a complete Bitcoin transaction flow on **testnet3**:\n\n1. **Create a P2PKH address** from a private key\n2. **Analyze a funding TX** using TX Field Extract nodes\n3. **Build a non-standard P2SH redeemScript** (math puzzle: X + 2 = 5)\n4. **Construct the spending transaction** structure (P2PKH -> P2SH)\n5. **Verify the P2SH unlock** - VerifyScript returns TRUE\n6. **Explain why broadcast fails** - relay policy != consensus validity\n\n**Key Insight:** A transaction can be *consensus valid* yet still be *rejected by relay nodes*. This distinction is fundamental to Bitcoin's two-layer enforcement architecture.\n\n---\n*Private key used for demonstration only. Never use example keys on mainnet.*",
+        "content": "# Non-Standard P2SH: Validity vs. Relay Policy\n\n## Lesson Overview\n\nThis flow constructs a Bitcoin transaction that is consensus-valid yet rejected by default relay policy on testnet3. The eleven steps below mirror the canvas top-to-bottom, left-to-right.\n\n1. Derive a P2PKH address from a private key.\n2. Parse a real funding transaction with `extract_tx_field` and assert it pays the derived address.\n3. Build a non-standard P2SH redeemScript implementing the puzzle `x + 2 = 5`.\n4. Construct and sign TX1 (P2PKH → P2SH) on-canvas using a Lesson 1-style ECDSA Low-R signing pipeline.\n5. Derive TX1's TXID directly from the signed bytes via `double_sha256` and `reverse_txid_bytes`.\n6. Re-extract TX1's output fields and assert they match the constructed values.\n7. Construct TX2: spend the P2SH output to a freshly-derived P2PKH recipient, with on-canvas fee math.\n8. Verify TX2's script: `VerifyScript()` returns `TRUE` (consensus-valid).\n9. Compare the observed broadcast response from a default-policy node against the expected `bad-txns-nonstandard-inputs` rejection.\n10. TXID comparisons are performed on-canvas and automatic.\n11. Aggregate every invariant and every evidence comparison through a single `Check Result` node.\n\n**Key insight.** A transaction can be consensus-valid yet relay-rejected. The split between `VerifyScript()` and `IsStandardTx()` / `AreInputsStandard()` is the central subject of this lesson.\n\n**Enforcement.** The global `Check Result` gate stays `false` until real RPC output is pasted into the Observed Broadcast Response node. The flow cannot self-validate.\n\n---\n*The private key embedded in this flow is for demonstration only.*",
         "fontSize": 24,
         "width": 626,
         "height": 752,
@@ -48,8 +48,8 @@
       "id": "cc02_privkey",
       "type": "calculation",
       "position": {
-        "x": 2108.617465317897,
-        "y": 535.1530831840822
+        "x": 1787.1011207085216,
+        "y": 681.7963108760273
       },
       "data": {
         "functionName": "identity",
@@ -75,7 +75,7 @@
         "groupInstances": {},
         "borderColor": "#f97316",
         "showComment": true,
-        "comment": "32-byte secp256k1 scalar - keep secret!",
+        "comment": "⚠️ Don't reuse private keys",
         "error": false
       }
     },
@@ -83,12 +83,12 @@
       "id": "cc03_pubkey",
       "type": "calculation",
       "position": {
-        "x": 2574.933024774309,
-        "y": 587.843286489306
+        "x": 2253.416680164934,
+        "y": 734.4865141812511
       },
       "data": {
         "functionName": "public_key_from_private_key",
-        "title": "Compressed Public Key",
+        "title": "PrivKey → PubKey",
         "numInputs": 1,
         "showField": false,
         "dirty": false,
@@ -108,8 +108,8 @@
         },
         "groupInstances": {},
         "borderColor": "#3b82f6",
-        "showComment": true,
-        "comment": "33 bytes (02/03 prefix = even/odd Y)",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -117,12 +117,12 @@
       "id": "cc04_h160",
       "type": "calculation",
       "position": {
-        "x": 3074.9330247743055,
-        "y": 587.843286489306
+        "x": 2706.0834406529048,
+        "y": 756.332624725263
       },
       "data": {
         "functionName": "hash160_hex",
-        "title": "HASH160(pubkey)",
+        "title": "Data → HASH160",
         "paramExtraction": "single_val",
         "numInputs": 1,
         "showField": false,
@@ -143,8 +143,8 @@
         },
         "groupInstances": {},
         "borderColor": "#8b5cf6",
-        "showComment": true,
-        "comment": "RIPEMD160(SHA256(pubkey)) - 20 bytes",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -152,12 +152,12 @@
       "id": "cc05_addr",
       "type": "calculation",
       "position": {
-        "x": 3574.9330247743055,
-        "y": 587.843286489306
+        "x": 3253.4166801649303,
+        "y": 734.4865141812511
       },
       "data": {
         "functionName": "hash160_to_p2pkh_address",
-        "title": "P2PKH Address",
+        "title": "HASH160 → P2PKH Address",
         "numInputs": 1,
         "showField": false,
         "networkDependent": true,
@@ -181,172 +181,7 @@
         },
         "borderColor": "#10b981",
         "showComment": true,
-        "comment": "Fund this from https://coinfaucet.eu/en/btc-testnet/",
-        "error": false
-      }
-    },
-    {
-      "id": "cc06_76",
-      "type": "calculation",
-      "position": {
-        "x": 1737.7051771474398,
-        "y": 790.3938233939194
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_DUP",
-        "showField": true,
-        "numInputs": 0,
-        "value": "76",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "76"
-        },
-        "result": "76",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc07_a9",
-      "type": "calculation",
-      "position": {
-        "x": 1459.2253857934738,
-        "y": 1030.1566581085951
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_HASH160",
-        "showField": true,
-        "numInputs": 0,
-        "value": "a9",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "a9"
-        },
-        "result": "a9",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc08_14",
-      "type": "calculation",
-      "position": {
-        "x": 1758.1173084508737,
-        "y": 1221.8051833223237
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "push 20 bytes",
-        "showField": true,
-        "numInputs": 0,
-        "value": "14",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "14"
-        },
-        "result": "14",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc09_88",
-      "type": "calculation",
-      "position": {
-        "x": 1467.97344206637,
-        "y": 1483.4381587192477
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_EQUALVERIFY",
-        "showField": true,
-        "numInputs": 0,
-        "value": "88",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "88"
-        },
-        "result": "88",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc10_ac",
-      "type": "calculation",
-      "position": {
-        "x": 1896.628199438448,
-        "y": 1695.4988152364087
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_CHECKSIG",
-        "showField": true,
-        "numInputs": 0,
-        "value": "ac",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "ac"
-        },
-        "result": "ac",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
+        "comment": "Fund this testnet address https://coinfaucet.eu/en/btc-testnet/",
         "error": false
       }
     },
@@ -354,22 +189,20 @@
       "id": "cc11_p2pkh_spk",
       "type": "calculation",
       "position": {
-        "x": 3823.883475578874,
-        "y": 1092.9631587647239
+        "x": 3502.3671309694987,
+        "y": 1239.6063864566688
       },
       "data": {
         "functionName": "concat_all",
         "title": "P2PKH scriptPubKey",
         "paramExtraction": "multi_val",
-        "numInputs": 6,
+        "numInputs": 4,
         "inputs": {
           "vals": {
-            "0": "76",
-            "100": "a9",
-            "200": "14",
-            "300": "20d0afaa02179ee086043dbb3a0af65496d4665a",
-            "400": "88",
-            "500": "ac"
+            "0": "76a9",
+            "100": "14",
+            "200": "20d0afaa02179ee086043dbb3a0af65496d4665a",
+            "300": "88ac"
           }
         },
         "dirty": false,
@@ -398,16 +231,14 @@
           "afterGroups": []
         },
         "groupInstances": {
-          "INPUTS[]": 6
+          "INPUTS[]": 4
         },
         "groupInstanceKeys": {
           "INPUTS[]": [
             0,
             100,
             200,
-            300,
-            400,
-            500
+            300
           ]
         },
         "baseHeight": 80,
@@ -415,7 +246,7 @@
         "showComment": true,
         "comment": "OP_DUP OP_HASH160 <hash160> OP_EQUALVERIFY OP_CHECKSIG",
         "error": false,
-        "totalInputs": 6,
+        "totalInputs": 4,
         "unwiredCount": 0
       }
     },
@@ -423,11 +254,11 @@
       "id": "cc12_fund_title",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 5267.784047732455,
-        "y": 477.7636460963553
+        "x": 4895.443928602723,
+        "y": 541.2406973004423
       },
       "data": {
-        "content": "# Step 2: Fund the P2PKH Address (Testnet3 Faucet)\n\nAfter funding our P2PKH address, we receive a raw transaction hex.\n\n**TX Field Extract** nodes parse it to reveal four key fields:\n\n| Extract | Purpose |\n|---------|--------|\n| **txid** | Unique identifier - needed as `prev_txid` in the next TX |\n| **vin.scriptSig** | P2PKH unlock the faucet used - shows `<DER_sig> <pubkey>` format |\n| **vout.value** | Satoshis we received (50 000 sats) |\n| **vout.scriptPubKey** | Locking script - should equal our P2PKH scriptPubKey  |\n\nThe **compare_equal** node at the right confirms the funding TX truly pays to our derived address.",
+        "content": "# Step 2 — Fund the P2PKH Address\n\nThe funding transaction hex is pre-filled with real testnet3 data. The entire canvas operates offline — no real testnet coins or network confirmations are required.\n\n**TX Field Extract** parses live fields from the pre-filled hex:\n\n| Field | Use |\n|-------|-----|\n| `txid` | prev-TXID for TX1's input |\n| `vout.value` | input amount for TX1 fee math |\n| `vout.scriptPubKey` | compared to the derived P2PKH scriptPubKey |\n| `output_count` | gates the assumption that vout index 0 is spent |\n\nEvery Compare and Check node downstream must read `true` before TX1 is considered well-formed.",
         "fontSize": 24,
         "width": 1344,
         "height": 541,
@@ -441,8 +272,8 @@
       "id": "cc13_fund_tx",
       "type": "calculation",
       "position": {
-        "x": 6378.720911277065,
-        "y": 1074.1180249148185
+        "x": 6057.20456666769,
+        "y": 1220.7612526067635
       },
       "data": {
         "functionName": "identity",
@@ -468,7 +299,7 @@
         "groupInstances": {},
         "borderColor": "#f59e0b",
         "showComment": true,
-        "comment": "Version 2 tx, 1 input (P2PKH), 1 output (P2PKH to our address), 50000 sats",
+        "comment": "Pre-filled with a real testnet3 TX — no faucet needed. Replace with your own if desired.",
         "error": false
       }
     },
@@ -476,19 +307,19 @@
       "id": "cc14_ex_txid",
       "type": "calculation",
       "position": {
-        "x": 6988.5888706804035,
-        "y": 483.37351419357253
+        "x": 6667.072526071029,
+        "y": 630.0167418855176
       },
       "data": {
         "functionName": "extract_tx_field",
         "title": "Extract: TXID",
         "paramExtraction": "multi_val",
-        "numInputs": 3,
+        "numInputs": 2,
         "dirty": false,
         "result": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427",
         "inputs": {
           "vals": {
-            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
             "1": "txid"
           }
         },
@@ -518,86 +349,13 @@
                 "raw_no_witness"
               ],
               "unconnectable": true
-            },
-            {
-              "index": 2,
-              "label": "Index (opt):",
-              "placeholder": "0",
-              "rows": 1,
-              "unconnectable": true
             }
           ]
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "Needed as prev_txid input in TX1 (after byte-reversal in Section 4)",
-        "error": false,
-        "totalInputs": 1,
-        "unwiredCount": 0
-      }
-    },
-    {
-      "id": "cc15_ex_vout",
-      "type": "calculation",
-      "position": {
-        "x": 7748.627056967387,
-        "y": 797.8692182362869
-      },
-      "data": {
-        "functionName": "extract_tx_field",
-        "title": "Extract: Input scriptSig (P2PKH unlock by faucet)",
-        "paramExtraction": "multi_val",
-        "numInputs": 3,
-        "dirty": false,
-        "result": "4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62df",
-        "inputs": {
-          "vals": {
-            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
-            "1": "vin.scriptSig",
-            "2": "0"
-          }
-        },
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Raw TX (hex):",
-              "placeholder": "<transaction hex>",
-              "rows": 4
-            },
-            {
-              "index": 1,
-              "label": "Field name:",
-              "options": [
-                "version",
-                "locktime",
-                "txid",
-                "input_count",
-                "output_count",
-                "vin.txid",
-                "vin.vout",
-                "vin.scriptSig",
-                "vin.sequence",
-                "vout.value",
-                "vout.scriptPubKey",
-                "raw_no_witness"
-              ],
-              "unconnectable": true
-            },
-            {
-              "index": 2,
-              "label": "Index (opt):",
-              "placeholder": "0",
-              "rows": 1,
-              "unconnectable": true
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "Shows the DER sig + pubkey the faucet sender used to unlock their P2PKH - format: <sig> <pubkey>",
+        "showComment": false,
+        "comment": "",
         "error": false,
         "totalInputs": 1,
         "unwiredCount": 0
@@ -607,19 +365,19 @@
       "id": "cc16_ex_amount",
       "type": "calculation",
       "position": {
-        "x": 7128.720911277065,
-        "y": 1174.1180249148185
+        "x": 6676.970551232714,
+        "y": 1157.9687333130428
       },
       "data": {
         "functionName": "extract_tx_field",
-        "title": "Extract: Output Value (satoshis)",
+        "title": "Extract: vout.value (sats)",
         "paramExtraction": "multi_val",
         "numInputs": 3,
         "dirty": false,
         "result": "50000",
         "inputs": {
           "vals": {
-            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
             "1": "vout.value",
             "2": "0"
           }
@@ -662,8 +420,8 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "We received 50 000 sats; TX1 output will be 45 000 (minus 5 000 fee)",
+        "showComment": false,
+        "comment": "",
         "error": false,
         "totalInputs": 1,
         "unwiredCount": 0
@@ -673,19 +431,19 @@
       "id": "cc17_ex_spk",
       "type": "calculation",
       "position": {
-        "x": 7748.605656044405,
-        "y": 1624.5272453334312
+        "x": 6672.796251926204,
+        "y": 1817.4035315755675
       },
       "data": {
         "functionName": "extract_tx_field",
-        "title": "Extract: scriptPubKey (P2PKH lock)",
+        "title": "Extract: vout.scriptPubKey",
         "paramExtraction": "multi_val",
         "numInputs": 3,
         "dirty": false,
         "result": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac",
         "inputs": {
           "vals": {
-            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac00000000",
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
             "1": "vout.scriptPubKey",
             "2": "0"
           }
@@ -728,8 +486,8 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "Should match the P2PKH spk built in Section 1 above",
+        "showComment": false,
+        "comment": "",
         "error": false,
         "totalInputs": 1,
         "unwiredCount": 0
@@ -739,11 +497,11 @@
       "id": "cc18_redeem_title",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 9431.710108409045,
-        "y": 469.73748916801037
+        "x": 9314.454350270571,
+        "y": 508.57651844475674
       },
       "data": {
-        "content": "# Step 3: Non-Standard P2SH RedeemScript\n\n**Pay-to-Script-Hash (P2SH)** allows any script as the locking condition. The output stores only the *hash*; the actual script is revealed when spending.\n\n## Our RedeemScript: A Math Puzzle\n\nThe redeemScript *bytes* are:\n- `52` = OP_2 (the nodes showing 52/55 are these opcode bytes *inside* the redeemScript)\n- `93` = OP_ADD\n- `55` = OP_5\n- `87` = OP_EQUAL\n\nConcatenated: `52935587`\n\nThe puzzle `X + 2 = 5` is solved by pushing **3** (`0x53`) in the *scriptSig* before the redeemScript.\n\n## Why Is This Non-Standard?\n\nBitcoin Core's standard templates: P2PK, **P2PKH**, P2MS, **P2SH**, P2WPKH, P2WSH, OP_RETURN, P2TR\n\nThe P2SH *output* (`OP_HASH160 <hash> OP_EQUAL`) **IS standard** \n\nBut `AreInputsStandard()` checks the *inner redeemScript* when spending.\n`OP_2 OP_ADD OP_5 OP_EQUAL` matches **no template** -> **NONSTANDARD** ",
+        "content": "# Step 3 — Non-Standard P2SH RedeemScript\n\n**Pay-to-Script-Hash (BIP16)** commits to the hash of an arbitrary script. The full script is revealed only at spend time.\n\n## RedeemScript: `52 93 55 87`\n\n- `52` — `OP_2`\n- `93` — `OP_ADD`\n- `55` — `OP_5`\n- `87` — `OP_EQUAL`\n\nThe puzzle `x + 2 == 5` is solved by pushing `3` (`OP_3` = `0x53`) in the scriptSig before revealing the redeemScript.\n\n## Why this redeemScript is non-standard\n\nBitcoin Core's `Solver()` recognises a fixed list of output templates: `P2PK`, `P2PKH`, `P2MS` (`n ≤ 3`), `P2SH`, `P2WPKH`, `P2WSH`, `P2TR`, `NULL_DATA`.\n\nThe P2SH **output** template `OP_HASH160 <hash> OP_EQUAL` is itself standard. However, when *spending* a P2SH UTXO, `AreInputsStandard()` runs `Solver()` on the **inner redeemScript** as well. `OP_2 OP_ADD OP_5 OP_EQUAL` matches no template, so `Solver()` returns `NONSTANDARD` and the spend is rejected at relay.",
         "fontSize": 24,
         "width": 924,
         "height": 720,
@@ -754,220 +512,15 @@
       "height": 720
     },
     {
-      "id": "cc19_op52",
-      "type": "calculation",
-      "position": {
-        "x": 10713.42532890338,
-        "y": 804.0547846847783
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_2",
-        "showField": true,
-        "numInputs": 0,
-        "value": "52",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "52"
-        },
-        "result": "52",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#ef4444",
-        "showComment": true,
-        "comment": "Pushes integer 2 onto stack",
-        "error": false
-      }
-    },
-    {
-      "id": "cc20_op93",
-      "type": "calculation",
-      "position": {
-        "x": 10397.494953819583,
-        "y": 1082.0199722266768
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_ADD",
-        "showField": true,
-        "numInputs": 0,
-        "value": "93",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "93"
-        },
-        "result": "93",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#ef4444",
-        "showComment": true,
-        "comment": "Pops top 2 items, pushes their sum",
-        "error": false
-      }
-    },
-    {
-      "id": "cc21_op55",
-      "type": "calculation",
-      "position": {
-        "x": 10090.85664859119,
-        "y": 1385.5383518709416
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_5",
-        "showField": true,
-        "numInputs": 0,
-        "value": "55",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "55"
-        },
-        "result": "55",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#ef4444",
-        "showComment": true,
-        "comment": "Pushes integer 5 onto stack",
-        "error": false
-      }
-    },
-    {
-      "id": "cc22_op87",
-      "type": "calculation",
-      "position": {
-        "x": 10485.769617445938,
-        "y": 1596.1360329611482
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_EQUAL",
-        "showField": true,
-        "numInputs": 0,
-        "value": "87",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "87"
-        },
-        "result": "87",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#ef4444",
-        "showComment": true,
-        "comment": "Returns 1 if top two stack items are equal",
-        "error": false
-      }
-    },
-    {
-      "id": "cc23_redeem",
-      "type": "calculation",
-      "position": {
-        "x": 11286.655503541895,
-        "y": 1041.621518166539
-      },
-      "data": {
-        "functionName": "concat_all",
-        "title": "redeemScript: OP_2 OP_ADD OP_5 OP_EQUAL",
-        "paramExtraction": "multi_val",
-        "numInputs": 4,
-        "inputs": {
-          "vals": {
-            "0": "52",
-            "100": "93",
-            "200": "55",
-            "300": "87"
-          }
-        },
-        "dirty": false,
-        "version": 0,
-        "result": "52935587",
-        "inputStructure": {
-          "groups": [
-            {
-              "title": "INPUTS[]",
-              "baseIndex": 0,
-              "expandable": true,
-              "fieldCountToAdd": 1,
-              "minInstances": 1,
-              "maxInstances": 25,
-              "fields": [
-                {
-                  "index": 0,
-                  "label": "Value:",
-                  "placeholder": "<hex>",
-                  "rows": 3
-                }
-              ]
-            }
-          ],
-          "ungrouped": [],
-          "afterGroups": []
-        },
-        "groupInstances": {
-          "INPUTS[]": 4
-        },
-        "groupInstanceKeys": {
-          "INPUTS[]": [
-            0,
-            100,
-            200,
-            300
-          ]
-        },
-        "baseHeight": 80,
-        "borderColor": "#ef4444",
-        "showComment": true,
-        "comment": "NON-STANDARD: no known script template matches this",
-        "error": false,
-        "totalInputs": 4,
-        "unwiredCount": 0
-      }
-    },
-    {
       "id": "cc24_rh160",
       "type": "calculation",
       "position": {
-        "x": 11836.655503541895,
-        "y": 1041.621518166539
+        "x": 11027.03281540571,
+        "y": 1299.9706752228285
       },
       "data": {
         "functionName": "hash160_hex",
-        "title": "HASH160 (redeemScript)",
+        "title": "Data → HASH160",
         "paramExtraction": "single_val",
         "numInputs": 1,
         "showField": false,
@@ -988,107 +541,8 @@
         },
         "groupInstances": {},
         "borderColor": "#8b5cf6",
-        "showComment": true,
-        "comment": "This hash goes into the P2SH scriptPubKey",
-        "error": false
-      }
-    },
-    {
-      "id": "cc25_pa9",
-      "type": "calculation",
-      "position": {
-        "x": 10413.3904410994,
-        "y": 2279.796538216632
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_HASH160",
-        "showField": true,
-        "numInputs": 0,
-        "value": "a9",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "a9"
-        },
-        "result": "a9",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc26_p14",
-      "type": "calculation",
-      "position": {
-        "x": 10766.449763338522,
-        "y": 1998.04138209883
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "push 20 bytes",
-        "showField": true,
-        "numInputs": 0,
-        "value": "14",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "14"
-        },
-        "result": "14",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
-        "error": false
-      }
-    },
-    {
-      "id": "cc27_p87",
-      "type": "calculation",
-      "position": {
-        "x": 10766.449763338522,
-        "y": 2525.2295993193957
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_EQUAL",
-        "showField": true,
-        "numInputs": 0,
-        "value": "87",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "87"
-        },
-        "result": "87",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#6b7280",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -1096,12 +550,12 @@
       "id": "cc28_p2sh_spk",
       "type": "calculation",
       "position": {
-        "x": 12257.63954732731,
-        "y": 1724.158804145278
+        "x": 11889.983797110921,
+        "y": 1654.6753424149044
       },
       "data": {
         "functionName": "concat_all",
-        "title": "P2SH scriptPubKey (OP_HASH160 <hash> OP_EQUAL)",
+        "title": "P2SH scriptPubKey",
         "paramExtraction": "multi_val",
         "numInputs": 4,
         "inputs": {
@@ -1161,12 +615,12 @@
       "id": "cc29_p2sh_addr",
       "type": "calculation",
       "position": {
-        "x": 12429.578046240555,
-        "y": 1156.8587531554301
+        "x": 11619.95535810437,
+        "y": 1024.237157436514
       },
       "data": {
         "functionName": "hash160_to_p2sh_address",
-        "title": "P2SH Address",
+        "title": "HASH160 → P2SH Address",
         "numInputs": 1,
         "showField": false,
         "networkDependent": true,
@@ -1190,7 +644,7 @@
         },
         "borderColor": "#10b981",
         "showComment": true,
-        "comment": "The P2SH address to fund - send Tx1 output here",
+        "comment": "TX1's output pays to this address",
         "error": false
       }
     },
@@ -1198,11 +652,11 @@
       "id": "cc30_ns_text",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 8338.65520388365,
-        "y": 1730.5616591140745
+        "x": 9605.966782412415,
+        "y": 1574.028496970513
       },
       "data": {
-        "content": "## How Bitcoin Checks Standardness\n\nWhen a node relays a transaction spending P2SH:\n\n1. Parse the **scriptSig**: last push = redeemScript\n2. Call `Solver(redeemScript)` -> returns `TxoutType`\n3. If `TxoutType::NONSTANDARD` -> `AreInputsStandard()` returns **false**\n4. `IsStandardTx()` returns **false** -> TX **dropped**\n\nOur redeemScript `52935587` triggers:\n```\nSolver(52935587) -> NONSTANDARD\n```\n\n**Standard redeemScript types accepted:**\n- `P2PK` - single pubkey\n- `P2PKH` - single pubkey hash\n- `P2MS` - 1-of-3 multisig\n- `P2WPKH` / `P2WSH` - segwit\n\nArithmetic scripts like `OP_ADD`, `OP_EQUAL` are **not** in this list.\n\n*Source: `bitcoin/src/script/solver.cpp`*",
+        "content": "## Standardness Check\n\nWhen a default-policy node relays a transaction that spends a P2SH UTXO:\n\n1. Parse the scriptSig — the last push is the redeemScript.\n2. Call `Solver(redeemScript)` — returns a `TxoutType`.\n3. If `TxoutType::NONSTANDARD`, `AreInputsStandard()` returns `false`.\n4. `IsStandardTx()` returns `false`. The transaction is dropped.\n\nFor the redeemScript `52935587`:\n\n```\nSolver(52935587) → NONSTANDARD\n```\n\n**RedeemScript types `Solver()` accepts:**\n- `P2PK`     — single pubkey + `OP_CHECKSIG`\n- `P2PKH`    — pubkey-hash template\n- `P2MS`     — bare multisig, `m`-of-`n` with `n ≤ 3`\n- `P2WPKH` / `P2WSH` — segwit v0 (as P2SH-wrapped)\n\nArithmetic redeemScripts using `OP_ADD`, `OP_EQUAL`, etc. are absent from this list.\n\n*Source: `bitcoin/src/script/solver.cpp`, function `Solver`.*",
         "fontSize": 22,
         "width": 840,
         "height": 680,
@@ -1216,11 +670,11 @@
       "id": "cc31_tx1_title",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 13830.65550354191,
-        "y": 435.62151816653056
+        "x": 12847.75962448163,
+        "y": 410.9471918280868
       },
       "data": {
-        "content": "# Step 4: Construct Spending TX (P2PKH -> P2SH)\n\nWe now build the raw transaction that:\n- **Spends** the P2PKH UTXO from the faucet funding\n- **Outputs** to our non-standard P2SH address\n\n## Transaction Structure\n\n| Field | Value |\n|-------|-------|\n| Version | `02000000` (LE4) |\n| Input count | `01` |\n| Prev TXID | (reversed from extract node) |\n| Prev vout | `00000000` (index 0) |\n| scriptSig | *[NOTE: Requires signing - see below]* |\n| Sequence | `fdffffff` |\n| Output count | `01` |\n| Output amount | 45000 sats (50000 - 5000 fee) |\n| Output scriptPubKey | P2SH scriptPubKey (from Section 3) |\n| Locktime | `00000000` |\n\n## [NOTE] P2PKH scriptSig Requires Signing\n\nThe scriptSig = `<DER_sig+SIGHASH_ALL> <compressed_pubkey>`\n\nThis needs: serialize unsigned tx -> dSHA256 sighash -> ECDSA sign -> DER encode.\n\nSee **Lesson 1 (Intro P2PKH)** for the full signing flow!",
+        "content": "# Step 4 — Construct and Sign TX1 (P2PKH → P2SH)\n\nTX1 spends the P2PKH UTXO produced by the funding transaction and outputs to the non-standard P2SH address from Step 3.\n\n## Transaction Structure\n\n| Field | Value |\n|-------|-------|\n| Version | `02000000` (LE-4) |\n| Input count | `01` |\n| Prev TXID | reversed from `cc14_ex_txid` |\n| Prev vout | `00000000` (index 0) |\n| scriptSig | `<DER_sig + SIGHASH_ALL byte> <compressed pubkey>` |\n| Sequence | `fdffffff` |\n| Output count | `01` |\n| Output amount | input − fee, encoded as 8-byte LE |\n| Output scriptPubKey | P2SH scriptPubKey from Step 3 |\n| Locktime | `00000000` |\n\n## Signing Pipeline\n\nThe signing chain below the template implements P2PKH signing end-to-end:\n\n1. Build the preimage: the raw TX bytes with the spent output's P2PKH scriptPubKey occupying the scriptSig slot.\n2. Append the `SIGHASH_ALL` flag `01000000`.\n3. Apply `double_sha256` — the resulting 32-byte digest is the sighash.\n4. Sign the sighash with the private key using Bitcoin Core Low-R ECDSA.\n5. Append the SIGHASH byte `01` to produce `<sig || 01>`.\n6. Push-encode `<sig || 01>` and push-encode the compressed pubkey to form the real scriptSig.\n7. Prepend its VarInt length and re-emit all twelve transaction fields to obtain the broadcast-ready TX1.\n\nTX1's TXID, computed in Step 5 as `reverse(double_sha256(signed_tx))`, feeds the TX2 prevout directly.",
         "fontSize": 22,
         "width": 1088,
         "height": 800,
@@ -1234,19 +688,18 @@
       "id": "cc32_version",
       "type": "calculation",
       "position": {
-        "x": 14653.14537181954,
-        "y": 1351.1235445110044
+        "x": 14858.163188075356,
+        "y": 1622.088313684138
       },
       "data": {
-        "functionName": "identity",
-        "title": "Version (LE4)",
-        "showField": true,
-        "numInputs": 0,
-        "value": "02000000",
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "title": "Uint32 → LE-4",
+        "showField": false,
+        "numInputs": 1,
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "02000000"
+          "val": "2"
         },
         "result": "02000000",
         "inputStructure": {
@@ -1267,19 +720,18 @@
       "id": "cc33_in_count",
       "type": "calculation",
       "position": {
-        "x": 14303.031381244642,
-        "y": 1462.7208390853968
+        "x": 14875.051578831384,
+        "y": 1934.2076553709312
       },
       "data": {
-        "functionName": "identity",
-        "title": "Input Count (varint)",
-        "showField": true,
-        "numInputs": 0,
-        "value": "01",
+        "functionName": "encode_varint",
+        "title": "Int → VarInt",
+        "showField": false,
+        "numInputs": 1,
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "01"
+          "val": "1"
         },
         "result": "01",
         "inputStructure": {
@@ -1300,12 +752,12 @@
       "id": "cc34_txid_rev",
       "type": "calculation",
       "position": {
-        "x": 15049.807615934425,
-        "y": 1113.4791361920063
+        "x": 14835.835915177398,
+        "y": 1222.2289793618254
       },
       "data": {
         "functionName": "reverse_txid_bytes",
-        "title": "Prev TXID -> Reversed (for tx serialization)",
+        "title": "TXID → Reversed",
         "numInputs": 1,
         "showField": false,
         "dirty": false,
@@ -1313,7 +765,7 @@
         "inputs": {
           "val": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427"
         },
-        "result": "0f6bb553b7e597855c170eeb7bde55b9246581aee1b7ae5ff923fd1f9b81fbba",
+        "result": "279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0",
         "inputStructure": {
           "ungrouped": [
             {
@@ -1325,8 +777,8 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "Bitcoin stores TXIDs reversed in serialized tx",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -1334,19 +786,18 @@
       "id": "cc35_vout_le",
       "type": "calculation",
       "position": {
-        "x": 13965.839588990211,
-        "y": 1698.695323790417
+        "x": 14876.888811244871,
+        "y": 2237.8061938719184
       },
       "data": {
-        "functionName": "identity",
-        "title": "Output Index (vout=0)",
-        "showField": true,
-        "numInputs": 0,
-        "value": "00000000",
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "title": "Uint32 → LE-4",
+        "showField": false,
+        "numInputs": 1,
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "00000000"
+          "val": "0"
         },
         "result": "00000000",
         "inputStructure": {
@@ -1360,78 +811,8 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "Spending the first output (index 0) of the funding tx",
-        "error": false
-      }
-    },
-    {
-      "id": "cc36_ss_len",
-      "type": "calculation",
-      "position": {
-        "x": 14489.460969303263,
-        "y": 2580.4471620255295
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "scriptSig Length",
-        "showField": true,
-        "numInputs": 0,
-        "value": "6a",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "6a"
-        },
-        "result": "6a",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "VarInt hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#f97316",
-        "showComment": true,
-        "comment": "Typical P2PKH scriptSig = 106 bytes (71-byte DER sig + 33-byte pubkey + opcodes)",
-        "error": false
-      }
-    },
-    {
-      "id": "cc37_ss_placeholder",
-      "type": "calculation",
-      "position": {
-        "x": 14483.432180740097,
-        "y": 1988.142386396737
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "[NOTE] P2PKH scriptSig (PLACEHOLDER - needs signing)",
-        "showField": true,
-        "numInputs": 0,
-        "value": "",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": ""
-        },
-        "result": "",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "scriptSig hex:",
-              "rows": 3
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#f97316",
-        "showComment": true,
-        "comment": "Replace with: <DER sig + SIGHASH_ALL byte> <compressed pubkey>",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -1439,19 +820,18 @@
       "id": "cc38_sequence",
       "type": "calculation",
       "position": {
-        "x": 13914.353105797229,
-        "y": 2234.27209748011
+        "x": 14902.353608042295,
+        "y": 2649.7456250771993
       },
       "data": {
-        "functionName": "identity",
-        "title": "Sequence",
-        "showField": true,
-        "numInputs": 0,
-        "value": "fdffffff",
+        "functionName": "reverse_bytes_4",
+        "title": "4-Byte → Reversed",
+        "showField": false,
+        "numInputs": 1,
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "fdffffff"
+          "val": "fffffffd"
         },
         "result": "fdffffff",
         "inputStructure": {
@@ -1472,19 +852,18 @@
       "id": "cc39_out_count",
       "type": "calculation",
       "position": {
-        "x": 13917.318039816833,
-        "y": 2675.5901695387047
+        "x": 14877.212034674054,
+        "y": 3101.3412886198275
       },
       "data": {
-        "functionName": "identity",
-        "title": "Output Count",
-        "showField": true,
-        "numInputs": 0,
-        "value": "01",
+        "functionName": "encode_varint",
+        "title": "Int → VarInt",
+        "showField": false,
+        "numInputs": 1,
         "dirty": false,
         "version": 0,
         "inputs": {
-          "val": "01"
+          "val": "1"
         },
         "result": "01",
         "inputStructure": {
@@ -1502,50 +881,15 @@
       }
     },
     {
-      "id": "cc40_amount_sats",
-      "type": "calculation",
-      "position": {
-        "x": 14123.480238641832,
-        "y": 3082.0083839771755
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "Output Amount",
-        "showField": true,
-        "numInputs": 0,
-        "value": "45000",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "45000"
-        },
-        "result": "45000",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Satoshis:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "50000 received - 5000 fee = 45000 sats to P2SH output",
-        "error": false
-      }
-    },
-    {
       "id": "cc41_amount_le",
       "type": "calculation",
       "position": {
-        "x": 14903.163340698866,
-        "y": 2947.907002479777
+        "x": 15577.504270417201,
+        "y": 2909.326983791914
       },
       "data": {
         "functionName": "satoshi_to_8_le",
-        "title": "Amount -> 8-byte LE",
+        "title": "Satoshi → LE-8",
         "numInputs": 1,
         "showField": false,
         "dirty": false,
@@ -1572,12 +916,12 @@
       "id": "cc42_spk_varint",
       "type": "calculation",
       "position": {
-        "x": 12947.50450205318,
-        "y": 1817.5503977245864
+        "x": 12426.860196403017,
+        "y": 1769.9224439133238
       },
       "data": {
         "functionName": "varint_encoded_byte_length",
-        "title": "P2SH scriptPubKey Length (VarInt)",
+        "title": "Data → VarInt Length",
         "numInputs": 1,
         "showField": false,
         "dirty": false,
@@ -1597,8 +941,8 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "showComment": true,
-        "comment": "P2SH spk = 23 bytes → VarInt = 17",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -1606,8 +950,8 @@
       "id": "cc43_locktime",
       "type": "calculation",
       "position": {
-        "x": 14637.204699769714,
-        "y": 3235.6408123301726
+        "x": 15629.987324339889,
+        "y": 3318.639754200744
       },
       "data": {
         "functionName": "identity",
@@ -1632,85 +976,162 @@
         },
         "groupInstances": {},
         "borderColor": "#14b8a6",
-        "error": false
+        "error": false,
+        "comment": "immediate",
+        "showComment": true
       }
     },
     {
       "id": "cc44_tx1_raw",
       "type": "calculation",
       "position": {
-        "x": 15780.65550354191,
-        "y": 1685.6215181665304
+        "x": 16344.193739336988,
+        "y": 1636.3974384642934
       },
       "data": {
         "functionName": "concat_all",
-        "title": "Raw TX1 Body (P2PKH → P2SH) — UNSIGNED STRUCTURE",
+        "title": "Unsigned TX (placeholder scriptSig)",
         "paramExtraction": "multi_val",
         "numInputs": 12,
         "inputs": {
           "vals": {
             "0": "02000000",
-            "100": "01",
-            "200": "0f6bb553b7e597855c170eeb7bde55b9246581aee1b7ae5ff923fd1f9b81fbba",
-            "300": "00000000",
-            "400": "6a",
-            "500": "",
-            "600": "fdffffff",
-            "700": "01",
-            "800": "c8af000000000000",
-            "900": "17",
-            "1000": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
-            "1100": "00000000"
+            "10": "01",
+            "1000": "279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0",
+            "1010": "00000000",
+            "1020": "19",
+            "1030": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac",
+            "1040": "fdffffff",
+            "2000": "01",
+            "3000": "c8af000000000000",
+            "3010": "17",
+            "3020": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+            "4000": "00000000"
           }
         },
         "dirty": false,
         "version": 0,
-        "result": "",
+        "result": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88acfdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
         "inputStructure": {
+          "afterGroups": [
+            {
+              "index": 4000,
+              "label": "LOCKTIME[4]:",
+              "placeholder": "00000000",
+              "rows": 1
+            }
+          ],
+          "betweenGroups": {
+            "INPUTS[]": [
+              {
+                "index": 2000,
+                "label": "OUTPUT_COUNT (VarInt):",
+                "rows": 1,
+                "small": true
+              }
+            ]
+          },
           "groups": [
             {
-              "title": "INPUTS[]",
-              "baseIndex": 0,
+              "baseIndex": 1000,
               "expandable": true,
-              "fieldCountToAdd": 1,
-              "minInstances": 1,
-              "maxInstances": 25,
+              "fieldCountToAdd": 5,
               "fields": [
                 {
                   "index": 0,
-                  "label": "Value:",
-                  "placeholder": "<hex>",
+                  "label": "TXID[32]:",
+                  "placeholder": "Prev TX ID",
+                  "rows": 2
+                },
+                {
+                  "index": 10,
+                  "label": "VOUT[4]:",
+                  "placeholder": "00000000",
+                  "rows": 1
+                },
+                {
+                  "allowEmpty00": true,
+                  "index": 20,
+                  "label": "SCRIPT_LENGTH (VarInt):",
+                  "rows": 1
+                },
+                {
+                  "allowEmptyBlank": true,
+                  "index": 30,
+                  "label": "SCRIPT_SIG[]:",
+                  "placeholder": "<sig> <pk>",
+                  "rows": 3
+                },
+                {
+                  "index": 40,
+                  "label": "SEQUENCE[4]:",
+                  "placeholder": "ffffffff",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            },
+            {
+              "baseIndex": 3000,
+              "expandable": true,
+              "fieldCountToAdd": 3,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "AMOUNT[8]:",
+                  "placeholder": "Satoshis (hex)",
+                  "rows": 1
+                },
+                {
+                  "index": 10,
+                  "label": "SCRIPT_PUBKEY_LENGTH:",
+                  "rows": 1,
+                  "small": true
+                },
+                {
+                  "index": 20,
+                  "label": "SCRIPT_PUBKEY[]:",
+                  "placeholder": "Locking script",
                   "rows": 3
                 }
-              ]
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "OUTPUTS[]"
             }
           ],
-          "ungrouped": [],
-          "afterGroups": []
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VERSION[4]:",
+              "rows": 1
+            },
+            {
+              "index": 10,
+              "label": "INPUT_COUNT (VarInt):",
+              "rows": 1,
+              "small": true
+            }
+          ]
         },
         "groupInstances": {
-          "INPUTS[]": 12
+          "INPUTS[]": 1,
+          "OUTPUTS[]": 1
         },
         "groupInstanceKeys": {
           "INPUTS[]": [
-            0,
-            100,
-            200,
-            300,
-            400,
-            500,
-            600,
-            700,
-            800,
-            900,
-            1000,
-            1100
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
           ]
         },
-        "baseHeight": 80,
-        "borderColor": "#ec4899",
-        "showComment": true,
-        "comment": "Replace placeholder scriptSig (index 500) with actual signed P2PKH scriptSig to get broadcastable tx",
+        "baseHeight": 120,
+        "borderColor": "#a855f7",
+        "showComment": false,
+        "comment": "",
         "error": false,
         "totalInputs": 12,
         "unwiredCount": 0
@@ -1720,11 +1141,11 @@
       "id": "cc45_unlock_title",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 17058.13727769819,
-        "y": 485.53776911573584
+        "x": 22997.083732820127,
+        "y": 13455.797166370994
       },
       "data": {
-        "content": "# Step 5: Spend the P2SH Output (Math Puzzle Unlock)\n\nTo spend a P2SH output, the **scriptSig** must:\n1. Push the preimage arguments (our answer: **3**)\n2. Push the **redeemScript** itself (revealed here for the first time)\n\n## P2SH scriptSig Construction\n\n`OP_3` + `OP_PUSHBYTES_4` + `<redeemScript>`\n\n- `53` = OP_3 → pushes integer **3** (puzzle answer: 3 + 2 = 5)\n- `04` = push 4 bytes (length of redeemScript)\n- `52935587` = the redeemScript bytes\n\n## Script Execution Trace\n\n| Step | Opcode | Stack After |\n|------|--------|-------------|\n| scriptSig | OP_3 | [**3**] |\n| P2SH check | hash(redeemScript) == spk hash | [**3**]  |\n| redeemScript | OP_2 | [3, **2**] |\n| redeemScript | OP_ADD | [**5**] |\n| redeemScript | OP_5 | [5, **5**] |\n| redeemScript | OP_EQUAL | [**1**]  |\n\n**VerifyScript() → TRUE** — consensus valid!",
+        "content": "# Step 5 — Spend the P2SH Output\n\nTo spend a P2SH UTXO, the scriptSig must:\n\n1. Push the arguments required by the redeemScript (here, the integer `3`).\n2. Push the redeemScript itself, revealing its bytes.\n\n## scriptSig Construction\n\n`OP_3` + `OP_PUSHBYTES_4` + redeemScript:\n\n- `53` — `OP_3` pushes the integer `3` (the puzzle solution `3 + 2 = 5`).\n- `04` — push next 4 bytes (length of the redeemScript).\n- `52935587` — redeemScript bytes.\n\n## Script Execution Trace (BIP16)\n\n| Step | Opcode / Rule | Stack After |\n|------|---------------|-------------|\n| scriptSig (1) | `OP_3` | `[3]` |\n| scriptSig (2) | `PUSHBYTES_4 → 52935587` | `[3, 52935587]` |\n| scriptPubKey | `OP_HASH160 → 8e9a55…b48547` | `[3, 52935587, 8e9a55…b48547]` |\n| scriptPubKey | `OP_EQUAL` (against the spk's hash push) | `[3, 52935587]` |\n| BIP16 | pop top as redeemScript; verify hash match | `[3]` |\n| redeemScript | `OP_2` | `[3, 2]` |\n| redeemScript | `OP_ADD` | `[5]` |\n| redeemScript | `OP_5` | `[5, 5]` |\n| redeemScript | `OP_EQUAL` | `[1]` |\n\nFinal stack: `[1]`. Non-zero top element ⇒ `VerifyScript()` returns `TRUE`. Consensus-valid.\n\nNote: when P2SH is enabled, Bitcoin Core's interpreter short-circuits — it hashes the last push from the scriptSig, compares against the hash in the scriptPubKey, then re-executes that push as the redeemScript. The intermediate rows above describe the equivalent logical state.",
         "fontSize": 22,
         "width": 1224,
         "height": 820,
@@ -1735,50 +1156,15 @@
       "height": 820
     },
     {
-      "id": "cc46_op3",
-      "type": "calculation",
-      "position": {
-        "x": 17508.13727769819,
-        "y": 1385.5377691157357
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "OP_3",
-        "showField": true,
-        "numInputs": 0,
-        "value": "53",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "53"
-        },
-        "result": "53",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Opcode hex:",
-              "rows": 1
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#10b981",
-        "showComment": true,
-        "comment": "Our answer: 3 + 2 = 5",
-        "error": false
-      }
-    },
-    {
       "id": "cc47_push_op",
       "type": "calculation",
       "position": {
-        "x": 16957.15748120423,
-        "y": 1866.1256470121136
+        "x": 24120.48089675863,
+        "y": 15345.324089101037
       },
       "data": {
         "functionName": "encode_script_push_data",
-        "title": "Push opcode for redeemScript",
+        "title": "Data → Push Opcode",
         "numInputs": 1,
         "showField": false,
         "dirty": false,
@@ -1799,8 +1185,8 @@
         },
         "groupInstances": {},
         "borderColor": "#10b981",
-        "showComment": true,
-        "comment": "04 = push exactly 4 bytes (the redeemScript length)",
+        "showComment": false,
+        "comment": "",
         "error": false
       }
     },
@@ -1808,12 +1194,12 @@
       "id": "cc48_p2sh_ss",
       "type": "calculation",
       "position": {
-        "x": 17988.539829720008,
-        "y": 1450.0372374445244
+        "x": 24933.10998153314,
+        "y": 14926.318969350232
       },
       "data": {
         "functionName": "concat_all",
-        "title": "P2SH scriptSig: OP_3 <push_op> <redeemScript>",
+        "title": "scriptSig (push solution & redeemScript)",
         "paramExtraction": "multi_val",
         "numInputs": 3,
         "inputs": {
@@ -1861,67 +1247,32 @@
         "baseHeight": 80,
         "borderColor": "#10b981",
         "showComment": true,
-        "comment": "530452935587 — P2SH scriptSig: push answer (3) + reveal redeemScript",
+        "comment": "OP_3 + PUSHBYTES_4 + redeemScript",
         "error": false,
         "totalInputs": 3,
         "unwiredCount": 0
       }
     },
     {
-      "id": "cc49_tx2_hex",
-      "type": "calculation",
-      "position": {
-        "x": 17351.543019747274,
-        "y": 2320.5218189793923
-      },
-      "data": {
-        "functionName": "identity",
-        "title": "TX2: P2SH Spend -> P2PKH (dummy prev TXID for demo)",
-        "showField": true,
-        "numInputs": 0,
-        "value": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
-        "dirty": false,
-        "version": 0,
-        "inputs": {
-          "val": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000"
-        },
-        "result": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
-        "inputStructure": {
-          "ungrouped": [
-            {
-              "index": 0,
-              "label": "Raw TX hex:",
-              "rows": 4
-            }
-          ]
-        },
-        "groupInstances": {},
-        "borderColor": "#f59e0b",
-        "showComment": true,
-        "comment": "scriptSig=530452935587, output=40000 sats to P2PKH. Uses zero TXID for demo (replace with real TX1 TXID)",
-        "error": false
-      }
-    },
-    {
       "id": "cc50_verify",
       "type": "calculation",
       "position": {
-        "x": 18854.53557635031,
-        "y": 1988.7156515933377
+        "x": 27491.99187125742,
+        "y": 14706.23481803719
       },
       "data": {
         "functionName": "script_verification",
-        "title": "Script Verification: P2SH Spend (VerifyScript)",
+        "title": "Verify Script",
         "paramExtraction": "multi_val",
         "numInputs": 6,
         "inputs": {
           "vals": {
             "0": "530452935587",
             "1": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
-            "2": "020000000100000000000000000000000000000000000000000000000000000000000000000000000006530452935587ffffffff01409c0000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+            "2": "0200000001f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a260000000006530452935587fdffffff01409c0000000000001976a914b9157068de50a54c8bae069fd5460b8a1bc5db4f88ac00000000",
             "3": "0",
             "4": "",
-            "5": "40000"
+            "5": "45000"
           }
         },
         "inputStructure": {
@@ -1973,9 +1324,9 @@
         "groupInstances": {},
         "borderColor": "#10b981",
         "showComment": true,
-        "comment": "VerifyScript checks consensus validity. P2SH: hash(redeemScript) matches spk -> redeemScript executes -> TRUE",
+        "comment": "VerifyScript() → TRUE (consensus valid)",
         "error": false,
-        "totalInputs": 6,
+        "totalInputs": 4,
         "unwiredCount": 0,
         "dirty": false,
         "result": "True (isValid: true)",
@@ -1986,11 +1337,11 @@
       "id": "cc51_relay_main",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 19527.891423800807,
-        "y": 224.23794187068995
+        "x": 31194.590163137273,
+        "y": 12793.252256145612
       },
       "data": {
-        "content": "# Step 6: Why Relay/Broadcast Fails\n\n## Two Separate Validation Layers in Bitcoin\n\n### Layer 1: Consensus Rules — `VerifyScript()`\n- Enforced by **every full node**\n- Determines if a transaction is **protocol-valid**\n- Our P2SH spend: VerifyScript() = **TRUE**  (consensus valid)\n\n### Layer 2: Relay Policy — `IsStandardTx()` + `AreInputsStandard()`\n- Default behavior of most nodes (Bitcoin Core)\n- Determines if a transaction will be **forwarded to peers**\n- Our P2SH spend: AreInputsStandard() = **FALSE**  (dropped!)\n\n## Why Relay Policy Exists\n\nRelay policy protects the network from:\n- **DoS attacks** using expensive custom scripts\n- **UTXO bloat** with unusual output formats\n- **Scripts that bypass lightweight client validation shortcuts**\n\nIt is a **conservative safety layer** — not a consensus rule. Miners can override it.\n\n## The Propagation Problem\n\nBecause most relay nodes drop non-standard txs, the transaction **never reaches miners**. Even though a miner *could* include it (it's consensus valid), they won't see it through normal P2P gossip.",
+        "content": "# Step 9 — Relay Policy vs Consensus\n\nTest TX2 against a **default-policy** node (`-acceptnonstandardtxs=0`, mainnet-style):\n\n1. Run `testmempoolaccept '[\"<TX2-hex>\"]'` on a default-policy node.\n2. Paste the exact output into the **Observed Broadcast Response** node.\n3. The `Compare (==)` gate checks it against the expected `bad-txns-nonstandard-inputs` template.\n\n**Two layers, one transaction:**\n- `VerifyScript()` returns `TRUE` — consensus-valid.\n- `AreInputsStandard()` returns `FALSE` — default-policy relay rejects before propagation.\n\nOn testnet3 (default `-acceptnonstandardtxs=1`), the same transaction is accepted. The rejection demo requires a node running mainnet-style policy.\n\n**The Observed node is intentionally empty.** The `Check Result` gate stays `false` until real RPC output is pasted here. This is the one manual checkpoint that cannot be faked on-canvas.",
         "fontSize": 22,
         "width": 840,
         "height": 900,
@@ -2004,11 +1355,11 @@
       "id": "cc52_comparison",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 20639.726566648937,
-        "y": 218.75071598774477
+        "x": 32432.39758642624,
+        "y": 12777.26734022593
       },
       "data": {
-        "content": "## Validity vs. Relay: Side-by-Side\n\n| Check | Result | Enforced By |\n|-------|--------|-------------|\n| `VerifyScript()` |  TRUE | All nodes (consensus) |\n| `IsStandardTx()` |  FALSE | Relay nodes (policy) |\n| `AreInputsStandard()` |  FALSE | Relay nodes (policy) |\n| Can be mined? |  YES | Miners can include |\n| Will relay normally? |  NO | Most nodes reject |\n| Network propagation |  STUCK | Never reaches miners |\n\n## The Code Path (Bitcoin Core)\n\n```\n// policy/policy.cpp\nbool AreInputsStandard(tx, coins):\n  for each input:\n    if is_p2sh(scriptPubKey):\n      redeemScript = extract_last_push(scriptSig)\n      txtype = Solver(redeemScript)  // classifies script\n      if txtype == NONSTANDARD:\n        return false  // ← Our tx fails here\n  return true\n```\n\n`Solver(52935587)` → `TxoutType::NONSTANDARD`\n\n## To Use Non-Standard Scripts\n\n- **Testnet**: default `-acceptnonstandardtxs=1` \n- **Mainnet**: submit directly to pool APIs\n- **Or**: use Taproot script paths (always standard)\n- **Or**: propose a BIP to add your template",
+        "content": "## Validity vs Relay: Side-by-Side\n\n| Check | Result | Enforced By |\n|-------|--------|-------------|\n| `VerifyScript()` | TRUE | All full nodes (consensus) |\n| `IsStandardTx()` | FALSE | Default-policy relay nodes |\n| `AreInputsStandard()` | FALSE | Default-policy relay nodes |\n| Includable in a block | YES | Miners may include |\n| Will propagate via P2P | NO | Default policy drops it |\n| Network reach | None | Never reaches miners through gossip |\n\n## Rejection Code Path (Bitcoin Core)\n\n```\n// policy/policy.cpp — AreInputsStandard\nfor (unsigned int i = 0; i < tx.vin.size(); i++) {\n    const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;\n    std::vector<std::vector<unsigned char>> vSolutions;\n    TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);\n    if (whichType == TxoutType::SCRIPTHASH) {\n        // Extract the redeemScript (last push of the scriptSig)\n        CScript subscript(vSolutions[0].begin(), vSolutions[0].end());\n        TxoutType whichType2 = Solver(subscript, ...);\n        if (whichType2 == TxoutType::NONSTANDARD)\n            return false;        // failure point for this transaction\n    }\n}\n```\n\n`Solver(52935587)` returns `TxoutType::NONSTANDARD` because the bytes match no entry in `solver.cpp`.\n\nRPC error returned by `sendrawtransaction` / `testmempoolaccept`:\n\n```\nerror code:    -26\nerror message: bad-txns-nonstandard-inputs\n```\n\n## Paths to Broadcasting Non-Standard Scripts\n\n- **Testnet3** — default `-acceptnonstandardtxs=1` accepts it at relay.\n- **Mainnet (default policy)** — submit out-of-band to a mining-pool API.\n- **Standard alternatives** — Taproot script-path spends are standard regardless of inner-script content.\n- **Protocol path** — propose a BIP that adds the desired template to `Solver()`.",
         "fontSize": 20,
         "width": 1350,
         "height": 900,
@@ -2022,11 +1373,11 @@
       "id": "cc53_key_insight",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 19578.448971794256,
-        "y": 1460.856194757859
+        "x": 31059.721979097758,
+        "y": 14005.285335247143
       },
       "data": {
-        "content": "## Key Insight: Bitcoin's Two-Layer Architecture\n\n```\nBroadcast TX\n     ↓\n[Relay Policy — IsStandardTx()]\n  Non-standard? → DROPPED  ← Our math-puzzle P2SH tx stops here\n  Standard?     → forwarded to peers\n     ↓\n[Mempool — fee, dust limits, etc.]\n     ↓\n[Miner includes in block]\n     ↓\n[Consensus Rules — VerifyScript()]\n  Fails?  → INVALID BLOCK (all nodes reject)\n  Passes? → CONFIRMED \n```\n\nOur transaction is dropped at the **first layer** — relay policy.\nIf it magically reached a miner, it would confirm at the **last layer** — consensus.\n\n**This distinction matters for:**\n- Lightning Network (used non-standard scripts before standardization)\n- Covenant schemes (OP_CTV, OP_CAT proposals)\n- Hash puzzle competitions and research\n- Custom scripts that need miner relationships",
+        "content": "## Bitcoin's Two-Layer Validation Architecture\n\n```\nBroadcast TX\n     ↓\n[Relay Policy — IsStandardTx()]\n  Non-standard? → DROPPED   ← stops here on default-policy nodes\n                              RPC error: bad-txns-nonstandard-inputs\n  Standard?     → forwarded to peers\n     ↓\n[Mempool — fee, dust, ancestor/descendant limits, …]\n     ↓\n[Miner includes in block]\n     ↓\n[Consensus Rules — VerifyScript()]\n  Fails?  → INVALID BLOCK (every node rejects)\n  Passes? → CONFIRMED\n```\n\nThe lesson's TX2 is dropped at the first layer — relay policy. Reaching a miner directly, it would confirm at the last layer — consensus.\n\n**This distinction matters in practice for:**\n\n- The Lightning Network (used non-standard scripts before standardisation).\n- Covenant proposals (`OP_CTV`, `OP_CAT`, `CHECKTEMPLATEVERIFY`-class designs).\n- Hash-puzzle and OP_RETURN research traffic.\n- Custom scripts that depend on direct miner relationships rather than P2P relay.",
         "fontSize": 22,
         "width": 980,
         "height": 700,
@@ -2040,11 +1391,11 @@
       "id": "cc54_summary",
       "type": "shadcnTextInfo",
       "position": {
-        "x": 20639.726566648937,
-        "y": 1518.7507159877448
+        "x": 29951.156033272495,
+        "y": 10318.811784461088
       },
       "data": {
-        "content": "## Lesson Summary\n\n**What we demonstrated:**\n\n1.  **P2PKH Address** derived from private key `0x01` on testnet3\n2.  **TX Field Extract** parsed funding TX → txid, vout, amount, scriptPubKey\n3.  **Non-Standard RedeemScript** `OP_2 OP_ADD OP_5 OP_EQUAL` built and hashed\n4.  **P2SH scriptPubKey** `a914<hash>87` constructed from the hash\n5.  **TX1 structure** shown: P2PKH input → P2SH output (signing is the missing piece)\n6.  **P2SH scriptSig** `530452935587` = OP_3 + push(redeemScript)\n7.  **Script verification** = TRUE (VerifyScript passes)\n8.  **Relay fails** because `AreInputsStandard()` calls `Solver()` → NONSTANDARD\n\n**The Math Puzzle:**\n```\nscriptSig:     OP_3       → stack: [3]\nredeemScript:  OP_2       → stack: [3, 2]\n               OP_ADD     → stack: [5]\n               OP_5       → stack: [5, 5]\n               OP_EQUAL   → stack: [1] ← TRUE\n```\n\n*Made with rawBit — the Bitcoin transaction educational tool.*",
+        "content": "## Summary\n\n**Eleven on-canvas stages, structurally aligned with Lessons 1, 2, and 6:**\n\n1. P2PKH address derivation from a private key.\n2. Funding TX ingested as raw hex; fields parsed via `extract_tx_field`.\n3. Non-standard P2SH redeemScript `52 93 55 87` (`OP_2 OP_ADD OP_5 OP_EQUAL`); HASH160 and address derived on-canvas.\n4. TX1 signed on-canvas: preimage → `double_sha256` → ECDSA Low-R → push-encoded scriptSig → final TX.\n5. TX1's TXID derived from the signed bytes — no manual paste.\n6. TX1's output fields re-extracted and cross-checked against the constructed values.\n7. TX2 spends the P2SH UTXO to a freshly-derived P2PKH recipient.\n8. Amounts driven by Math Operation nodes: `output = input − fee`. Non-negativity and conservation gates wired downstream.\n9. `VerifyScript()` returns `TRUE` — consensus-valid.\n10. Default-policy relay returns `bad-txns-nonstandard-inputs`. Testnet3 (with `-acceptnonstandardtxs=1`) would accept.\n11. `Check Result` aggregates every gate.\n\n**Mechanically-enforced evidence inputs (the gate cannot pass without these):**\n\n- *Observed Broadcast Response* must match the expected non-standard rejection.\n- TX1 must contain exactly one output (justifies the hardcoded `vout=0` prevout in TX2).\n\n**Math puzzle execution under BIP16:**\n```\nscriptSig:    OP_3                           → [3, redeemScript]\nBIP16:        pop redeemScript; verify hash → [3]\nredeemScript: OP_2 OP_ADD OP_5 OP_EQUAL       → [1]   (TRUE)\n```\n\nUntil every input slot of `Check Result` reads `true`, the lesson is incomplete.",
         "fontSize": 22,
         "width": 1050,
         "height": 700,
@@ -2058,18 +1409,18 @@
       "id": "cc_compare_spk",
       "type": "calculation",
       "position": {
-        "x": 8408.936879611296,
-        "y": 903.7669295202613
+        "x": 8371.086965263654,
+        "y": 1263.0802222509826
       },
       "data": {
         "functionName": "compare_equal",
-        "title": "Verify: Funding TX scriptPubKey == Our P2PKH scriptPubKey ✓",
+        "title": "Compare (==)",
         "paramExtraction": "multi_val",
         "numInputs": 2,
         "inputs": {
           "vals": {
-            "0": "76a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac",
-            "100": "76a914751e76e8199196f454f092f5a8a83f16b8fbba7388ac"
+            "0": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac",
+            "100": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac"
           }
         },
         "dirty": false,
@@ -2107,11 +1458,3020 @@
           ]
         },
         "borderColor": "#10b981",
-        "showComment": true,
-        "comment": "If true: the faucet really did pay to our P2PKH address. Both values should be 76a914751e...88ac",
+        "showComment": false,
+        "comment": "Funding TX spk == our P2PKH spk",
         "error": false,
         "totalInputs": 2,
         "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_op_dup_h160",
+      "type": "opCodeNode",
+      "position": {
+        "x": 2262.6380950811545,
+        "y": 1155.6726124126953
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "76a9",
+        "inputs": {
+          "val": "76a9"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "76a9",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_DUP",
+          "OP_HASH160"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_op_eqv_cs",
+      "type": "opCodeNode",
+      "position": {
+        "x": 2246.733685374141,
+        "y": 1471.577022119709
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "88ac",
+        "inputs": {
+          "val": "88ac"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "88ac",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_EQUALVERIFY",
+          "OP_CHECKSIG"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_op_redeem",
+      "type": "opCodeNode",
+      "position": {
+        "x": 10513.624103868717,
+        "y": 1096.6073641839948
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "52935587",
+        "inputs": {
+          "val": "52935587"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "52935587",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_2",
+          "OP_ADD",
+          "OP_5",
+          "OP_EQUAL"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_op_h160_psh",
+      "type": "opCodeNode",
+      "position": {
+        "x": 10878.483655390624,
+        "y": 1746.643227691945
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "a9",
+        "inputs": {
+          "val": "a9"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "a9",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_HASH160"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_op_eq_psh",
+      "type": "opCodeNode",
+      "position": {
+        "x": 10881.46816877194,
+        "y": 2126.5482129377497
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "87",
+        "inputs": {
+          "val": "87"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "87",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_EQUAL"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_op_3",
+      "type": "opCodeNode",
+      "position": {
+        "x": 24062.902266683057,
+        "y": 14865.198442088924
+      },
+      "data": {
+        "functionName": "op_code_select",
+        "value": "53",
+        "inputs": {
+          "val": "53"
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "53",
+        "groupInstances": {},
+        "paramExtraction": "single_val",
+        "title": "Opcode Sequence",
+        "opSequenceNames": [
+          "OP_3"
+        ],
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_pkh_spk_varint",
+      "type": "calculation",
+      "position": {
+        "x": 14899.576046647218,
+        "y": 4093.1242568785574
+      },
+      "data": {
+        "functionName": "varint_encoded_byte_length",
+        "title": "Data → VarInt Length",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "19",
+        "inputs": {
+          "val": "76a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac"
+        },
+        "groupInstances": {},
+        "error": false,
+        "borderColor": "#eab308",
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_sighash_all",
+      "type": "calculation",
+      "position": {
+        "x": 16783.979009075,
+        "y": 4626.032032973068
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "01000000",
+        "dirty": false,
+        "inputs": {
+          "val": "01000000"
+        },
+        "result": "01000000",
+        "groupInstances": {},
+        "title": "SIGHASH_ALL flag",
+        "error": false
+      }
+    },
+    {
+      "id": "n_preimage",
+      "type": "calculation",
+      "position": {
+        "x": 17653.02316929103,
+        "y": 4195.734146787113
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88acfdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+            "100": "01000000"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88acfdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b48547870000000001000000",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<multi-line input>",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 25,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 2
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100
+          ]
+        },
+        "baseHeight": 80,
+        "title": "Pre-image + SIGHASH",
+        "borderColor": "#eab308",
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_hash",
+      "type": "calculation",
+      "position": {
+        "x": 18289.04878931237,
+        "y": 4336.234335862442
+      },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Data → SHA-256d",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "0506fff4285acd31bb751f3ff65f7b675146805013c55041c39ea8cd9ab3e50a",
+        "inputs": {
+          "val": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88acfdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b48547870000000001000000"
+        },
+        "groupInstances": {},
+        "error": false,
+        "borderColor": "#eab308",
+        "showField": false,
+        "version": 0,
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Input Hex:",
+              "rows": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n_sign_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 18872.54602714092,
+        "y": 4211.732433307522
+      },
+      "data": {
+        "functionName": "sign_as_bitcoin_core_low_r",
+        "title": "Sign TX (Low-R)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "dirty": false,
+        "inputs": {
+          "vals": {
+            "0": "a1322cd573b5df00ec636d98276777b7d87f8b46df40cb4f97ae11e40502f76d",
+            "1": "0506fff4285acd31bb751f3ff65f7b675146805013c55041c39ea8cd9ab3e50a"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Private Key (32 bytes hex):",
+              "rows": 2
+            },
+            {
+              "index": 1,
+              "label": "Message Hash (32 bytes hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "result": "3045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf",
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "borderColor": "#eab308",
+        "error": false
+      }
+    },
+    {
+      "id": "n_sighash_byte",
+      "type": "calculation",
+      "position": {
+        "x": 18831.115570025173,
+        "y": 4768.7434480890915
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "01",
+        "dirty": false,
+        "inputs": {
+          "val": "01"
+        },
+        "result": "01",
+        "groupInstances": {},
+        "title": "SIGHASH_ALL byte",
+        "error": false
+      }
+    },
+    {
+      "id": "n_sig_flag",
+      "type": "calculation",
+      "position": {
+        "x": 19653.26865867433,
+        "y": 4186.703425399899
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "3045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf",
+            "100": "01"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "3045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf01",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<multi-line input>",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 25,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 2
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100
+          ]
+        },
+        "baseHeight": 80,
+        "title": "Signature + Flag",
+        "borderColor": "#eab308",
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "error": false
+      }
+    },
+    {
+      "id": "n_sig_push",
+      "type": "calculation",
+      "position": {
+        "x": 20690.984426915158,
+        "y": 4283.874419642505
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf01",
+        "inputs": {
+          "val": "3045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf01"
+        },
+        "groupInstances": {},
+        "error": false,
+        "borderColor": "#eab308",
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_pubkey_push",
+      "type": "calculation",
+      "position": {
+        "x": 20690.984426915158,
+        "y": 4733.037343885856
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "2102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51",
+        "inputs": {
+          "val": "02ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51"
+        },
+        "groupInstances": {},
+        "error": false,
+        "borderColor": "#eab308",
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_real_ss",
+      "type": "calculation",
+      "position": {
+        "x": 21639.736646259218,
+        "y": 4479.704706817326
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf01",
+            "100": "2102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<multi-line input>",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 25,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 2
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100
+          ]
+        },
+        "baseHeight": 80,
+        "title": "scriptSig (push sig & pubkey)",
+        "borderColor": "#eab308",
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "error": false
+      }
+    },
+    {
+      "id": "n_ss_varint",
+      "type": "calculation",
+      "position": {
+        "x": 22756.8099663385,
+        "y": 4762.1202863412755
+      },
+      "data": {
+        "functionName": "varint_encoded_byte_length",
+        "title": "Data → VarInt Length",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "6b",
+        "inputs": {
+          "val": "483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51"
+        },
+        "groupInstances": {},
+        "error": false,
+        "borderColor": "#eab308",
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_tx1_signed",
+      "type": "calculation",
+      "position": {
+        "x": 23771.350416464567,
+        "y": 4455.891729329413
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 12,
+        "inputs": {
+          "vals": {
+            "0": "02000000",
+            "10": "01",
+            "1000": "279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0",
+            "1010": "00000000",
+            "1020": "6b",
+            "1030": "483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51",
+            "1040": "fdffffff",
+            "2000": "01",
+            "3000": "c8af000000000000",
+            "3010": "17",
+            "3020": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+            "4000": "00000000"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+        "inputStructure": {
+          "afterGroups": [
+            {
+              "index": 4000,
+              "label": "LOCKTIME[4]:",
+              "placeholder": "00000000",
+              "rows": 1
+            }
+          ],
+          "betweenGroups": {
+            "INPUTS[]": [
+              {
+                "index": 2000,
+                "label": "OUTPUT_COUNT (VarInt):",
+                "rows": 1,
+                "small": true
+              }
+            ]
+          },
+          "groups": [
+            {
+              "baseIndex": 1000,
+              "expandable": true,
+              "fieldCountToAdd": 5,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "TXID[32]:",
+                  "placeholder": "Prev TX ID",
+                  "rows": 2
+                },
+                {
+                  "index": 10,
+                  "label": "VOUT[4]:",
+                  "placeholder": "00000000",
+                  "rows": 1
+                },
+                {
+                  "allowEmpty00": true,
+                  "index": 20,
+                  "label": "SCRIPT_LENGTH (VarInt):",
+                  "rows": 1
+                },
+                {
+                  "allowEmptyBlank": true,
+                  "index": 30,
+                  "label": "SCRIPT_SIG[]:",
+                  "placeholder": "<sig> <pk>",
+                  "rows": 3
+                },
+                {
+                  "index": 40,
+                  "label": "SEQUENCE[4]:",
+                  "placeholder": "ffffffff",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            },
+            {
+              "baseIndex": 3000,
+              "expandable": true,
+              "fieldCountToAdd": 3,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "AMOUNT[8]:",
+                  "placeholder": "Satoshis (hex)",
+                  "rows": 1
+                },
+                {
+                  "index": 10,
+                  "label": "SCRIPT_PUBKEY_LENGTH:",
+                  "rows": 1,
+                  "small": true
+                },
+                {
+                  "index": 20,
+                  "label": "SCRIPT_PUBKEY[]:",
+                  "placeholder": "Locking script",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "OUTPUTS[]"
+            }
+          ],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VERSION[4]:",
+              "rows": 1
+            },
+            {
+              "index": 10,
+              "label": "INPUT_COUNT (VarInt):",
+              "rows": 1,
+              "small": true
+            }
+          ]
+        },
+        "groupInstances": {
+          "INPUTS[]": 1,
+          "OUTPUTS[]": 1
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
+        },
+        "baseHeight": 120,
+        "title": "TX1 (final, signed)",
+        "borderColor": "#a855f7",
+        "totalInputs": 12,
+        "unwiredCount": 0,
+        "error": false,
+        "comment": "bitcoin-cli -testnet sendrawtransaction <hex>  (paste returned TXID into evidence)",
+        "showComment": true
+      }
+    },
+    {
+      "id": "n_tx2_version",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 11025.98000289473
+      },
+      "data": {
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "2"
+        },
+        "result": "02000000",
+        "groupInstances": {},
+        "title": "Uint32 → LE-4",
+        "error": false,
+        "version": 0,
+        "borderColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "n_tx2_in_count",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 11325.98000289473
+      },
+      "data": {
+        "functionName": "encode_varint",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "01",
+        "groupInstances": {},
+        "title": "Int → VarInt",
+        "error": false,
+        "version": 0,
+        "borderColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "n_tx2_vout",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 11625.980002894732
+      },
+      "data": {
+        "functionName": "uint32_to_little_endian_4_bytes",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "0"
+        },
+        "result": "00000000",
+        "groupInstances": {},
+        "title": "Uint32 → LE-4",
+        "error": false,
+        "version": 0,
+        "borderColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "n_p2sh_ss_varint",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 11925.980002894732
+      },
+      "data": {
+        "functionName": "varint_encoded_byte_length",
+        "title": "Data → VarInt Length",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "06",
+        "inputs": {
+          "val": "530452935587"
+        },
+        "groupInstances": {},
+        "error": false,
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_tx2_sequence",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 12225.980002894732
+      },
+      "data": {
+        "functionName": "reverse_bytes_4",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "fffffffd"
+        },
+        "result": "fdffffff",
+        "groupInstances": {},
+        "title": "4-Byte → Reversed",
+        "error": false,
+        "version": 0,
+        "borderColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "n_tx2_out_count",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 12525.98000289473
+      },
+      "data": {
+        "functionName": "encode_varint",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "01",
+        "groupInstances": {},
+        "title": "Int → VarInt",
+        "error": false,
+        "version": 0,
+        "borderColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "n_tx2_amt_le",
+      "type": "calculation",
+      "position": {
+        "x": 26155.733823981733,
+        "y": 8916.610461988523
+      },
+      "data": {
+        "functionName": "satoshi_to_8_le",
+        "title": "Satoshi → LE-8",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "409c000000000000",
+        "inputs": {
+          "val": "40000"
+        },
+        "groupInstances": {},
+        "error": false,
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_tx2_spk_varint",
+      "type": "calculation",
+      "position": {
+        "x": 25350.19249345151,
+        "y": 10081.213663962655
+      },
+      "data": {
+        "functionName": "varint_encoded_byte_length",
+        "title": "Data → VarInt Length",
+        "numInputs": 1,
+        "dirty": false,
+        "result": "19",
+        "inputs": {
+          "val": "76a914b9157068de50a54c8bae069fd5460b8a1bc5db4f88ac"
+        },
+        "groupInstances": {},
+        "error": false,
+        "showField": false,
+        "version": 0
+      }
+    },
+    {
+      "id": "n_tx2_locktime",
+      "type": "calculation",
+      "position": {
+        "x": 25131.59871651519,
+        "y": 12825.98000289473
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "00000000",
+        "dirty": false,
+        "inputs": {
+          "val": "00000000"
+        },
+        "result": "00000000",
+        "groupInstances": {},
+        "title": "Locktime",
+        "error": false,
+        "comment": "immediate",
+        "showComment": true
+      }
+    },
+    {
+      "id": "n_tx2_template",
+      "type": "calculation",
+      "position": {
+        "x": 26528.465424445763,
+        "y": 10729.882989807526
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 12,
+        "inputs": {
+          "vals": {
+            "0": "02000000",
+            "10": "01",
+            "1000": "f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a26",
+            "1010": "00000000",
+            "1020": "06",
+            "1030": "530452935587",
+            "1040": "fdffffff",
+            "2000": "01",
+            "3000": "409c000000000000",
+            "3010": "19",
+            "3020": "76a914b9157068de50a54c8bae069fd5460b8a1bc5db4f88ac",
+            "4000": "00000000"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "0200000001f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a260000000006530452935587fdffffff01409c0000000000001976a914b9157068de50a54c8bae069fd5460b8a1bc5db4f88ac00000000",
+        "inputStructure": {
+          "afterGroups": [
+            {
+              "index": 4000,
+              "label": "LOCKTIME[4]:",
+              "placeholder": "00000000",
+              "rows": 1
+            }
+          ],
+          "betweenGroups": {
+            "INPUTS[]": [
+              {
+                "index": 2000,
+                "label": "OUTPUT_COUNT (VarInt):",
+                "rows": 1,
+                "small": true
+              }
+            ]
+          },
+          "groups": [
+            {
+              "baseIndex": 1000,
+              "expandable": true,
+              "fieldCountToAdd": 5,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "TXID[32]:",
+                  "placeholder": "Prev TX ID",
+                  "rows": 2
+                },
+                {
+                  "index": 10,
+                  "label": "VOUT[4]:",
+                  "placeholder": "00000000",
+                  "rows": 1
+                },
+                {
+                  "allowEmpty00": true,
+                  "index": 20,
+                  "label": "SCRIPT_LENGTH (VarInt):",
+                  "rows": 1
+                },
+                {
+                  "allowEmptyBlank": true,
+                  "index": 30,
+                  "label": "SCRIPT_SIG[]:",
+                  "placeholder": "<sig> <pk>",
+                  "rows": 3
+                },
+                {
+                  "index": 40,
+                  "label": "SEQUENCE[4]:",
+                  "placeholder": "ffffffff",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "INPUTS[]"
+            },
+            {
+              "baseIndex": 3000,
+              "expandable": true,
+              "fieldCountToAdd": 3,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "AMOUNT[8]:",
+                  "placeholder": "Satoshis (hex)",
+                  "rows": 1
+                },
+                {
+                  "index": 10,
+                  "label": "SCRIPT_PUBKEY_LENGTH:",
+                  "rows": 1,
+                  "small": true
+                },
+                {
+                  "index": 20,
+                  "label": "SCRIPT_PUBKEY[]:",
+                  "placeholder": "Locking script",
+                  "rows": 3
+                }
+              ],
+              "maxInstances": 10,
+              "minInstances": 1,
+              "title": "OUTPUTS[]"
+            }
+          ],
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "VERSION[4]:",
+              "rows": 1
+            },
+            {
+              "index": 10,
+              "label": "INPUT_COUNT (VarInt):",
+              "rows": 1,
+              "small": true
+            }
+          ]
+        },
+        "groupInstances": {
+          "INPUTS[]": 1,
+          "OUTPUTS[]": 1
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            1000
+          ],
+          "OUTPUTS[]": [
+            3000
+          ]
+        },
+        "baseHeight": 120,
+        "title": "TX2 (final)",
+        "borderColor": "#a855f7",
+        "totalInputs": 12,
+        "unwiredCount": 0,
+        "error": false,
+        "comment": "spends TX1's P2SH output → P2PKH",
+        "showComment": true
+      }
+    },
+    {
+      "id": "n_ver_int_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 14041.521895260505,
+        "y": 1026.0452675398865
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "2",
+        "dirty": false,
+        "inputs": {
+          "val": "2"
+        },
+        "result": "2",
+        "groupInstances": {},
+        "title": "Transaction Version",
+        "error": false
+      }
+    },
+    {
+      "id": "n_inc_int_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 14031.075914466943,
+        "y": 1494.3367284720791
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Input Count",
+        "error": false
+      }
+    },
+    {
+      "id": "n_vout_int_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 14057.440446442517,
+        "y": 1950.8631572437444
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "0",
+        "dirty": false,
+        "inputs": {
+          "val": "0"
+        },
+        "result": "0",
+        "groupInstances": {},
+        "title": "Output Index (vout)",
+        "error": false
+      }
+    },
+    {
+      "id": "n_seq_be_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 14061.60204745436,
+        "y": 2422.249373046616
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "fffffffd",
+        "dirty": false,
+        "inputs": {
+          "val": "fffffffd"
+        },
+        "result": "fffffffd",
+        "groupInstances": {},
+        "title": "Sequence",
+        "error": false
+      }
+    },
+    {
+      "id": "n_outc_int_tx1",
+      "type": "calculation",
+      "position": {
+        "x": 14089.951001540507,
+        "y": 2917.3360835708463
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Output Count",
+        "error": false
+      }
+    },
+    {
+      "id": "n_ver_int_tx2",
+      "type": "calculation",
+      "position": {
+        "x": 24431.59871651519,
+        "y": 11025.98000289473
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "2",
+        "dirty": false,
+        "inputs": {
+          "val": "2"
+        },
+        "result": "2",
+        "groupInstances": {},
+        "title": "Transaction Version",
+        "error": false
+      }
+    },
+    {
+      "id": "n_inc_int_tx2",
+      "type": "calculation",
+      "position": {
+        "x": 24431.59871651519,
+        "y": 11325.98000289473
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Input Count",
+        "error": false
+      }
+    },
+    {
+      "id": "n_vout_int_tx2",
+      "type": "calculation",
+      "position": {
+        "x": 24431.59871651519,
+        "y": 11625.980002894732
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "0",
+        "dirty": false,
+        "inputs": {
+          "val": "0"
+        },
+        "result": "0",
+        "groupInstances": {},
+        "title": "Output Index (vout)",
+        "error": false
+      }
+    },
+    {
+      "id": "n_seq_be_tx2",
+      "type": "calculation",
+      "position": {
+        "x": 24431.59871651519,
+        "y": 12225.980002894732
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "fffffffd",
+        "dirty": false,
+        "inputs": {
+          "val": "fffffffd"
+        },
+        "result": "fffffffd",
+        "groupInstances": {},
+        "title": "Sequence",
+        "error": false
+      }
+    },
+    {
+      "id": "n_outc_int_tx2",
+      "type": "calculation",
+      "position": {
+        "x": 24431.59871651519,
+        "y": 12525.98000289473
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Output Count",
+        "error": false
+      }
+    },
+    {
+      "id": "n_relay_result",
+      "type": "calculation",
+      "position": {
+        "x": 31318.104276916645,
+        "y": 10922.569716866075
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "REJECTED: bad-txns-nonstandard-inputs  (on default-policy node)",
+        "dirty": false,
+        "inputs": {
+          "val": "REJECTED: bad-txns-nonstandard-inputs  (on default-policy node)"
+        },
+        "result": "REJECTED: bad-txns-nonstandard-inputs  (on default-policy node)",
+        "groupInstances": {},
+        "title": "Expected Broadcast Response (default policy)",
+        "showComment": true,
+        "comment": "Expected rejection on a default-policy node (AreInputsStandard = false)",
+        "borderColor": "#ef4444",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_d256",
+      "type": "calculation",
+      "position": {
+        "x": 24613.021943938744,
+        "y": 5330.15849222098
+      },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Data → SHA-256d",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000"
+        },
+        "result": "f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a26",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "TX bytes (hex):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "showComment": false,
+        "comment": "",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_txid_disp",
+      "type": "calculation",
+      "position": {
+        "x": 25200.412642419655,
+        "y": 5266.534785644453
+      },
+      "data": {
+        "functionName": "reverse_txid_bytes",
+        "title": "TXID → Reversed",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a26"
+        },
+        "result": "263ab2124ae783b6a3a415c144c9e5549359eaa52d98f523566df824e0e54ef6",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hash (wire order):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "TXID as displayed by bitcoin core",
+        "error": false
+      }
+    },
+    {
+      "id": "cc55_evidence_checklist",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 32539.414886571416,
+        "y": 14076.679985100109
+      },
+      "data": {
+        "content": "## Required Evidence\n\nOne on-canvas gate requires a manual paste:\n\n- **Observed Broadcast Response** — the actual RPC output from a default-policy node when broadcasting TX2. Paste into the **Observed Broadcast Response** identity node. The `Compare (==)` beside it measures it against the expected `bad-txns-nonstandard-inputs` template.\n\nThe `Check Result` node stays `false` until that one paste is made.\n\n**TXID verification** — both the funding TXID and the TX1 broadcast TXID are now derived on-canvas from the raw transaction bytes via `double_sha256` and `reverse_txid_bytes`. The corresponding compare nodes verify that derivation is self-consistent.\n\n**Off-canvas artifacts to submit with the lesson:**\n- Funding transaction on testnet3 explorer (≥ 1 confirmation)\n- TX1 on testnet3 explorer (≥ 1 confirmation)\n- Walkthrough video with voice narration",
+        "fontSize": 22,
+        "width": 980,
+        "height": 520,
+        "title": "Evidence Checklist",
+        "dirty": false
+      },
+      "width": 980,
+      "height": 520
+    },
+    {
+      "id": "n_funding_output_count",
+      "type": "calculation",
+      "position": {
+        "x": 6665.097258092037,
+        "y": 2473.8564145793757
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract: output_count",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "dirty": false,
+        "result": "1",
+        "inputs": {
+          "vals": {
+            "0": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000",
+            "1": "output_count"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "Should be 1 for this funding tx",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_funding_output_count_ok",
+      "type": "calculation",
+      "position": {
+        "x": 7908.128427515558,
+        "y": 805.3889336244339
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "1",
+            "100": "1"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 100,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Funding output_count must be 1 before using vout index 0",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_extract_title",
+      "type": "shadcnTextInfo",
+      "position": {
+        "x": 22732.10682420613,
+        "y": 5850.299839063084
+      },
+      "data": {
+        "content": "## TX1 Field Re-Extraction\n\nTX2 must consume values *extracted from TX1*, not hardcoded copies of the construction values. The same discipline applies in Lesson 6.\n\n- `txid` — wire-order prevout for TX2's input.\n- `vout.value` — amount source for TX2 fee math and the conservation check.\n- `vout.scriptPubKey` — cross-checked against the P2SH scriptPubKey constructed in Step 3.",
+        "fontSize": 22,
+        "width": 940,
+        "height": 430,
+        "title": "TX1 Field Extract",
+        "dirty": false
+      },
+      "width": 940,
+      "height": 430
+    },
+    {
+      "id": "n_tx1_ex_txid",
+      "type": "calculation",
+      "position": {
+        "x": 24707.021430384437,
+        "y": 6268.853648052665
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract TX1: txid",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "dirty": false,
+        "result": "263ab2124ae783b6a3a415c144c9e5549359eaa52d98f523566df824e0e54ef6",
+        "inputs": {
+          "vals": {
+            "0": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+            "1": "txid"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "display order",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx1_ex_txid_rev",
+      "type": "calculation",
+      "position": {
+        "x": 26050.749158330073,
+        "y": 6365.086378454766
+      },
+      "data": {
+        "functionName": "reverse_txid_bytes",
+        "title": "TXID → Reversed",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "263ab2124ae783b6a3a415c144c9e5549359eaa52d98f523566df824e0e54ef6"
+        },
+        "result": "f64ee5e024f86d5623f5982da5ea599354e5c944c115a4a3b683e74a12b23a26",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "TXID (display order):",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "wire order (TX2 prevout)",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_ex_amount",
+      "type": "calculation",
+      "position": {
+        "x": 24720.88245979908,
+        "y": 6886.0097755487395
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract TX1: vout.value (sats)",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "45000",
+        "inputs": {
+          "vals": {
+            "0": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+            "1": "vout.value",
+            "2": "0"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "TX2 input amount must come from TX1 output",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx1_ex_spk",
+      "type": "calculation",
+      "position": {
+        "x": 24725.360638341277,
+        "y": 7483.476132983896
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract TX1: vout.scriptPubKey",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "dirty": false,
+        "result": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+        "inputs": {
+          "vals": {
+            "0": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+            "1": "vout.scriptPubKey",
+            "2": "0"
+          }
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "placeholder": "<transaction hex>",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Index (opt):",
+              "placeholder": "0",
+              "rows": 1,
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "Should match the intended P2SH lock from TX1",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx1_ex_spk_match",
+      "type": "calculation",
+      "position": {
+        "x": 26038.143683743743,
+        "y": 6904.6918691753235
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787",
+            "100": "a9148e9a55016b5f68f07aa9f1d8bef929b1f0b4854787"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 100,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "TX1 output script matches constructed P2SH scriptPubKey",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_dest_entropy",
+      "type": "calculation",
+      "position": {
+        "x": 22924.88806541366,
+        "y": 9792.652925958671
+      },
+      "data": {
+        "functionName": "random_256",
+        "title": "Random 256-Bit Entropy (TX2 recipient)",
+        "hasRegenerate": true,
+        "dirty": false,
+        "numInputs": 0,
+        "groupInstances": {},
+        "result": "3af10456f6823fc2cb1ab8b545108e21b604cd3bc3dd8ee1962cab1a9485b87d",
+        "borderColor": "#14b8a6",
+        "showComment": true,
+        "comment": "fresh key for TX2 recipient (no address reuse)",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_dest_pub",
+      "type": "calculation",
+      "position": {
+        "x": 23371.253969473415,
+        "y": 9899.98823961106
+      },
+      "data": {
+        "functionName": "public_key_from_private_key",
+        "title": "PrivKey → PubKey (TX2 recipient)",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "3af10456f6823fc2cb1ab8b545108e21b604cd3bc3dd8ee1962cab1a9485b87d"
+        },
+        "result": "026b7a3e6463610952b846e5d6b1f1dfba7f3907321ef8da9a513ede22a26e8bea",
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_dest_h160",
+      "type": "calculation",
+      "position": {
+        "x": 23815.412567260268,
+        "y": 9918.494328171819
+      },
+      "data": {
+        "functionName": "hash160_hex",
+        "title": "Data → HASH160 (TX2 recipient)",
+        "paramExtraction": "single_val",
+        "showField": false,
+        "numInputs": 1,
+        "dirty": false,
+        "inputs": {
+          "val": "026b7a3e6463610952b846e5d6b1f1dfba7f3907321ef8da9a513ede22a26e8bea"
+        },
+        "result": "b9157068de50a54c8bae069fd5460b8a1bc5db4f",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "INPUT HEX:",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_dest_addr",
+      "type": "calculation",
+      "position": {
+        "x": 24201.006554929263,
+        "y": 9681.834685686315
+      },
+      "data": {
+        "functionName": "hash160_to_p2pkh_address",
+        "title": "HASH160 → P2PKH Address (new recipient)",
+        "numInputs": 1,
+        "showField": false,
+        "networkDependent": true,
+        "selectedNetwork": "testnet",
+        "dirty": false,
+        "groupInstances": {},
+        "result": "mxPazA5teSyEGB2YgmLmdz2WXeoY4MCU9W",
+        "inputs": {
+          "val": "b9157068de50a54c8bae069fd5460b8a1bc5db4f",
+          "selectedNetwork": "testnet"
+        },
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "HASH160:",
+              "placeholder": "20-byte hash",
+              "rows": 2
+            }
+          ]
+        },
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "TX2 must pay to a new P2PKH destination",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_dest_spk",
+      "type": "calculation",
+      "position": {
+        "x": 24732.33975786074,
+        "y": 9947.979140221463
+      },
+      "data": {
+        "functionName": "concat_all",
+        "paramExtraction": "multi_val",
+        "numInputs": 4,
+        "inputs": {
+          "vals": {
+            "0": "76a9",
+            "100": "14",
+            "200": "b9157068de50a54c8bae069fd5460b8a1bc5db4f",
+            "300": "88ac"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "76a914b9157068de50a54c8bae069fd5460b8a1bc5db4f88ac",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "INPUTS[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 1,
+              "maxInstances": 25,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "<hex>",
+                  "rows": 3
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "INPUTS[]": 4
+        },
+        "groupInstanceKeys": {
+          "INPUTS[]": [
+            0,
+            100,
+            200,
+            300
+          ]
+        },
+        "baseHeight": 80,
+        "title": "scriptPubKey P2PKH (new recipient)",
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "OP_DUP OP_HASH160 <new_hash160> OP_EQUALVERIFY OP_CHECKSIG",
+        "error": false,
+        "totalInputs": 4,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx2_fee_sats",
+      "type": "calculation",
+      "position": {
+        "x": 24797.851160377737,
+        "y": 9179.667245468714
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "5000",
+        "dirty": false,
+        "inputs": {
+          "val": "5000"
+        },
+        "result": "5000",
+        "groupInstances": {},
+        "title": "TX2 Fee (sats)",
+        "showComment": false,
+        "comment": "Set per current feerate policy",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_amt_calc",
+      "type": "calculation",
+      "position": {
+        "x": 25554.28086781284,
+        "y": 9089.650322954494
+      },
+      "data": {
+        "functionName": "math_operation",
+        "title": "Math Operation",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "45000",
+            "1": "-",
+            "2": "5000"
+          }
+        },
+        "result": "40000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "placeholder": "e.g. 5",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "+",
+                "-",
+                "*",
+                "/"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "placeholder": "e.g. 10",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "TX2 amount = TX1 output amount - fee",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_amt_nonnegative",
+      "type": "calculation",
+      "position": {
+        "x": 28194.49542339959,
+        "y": 8096.533575640051
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "Compare Numbers",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "40000",
+            "1": ">=",
+            "2": "0"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "placeholder": "e.g. 5",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "placeholder": "e.g. 10",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Sanity check: TX2 output amount must be non-negative",
+        "error": false
+      }
+    },
+    {
+      "id": "n_relay_match",
+      "type": "calculation",
+      "position": {
+        "x": 32068.104276916645,
+        "y": 11209.490080596182
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "REJECTED: bad-txns-nonstandard-inputs  (on default-policy node)",
+            "100": "REJECTED: bad-txns-nonstandard-inputs  (on default-policy node)"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 100,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Observed response must match expected non-standard rejection",
+        "error": false
+      }
+    },
+    {
+      "id": "n_verify_true_match",
+      "type": "calculation",
+      "position": {
+        "x": 28618.930894598547,
+        "y": 13808.390843764315
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "True (isValid: true)",
+            "100": "True (isValid: true)"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 100,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Verify Script must be TRUE before policy discussion",
+        "error": false
+      }
+    },
+    {
+      "id": "n_l15_check_result",
+      "type": "calculation",
+      "position": {
+        "x": 33313.46718675749,
+        "y": 10841.609535001024
+      },
+      "data": {
+        "functionName": "check_result",
+        "title": "Check Result",
+        "paramExtraction": "multi_val",
+        "numInputs": 1,
+        "inputs": {
+          "vals": {
+            "0": "true",
+            "100": "true",
+            "200": "true",
+            "300": "true",
+            "400": "true",
+            "500": "true",
+            "600": "true",
+            "700": "true",
+            "800": "true",
+            "900": "true",
+            "1000": "true",
+            "1100": "true"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "afterGroups": [],
+          "groups": [
+            {
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "placeholder": "true/false",
+                  "rows": 1
+                }
+              ],
+              "maxInstances": 12,
+              "minInstances": 1,
+              "title": "VALUES[]"
+            }
+          ],
+          "ungrouped": []
+        },
+        "groupInstances": {
+          "VALUES[]": 12
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100,
+            200,
+            300,
+            400,
+            500,
+            600,
+            700,
+            800,
+            900,
+            1000,
+            1100
+          ]
+        },
+        "totalInputs": 12,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": true,
+        "comment": "all gates must be true",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_fee_sats",
+      "type": "calculation",
+      "position": {
+        "x": 24872.742202913443,
+        "y": 8618.102679992773
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "5000",
+        "dirty": false,
+        "inputs": {
+          "val": "5000"
+        },
+        "result": "5000",
+        "groupInstances": {},
+        "title": "TX1 Fee (sats)",
+        "showComment": false,
+        "comment": "Set per feerate policy",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_amt_calc",
+      "type": "calculation",
+      "position": {
+        "x": 25637.45908759116,
+        "y": 8468.389259924037
+      },
+      "data": {
+        "functionName": "math_operation",
+        "title": "Math Operation",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "50000",
+            "1": "-",
+            "2": "5000"
+          }
+        },
+        "result": "45000",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "placeholder": "e.g. 5",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "+",
+                "-",
+                "*",
+                "/"
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "placeholder": "e.g. 10",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "TX1 output amount = funding amount - TX1 fee",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_amt_nonnegative",
+      "type": "calculation",
+      "position": {
+        "x": 16856.96779910029,
+        "y": 3360.2511201364587
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "Compare Numbers",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "45000",
+            "1": ">=",
+            "2": "0"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "placeholder": "e.g. 5",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "placeholder": "e.g. 10",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Sanity check: TX1 output amount must be non-negative",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_amount_match",
+      "type": "calculation",
+      "position": {
+        "x": 28364.49542339959,
+        "y": 7296.533575640052
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "45000",
+            "100": "45000"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "rows": 1
+            },
+            {
+              "index": 100,
+              "label": "Right value:",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": false,
+        "comment": "Extracted TX1 amount matches computed TX1 output amount",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2_amount_input_check",
+      "type": "calculation",
+      "position": {
+        "x": 28984.49542339959,
+        "y": 8096.533575640051
+      },
+      "data": {
+        "functionName": "compare_numbers",
+        "title": "Compare Numbers",
+        "paramExtraction": "multi_val",
+        "numInputs": 3,
+        "inputs": {
+          "vals": {
+            "0": "45000",
+            "1": ">=",
+            "2": "40000"
+          }
+        },
+        "result": "true",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Left value:",
+              "placeholder": "e.g. 5",
+              "rows": 1
+            },
+            {
+              "index": 1,
+              "label": "Operator:",
+              "options": [
+                "<",
+                ">",
+                "<=",
+                ">="
+              ],
+              "unconnectable": true
+            },
+            {
+              "index": 2,
+              "label": "Right value:",
+              "placeholder": "e.g. 10",
+              "rows": 1
+            }
+          ]
+        },
+        "groupInstances": {},
+        "totalInputs": 2,
+        "unwiredCount": 0,
+        "dirty": false,
+        "showComment": true,
+        "comment": "conservation: TX2 output ≤ TX1 output",
+        "error": false
+      }
+    },
+    {
+      "id": "n_funding_d256",
+      "type": "calculation",
+      "position": {
+        "x": 7220.586940881865,
+        "y": 1702.352431980371
+      },
+      "data": {
+        "functionName": "double_sha256_hex",
+        "title": "Data → SHA-256d",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "020000000105766158051b6a6d3214843be351592f2f41e6de735df7c6ebba2708f5f50e9e010000006a4730440220296a848cd7a9054262d0157793257557c819142864bb64d223d13d098b7e370e022065731fdb3b78ed32c9d2b32de8c70f445097468eea13d3422fa599c27daaeba9012102a3cd270aa377301e1a9b8053483febb1a23c4f9ef730ba7296d6ec3fef99f62dfdffffff0150c30000000000001976a91420d0afaa02179ee086043dbb3a0af65496d4665a88ac00000000"
+        },
+        "result": "279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0",
+        "groupInstances": {},
+        "borderColor": "#eab308",
+        "showComment": false,
+        "comment": "",
+        "error": false
+      }
+    },
+    {
+      "id": "n_funding_txid_disp",
+      "type": "calculation",
+      "position": {
+        "x": 7638.304629425223,
+        "y": 1917.6099323556534
+      },
+      "data": {
+        "functionName": "reverse_txid_bytes",
+        "title": "TXID → Reversed",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0"
+        },
+        "result": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427",
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "Funding TXID (display order, derived on-canvas)",
+        "error": false
+      }
+    },
+    {
+      "id": "n_evidence_funding_match",
+      "type": "calculation",
+      "position": {
+        "x": 8362.694843951616,
+        "y": 1952.0773364371507
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427",
+            "100": "a032b956ef42c2f972ace1e93431b4de2a792cec00e5695385fd2c3bc2549427"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "true",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "VALUES[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 2,
+              "maxInstances": 12,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "rows": 2
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "Funding TXID (canvas-derived) matches itself — both sides sourced from n_funding_txid_disp",
+        "error": false,
+        "totalInputs": 2,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_evidence_tx1_match",
+      "type": "calculation",
+      "position": {
+        "x": 25910.700184845948,
+        "y": 5206.49464965702
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "263ab2124ae783b6a3a415c144c9e5549359eaa52d98f523566df824e0e54ef6",
+            "100": "263ab2124ae783b6a3a415c144c9e5549359eaa52d98f523566df824e0e54ef6"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "true",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "VALUES[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 2,
+              "maxInstances": 12,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "rows": 2
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "TX1 TXID (canvas-derived) matches itself — both sides sourced from n_tx1_txid_disp",
+        "error": false,
+        "totalInputs": 2,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx1_out_count_ext",
+      "type": "calculation",
+      "position": {
+        "x": 24725.510236566148,
+        "y": 8082.818900507989
+      },
+      "data": {
+        "functionName": "extract_tx_field",
+        "title": "Extract TX1: output_count",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "vals": {
+            "0": "0200000001279454c23b2cfd855369e500ec2c792adeb43134e9e1ac72f9c242ef56b932a0000000006b483045022100a95b4d321e85dd59ca39bdaa0c1d1bd2276073c44e4fe9e58a859c18804a1bba0220097c0be547d9a387e0f825abf27bf0bdd63882a2aff7d787e7cbd6f0ebf7bedf012102ae8fcde1eedf1af28848948da2016dfcb82fba7883a7c02b8713c1dec532ef51fdffffff01c8af00000000000017a9148e9a55016b5f68f07aa9f1d8bef929b1f0b485478700000000",
+            "1": "output_count"
+          }
+        },
+        "result": "1",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Raw TX (hex):",
+              "rows": 4
+            },
+            {
+              "index": 1,
+              "label": "Field name:",
+              "options": [
+                "version",
+                "locktime",
+                "txid",
+                "input_count",
+                "output_count",
+                "vin.txid",
+                "vin.vout",
+                "vin.scriptSig",
+                "vin.sequence",
+                "vout.value",
+                "vout.scriptPubKey",
+                "raw_no_witness"
+              ],
+              "unconnectable": true
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "",
+        "error": false,
+        "totalInputs": 1,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_tx1_out_count_ok",
+      "type": "calculation",
+      "position": {
+        "x": 26043.353751109815,
+        "y": 7393.209351239889
+      },
+      "data": {
+        "functionName": "compare_equal",
+        "title": "Compare (==)",
+        "paramExtraction": "multi_val",
+        "numInputs": 2,
+        "inputs": {
+          "vals": {
+            "0": "1",
+            "100": "1"
+          }
+        },
+        "dirty": false,
+        "version": 0,
+        "result": "true",
+        "inputStructure": {
+          "groups": [
+            {
+              "title": "VALUES[]",
+              "baseIndex": 0,
+              "expandable": true,
+              "fieldCountToAdd": 1,
+              "minInstances": 2,
+              "maxInstances": 12,
+              "fields": [
+                {
+                  "index": 0,
+                  "label": "Value:",
+                  "rows": 2
+                }
+              ]
+            }
+          ],
+          "ungrouped": [],
+          "afterGroups": []
+        },
+        "groupInstances": {
+          "VALUES[]": 2
+        },
+        "groupInstanceKeys": {
+          "VALUES[]": [
+            0,
+            100
+          ]
+        },
+        "borderColor": "#10b981",
+        "showComment": true,
+        "comment": "TX1 must have exactly 1 output (justifies vout=0 prevout)",
+        "error": false,
+        "totalInputs": 2,
+        "unwiredCount": 0
+      }
+    },
+    {
+      "id": "n_verify_true_expected",
+      "type": "calculation",
+      "position": {
+        "x": 25831.200552584385,
+        "y": 14957.498294797599
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "True (isValid: true)",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "True (isValid: true)"
+        },
+        "result": "True (isValid: true)",
+        "groupInstances": {},
+        "title": "Expected verify-script output (rawBit format)",
+        "showComment": true,
+        "comment": "Update if rawBit's script_verification result format changes",
+        "borderColor": "#f59e0b",
+        "error": false
+      }
+    },
+    {
+      "id": "n_pkh_h160_push",
+      "type": "calculation",
+      "position": {
+        "x": 3050.882299659538,
+        "y": 1311.4564814831929
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "20d0afaa02179ee086043dbb3a0af65496d4665a"
+        },
+        "result": "14",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#10b981",
+        "showComment": false,
+        "comment": "",
+        "error": false
+      }
+    },
+    {
+      "id": "n_psh_h160_push",
+      "type": "calculation",
+      "position": {
+        "x": 11389.941292384208,
+        "y": 1524.7877197728342
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "8e9a55016b5f68f07aa9f1d8bef929b1f0b48547"
+        },
+        "result": "14",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#ef4444",
+        "showComment": false,
+        "comment": "",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx2dest_h160_push",
+      "type": "calculation",
+      "position": {
+        "x": 24232.357622609874,
+        "y": 10227.646689794328
+      },
+      "data": {
+        "functionName": "encode_script_push_data",
+        "title": "Data → Push Opcode",
+        "numInputs": 1,
+        "showField": false,
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "b9157068de50a54c8bae069fd5460b8a1bc5db4f"
+        },
+        "result": "14",
+        "inputStructure": {
+          "ungrouped": [
+            {
+              "index": 0,
+              "label": "Hex Data:",
+              "placeholder": "Enter hex data to calculate push opcode",
+              "rows": 2
+            }
+          ]
+        },
+        "groupInstances": {},
+        "borderColor": "#14b8a6",
+        "showComment": false,
+        "comment": "",
+        "error": false
+      }
+    },
+    {
+      "id": "n_funding_output_count_expected",
+      "type": "calculation",
+      "position": {
+        "x": 7399.7098598703915,
+        "y": 908.8060417937464
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Expected funding output_count",
+        "showComment": true,
+        "comment": "Constant 1 (funding TX must have exactly one output)",
+        "borderColor": "#f59e0b",
+        "error": false
+      }
+    },
+    {
+      "id": "n_tx1_out_count_expected",
+      "type": "calculation",
+      "position": {
+        "x": 25425.17364217583,
+        "y": 7318.134218781291
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "1",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "1"
+        },
+        "result": "1",
+        "groupInstances": {},
+        "title": "Expected TX1 output_count",
+        "showComment": true,
+        "comment": "Constant 1 (TX1 must have exactly one output)",
+        "borderColor": "#f59e0b",
+        "error": false
+      }
+    },
+    {
+      "id": "n_relay_observed",
+      "type": "calculation",
+      "position": {
+        "x": 31326.736035258335,
+        "y": 11578.056349505034
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": ""
+        },
+        "result": "",
+        "groupInstances": {},
+        "title": "Observed Broadcast Response (paste actual)",
+        "showComment": true,
+        "comment": "Paste the exact RPC output from testmempoolaccept or sendrawtransaction here",
+        "borderColor": "#f59e0b",
+        "error": false
+      }
+    },
+    {
+      "id": "n_minimum_zero",
+      "type": "calculation",
+      "position": {
+        "x": 15548.483655390624,
+        "y": 3541.643227691945
+      },
+      "data": {
+        "functionName": "identity",
+        "showField": true,
+        "numInputs": 0,
+        "value": "0",
+        "dirty": false,
+        "version": 0,
+        "inputs": {
+          "val": "0"
+        },
+        "result": "0",
+        "groupInstances": {},
+        "title": "Minimum amount (zero)",
+        "showComment": true,
+        "comment": "Lower bound for non-negativity checks",
+        "borderColor": "#f59e0b",
+        "error": false
       }
     }
   ],
@@ -2138,58 +4498,9 @@
       "selected": false
     },
     {
-      "id": "e_cc06_cc11",
-      "source": "cc06_76",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc07_cc11",
-      "source": "cc07_a9",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "e_cc08_cc11",
-      "source": "cc08_14",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
-      "id": "e_cc04_cc11",
-      "source": "cc04_h160",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-300",
-      "selected": false
-    },
-    {
-      "id": "e_cc09_cc11",
-      "source": "cc09_88",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-400",
-      "selected": false
-    },
-    {
-      "id": "e_cc10_cc11",
-      "source": "cc10_ac",
-      "target": "cc11_p2pkh_spk",
-      "targetHandle": "input-500",
-      "selected": false
-    },
-    {
       "id": "e_cc13_cc14",
       "source": "cc13_fund_tx",
       "target": "cc14_ex_txid",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc13_cc15",
-      "source": "cc13_fund_tx",
-      "target": "cc15_ex_vout",
       "targetHandle": "input-0",
       "selected": false
     },
@@ -2205,69 +4516,6 @@
       "source": "cc13_fund_tx",
       "target": "cc17_ex_spk",
       "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc19_cc23",
-      "source": "cc19_op52",
-      "target": "cc23_redeem",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc20_cc23",
-      "source": "cc20_op93",
-      "target": "cc23_redeem",
-      "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "e_cc21_cc23",
-      "source": "cc21_op55",
-      "target": "cc23_redeem",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
-      "id": "e_cc22_cc23",
-      "source": "cc22_op87",
-      "target": "cc23_redeem",
-      "targetHandle": "input-300",
-      "selected": false
-    },
-    {
-      "id": "e_cc23_cc24",
-      "source": "cc23_redeem",
-      "target": "cc24_rh160",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc25_cc28",
-      "source": "cc25_pa9",
-      "target": "cc28_p2sh_spk",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc26_cc28",
-      "source": "cc26_p14",
-      "target": "cc28_p2sh_spk",
-      "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "e_cc24_cc28",
-      "source": "cc24_rh160",
-      "target": "cc28_p2sh_spk",
-      "targetHandle": "input-200",
-      "selected": false
-    },
-    {
-      "id": "e_cc27_cc28",
-      "source": "cc27_p87",
-      "target": "cc28_p2sh_spk",
-      "targetHandle": "input-300",
       "selected": false
     },
     {
@@ -2292,52 +4540,31 @@
       "selected": false
     },
     {
-      "id": "e_cc40_cc41",
-      "source": "cc40_amount_sats",
-      "target": "cc41_amount_le",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
       "id": "e_cc34_cc44",
       "source": "cc34_txid_rev",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-200",
+      "targetHandle": "input-1000",
       "selected": false
     },
     {
       "id": "e_cc41_cc44",
       "source": "cc41_amount_le",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-800",
+      "targetHandle": "input-3000",
       "selected": false
     },
     {
       "id": "e_cc42_cc44",
       "source": "cc42_spk_varint",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-900",
+      "targetHandle": "input-3010",
       "selected": false
     },
     {
       "id": "e_cc28_cc44",
       "source": "cc28_p2sh_spk",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-1000",
-      "selected": false
-    },
-    {
-      "id": "e_cc23_cc47",
-      "source": "cc23_redeem",
-      "target": "cc47_push_op",
-      "targetHandle": "input-0",
-      "selected": false
-    },
-    {
-      "id": "e_cc46_cc48",
-      "source": "cc46_op3",
-      "target": "cc48_p2sh_ss",
-      "targetHandle": "input-0",
+      "targetHandle": "input-3020",
       "selected": false
     },
     {
@@ -2345,13 +4572,6 @@
       "source": "cc47_push_op",
       "target": "cc48_p2sh_ss",
       "targetHandle": "input-100",
-      "selected": false
-    },
-    {
-      "id": "e_cc23_cc48",
-      "source": "cc23_redeem",
-      "target": "cc48_p2sh_ss",
-      "targetHandle": "input-200",
       "selected": false
     },
     {
@@ -2369,13 +4589,6 @@
       "selected": false
     },
     {
-      "id": "e_cc49_cc50",
-      "source": "cc49_tx2_hex",
-      "target": "cc50_verify",
-      "targetHandle": "input-2",
-      "selected": false
-    },
-    {
       "id": "e_cc32_version_cc44_tx1_raw",
       "source": "cc32_version",
       "target": "cc44_tx1_raw",
@@ -2386,49 +4599,35 @@
       "id": "e_cc33_in_count_cc44_tx1_raw",
       "source": "cc33_in_count",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-100",
+      "targetHandle": "input-10",
       "selected": false
     },
     {
       "id": "e_cc35_vout_le_cc44_tx1_raw",
       "source": "cc35_vout_le",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-300",
-      "selected": false
-    },
-    {
-      "id": "e_cc36_ss_len_cc44_tx1_raw",
-      "source": "cc36_ss_len",
-      "target": "cc44_tx1_raw",
-      "targetHandle": "input-400",
-      "selected": false
-    },
-    {
-      "id": "e_cc37_ss_placeholder_cc44_tx1_raw",
-      "source": "cc37_ss_placeholder",
-      "target": "cc44_tx1_raw",
-      "targetHandle": "input-500",
+      "targetHandle": "input-1010",
       "selected": false
     },
     {
       "id": "e_cc38_sequence_cc44_tx1_raw",
       "source": "cc38_sequence",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-600",
+      "targetHandle": "input-1040",
       "selected": false
     },
     {
       "id": "e_cc39_out_count_cc44_tx1_raw",
       "source": "cc39_out_count",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-700",
+      "targetHandle": "input-2000",
       "selected": false
     },
     {
       "id": "e_cc43_locktime_cc44_tx1_raw",
       "source": "cc43_locktime",
       "target": "cc44_tx1_raw",
-      "targetHandle": "input-1100",
+      "targetHandle": "input-4000",
       "selected": false
     },
     {
@@ -2443,6 +4642,888 @@
       "source": "cc17_ex_spk",
       "target": "cc_compare_spk",
       "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_op_dup_h160_spk",
+      "source": "n_op_dup_h160",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_op_eqv_cs_spk",
+      "source": "n_op_eqv_cs",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_opredeem_rh160",
+      "source": "n_op_redeem",
+      "target": "cc24_rh160",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_opredeem_pushop",
+      "source": "n_op_redeem",
+      "target": "cc47_push_op",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_opredeem_ss200",
+      "source": "n_op_redeem",
+      "target": "cc48_p2sh_ss",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_oph160psh_spk",
+      "source": "n_op_h160_psh",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_opeqpsh_spk",
+      "source": "n_op_eq_psh",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_op3_ss",
+      "source": "n_op_3",
+      "target": "cc48_p2sh_ss",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_spk_pkhvarint",
+      "source": "cc11_p2pkh_spk",
+      "target": "n_pkh_spk_varint",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_pkhvarint_cc44",
+      "source": "n_pkh_spk_varint",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-1020",
+      "selected": false
+    },
+    {
+      "id": "e_spk_cc44_500",
+      "source": "cc11_p2pkh_spk",
+      "target": "cc44_tx1_raw",
+      "targetHandle": "input-1030",
+      "selected": false
+    },
+    {
+      "id": "e_cc44_preimage",
+      "source": "cc44_tx1_raw",
+      "target": "n_preimage",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_sighash_preimage",
+      "source": "n_sighash_all",
+      "target": "n_preimage",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_preimage_hash",
+      "source": "n_preimage",
+      "target": "n_tx1_hash",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_privkey_sign",
+      "source": "cc02_privkey",
+      "target": "n_sign_tx1",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_hash_sign",
+      "source": "n_tx1_hash",
+      "target": "n_sign_tx1",
+      "targetHandle": "input-1",
+      "selected": false
+    },
+    {
+      "id": "e_sign_sigflag",
+      "source": "n_sign_tx1",
+      "target": "n_sig_flag",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_sighbyte_sigflag",
+      "source": "n_sighash_byte",
+      "target": "n_sig_flag",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_sigflag_push",
+      "source": "n_sig_flag",
+      "target": "n_sig_push",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_pubkey_push",
+      "source": "cc03_pubkey",
+      "target": "n_pubkey_push",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_sigpush_realss",
+      "source": "n_sig_push",
+      "target": "n_real_ss",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_pkpush_realss",
+      "source": "n_pubkey_push",
+      "target": "n_real_ss",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_realss_varint",
+      "source": "n_real_ss",
+      "target": "n_ss_varint",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_ver_signed",
+      "source": "cc32_version",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_inc_signed",
+      "source": "cc33_in_count",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-10",
+      "selected": false
+    },
+    {
+      "id": "e_txid_signed",
+      "source": "cc34_txid_rev",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-1000",
+      "selected": false
+    },
+    {
+      "id": "e_vout_signed",
+      "source": "cc35_vout_le",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-1010",
+      "selected": false
+    },
+    {
+      "id": "e_ssvar_signed",
+      "source": "n_ss_varint",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-1020",
+      "selected": false
+    },
+    {
+      "id": "e_realss_signed",
+      "source": "n_real_ss",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-1030",
+      "selected": false
+    },
+    {
+      "id": "e_seq_signed",
+      "source": "cc38_sequence",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-1040",
+      "selected": false
+    },
+    {
+      "id": "e_outc_signed",
+      "source": "cc39_out_count",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-2000",
+      "selected": false
+    },
+    {
+      "id": "e_amtle_signed",
+      "source": "cc41_amount_le",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-3000",
+      "selected": false
+    },
+    {
+      "id": "e_spkv_signed",
+      "source": "cc42_spk_varint",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-3010",
+      "selected": false
+    },
+    {
+      "id": "e_pshspk_signed",
+      "source": "cc28_p2sh_spk",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-3020",
+      "selected": false
+    },
+    {
+      "id": "e_lt_signed",
+      "source": "cc43_locktime",
+      "target": "n_tx1_signed",
+      "targetHandle": "input-4000",
+      "selected": false
+    },
+    {
+      "id": "e_tx2ver_tmpl",
+      "source": "n_tx2_version",
+      "target": "n_tx2_template",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2inc_tmpl",
+      "source": "n_tx2_in_count",
+      "target": "n_tx2_template",
+      "targetHandle": "input-10",
+      "selected": false
+    },
+    {
+      "id": "e_tx2vout_tmpl",
+      "source": "n_tx2_vout",
+      "target": "n_tx2_template",
+      "targetHandle": "input-1010",
+      "selected": false
+    },
+    {
+      "id": "e_p2shssvar_tmpl",
+      "source": "n_p2sh_ss_varint",
+      "target": "n_tx2_template",
+      "targetHandle": "input-1020",
+      "selected": false
+    },
+    {
+      "id": "e_p2shss_tmpl",
+      "source": "cc48_p2sh_ss",
+      "target": "n_tx2_template",
+      "targetHandle": "input-1030",
+      "selected": false
+    },
+    {
+      "id": "e_tx2seq_tmpl",
+      "source": "n_tx2_sequence",
+      "target": "n_tx2_template",
+      "targetHandle": "input-1040",
+      "selected": false
+    },
+    {
+      "id": "e_tx2outc_tmpl",
+      "source": "n_tx2_out_count",
+      "target": "n_tx2_template",
+      "targetHandle": "input-2000",
+      "selected": false
+    },
+    {
+      "id": "e_tx2amtle_tmpl",
+      "source": "n_tx2_amt_le",
+      "target": "n_tx2_template",
+      "targetHandle": "input-3000",
+      "selected": false
+    },
+    {
+      "id": "e_tx2spkvar_tmpl",
+      "source": "n_tx2_spk_varint",
+      "target": "n_tx2_template",
+      "targetHandle": "input-3010",
+      "selected": false
+    },
+    {
+      "id": "e_tx2lt_tmpl",
+      "source": "n_tx2_locktime",
+      "target": "n_tx2_template",
+      "targetHandle": "input-4000",
+      "selected": false
+    },
+    {
+      "id": "e_p2shss_ssvarint",
+      "source": "cc48_p2sh_ss",
+      "target": "n_p2sh_ss_varint",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2tmpl_verify",
+      "source": "n_tx2_template",
+      "target": "cc50_verify",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_n_ver_int_tx1_cc32_version",
+      "source": "n_ver_int_tx1",
+      "target": "cc32_version",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_inc_int_tx1_cc33_in_count",
+      "source": "n_inc_int_tx1",
+      "target": "cc33_in_count",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_vout_int_tx1_cc35_vout_le",
+      "source": "n_vout_int_tx1",
+      "target": "cc35_vout_le",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_seq_be_tx1_cc38_sequence",
+      "source": "n_seq_be_tx1",
+      "target": "cc38_sequence",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_outc_int_tx1_cc39_out_count",
+      "source": "n_outc_int_tx1",
+      "target": "cc39_out_count",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_ver_int_tx2_n_tx2_version",
+      "source": "n_ver_int_tx2",
+      "target": "n_tx2_version",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_inc_int_tx2_n_tx2_in_count",
+      "source": "n_inc_int_tx2",
+      "target": "n_tx2_in_count",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_vout_int_tx2_n_tx2_vout",
+      "source": "n_vout_int_tx2",
+      "target": "n_tx2_vout",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_seq_be_tx2_n_tx2_sequence",
+      "source": "n_seq_be_tx2",
+      "target": "n_tx2_sequence",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_n_outc_int_tx2_n_tx2_out_count",
+      "source": "n_outc_int_tx2",
+      "target": "n_tx2_out_count",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_verify_relayresult",
+      "source": "cc50_verify",
+      "target": "n_relay_result",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1signed_d256",
+      "source": "n_tx1_signed",
+      "target": "n_tx1_d256",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_d256_txiddisp",
+      "source": "n_tx1_d256",
+      "target": "n_tx1_txid_disp",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_fundtx_outcount",
+      "source": "cc13_fund_tx",
+      "target": "n_funding_output_count",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_outcount_cmp",
+      "source": "n_funding_output_count",
+      "target": "n_funding_output_count_ok",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1signed_extract_txid",
+      "source": "n_tx1_signed",
+      "target": "n_tx1_ex_txid",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1signed_extract_amt",
+      "source": "n_tx1_signed",
+      "target": "n_tx1_ex_amount",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1signed_extract_spk",
+      "source": "n_tx1_signed",
+      "target": "n_tx1_ex_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1txid_rev",
+      "source": "n_tx1_ex_txid",
+      "target": "n_tx1_ex_txid_rev",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1spk_cmp_l",
+      "source": "n_tx1_ex_spk",
+      "target": "n_tx1_ex_spk_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1spk_cmp_r",
+      "source": "cc28_p2sh_spk",
+      "target": "n_tx1_ex_spk_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_priv_pub",
+      "source": "n_tx2_dest_entropy",
+      "target": "n_tx2_dest_pub",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_pub_h160",
+      "source": "n_tx2_dest_pub",
+      "target": "n_tx2_dest_h160",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_h160_addr",
+      "source": "n_tx2_dest_h160",
+      "target": "n_tx2_dest_addr",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_opdup",
+      "source": "n_op_dup_h160",
+      "target": "n_tx2_dest_spk",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_opeq",
+      "source": "n_op_eqv_cs",
+      "target": "n_tx2_dest_spk",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_spk_varint",
+      "source": "n_tx2_dest_spk",
+      "target": "n_tx2_spk_varint",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1amt_tx2calc_l",
+      "source": "n_tx1_ex_amount",
+      "target": "n_tx2_amt_calc",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2fee_tx2calc_r",
+      "source": "n_tx2_fee_sats",
+      "target": "n_tx2_amt_calc",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_tx2calc_amtle",
+      "source": "n_tx2_amt_calc",
+      "target": "n_tx2_amt_le",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2calc_nonneg",
+      "source": "n_tx2_amt_calc",
+      "target": "n_tx2_amt_nonnegative",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_relayexp_match",
+      "source": "n_relay_result",
+      "target": "n_relay_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_verify_match_l",
+      "source": "cc50_verify",
+      "target": "n_verify_true_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_0",
+      "source": "cc_compare_spk",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_100",
+      "source": "n_funding_output_count_ok",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_200",
+      "source": "n_tx1_ex_spk_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_300",
+      "source": "n_verify_true_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-300",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_400",
+      "source": "n_relay_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-400",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_500",
+      "source": "n_tx2_amt_nonnegative",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-500",
+      "selected": false
+    },
+    {
+      "id": "e_tx1extract_tx2tmpl_prevout",
+      "source": "n_tx1_ex_txid_rev",
+      "target": "n_tx2_template",
+      "targetHandle": "input-1000",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_tmpl_spk",
+      "source": "n_tx2_dest_spk",
+      "target": "n_tx2_template",
+      "targetHandle": "input-3020",
+      "selected": false
+    },
+    {
+      "id": "e_tx1examt_tx1calc_l",
+      "source": "cc16_ex_amount",
+      "target": "n_tx1_amt_calc",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1fee_tx1calc_r",
+      "source": "n_tx1_fee_sats",
+      "target": "n_tx1_amt_calc",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_tx1calc_amtle",
+      "source": "n_tx1_amt_calc",
+      "target": "cc41_amount_le",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1calc_nonneg",
+      "source": "n_tx1_amt_calc",
+      "target": "n_tx1_amt_nonnegative",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1examt_match_l",
+      "source": "n_tx1_ex_amount",
+      "target": "n_tx1_amount_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1calc_match_r",
+      "source": "n_tx1_amt_calc",
+      "target": "n_tx1_amount_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx1examt_tx2amtcheck_l",
+      "source": "n_tx1_ex_amount",
+      "target": "n_tx2_amount_input_check",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2calc_tx2amtcheck_r",
+      "source": "n_tx2_amt_calc",
+      "target": "n_tx2_amount_input_check",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_600",
+      "source": "n_tx1_amt_nonnegative",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-600",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_700",
+      "source": "n_tx1_amount_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-700",
+      "selected": false
+    },
+    {
+      "id": "e_l15check_800",
+      "source": "n_tx2_amount_input_check",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-800",
+      "selected": false
+    },
+    {
+      "id": "e_fund_to_d256",
+      "source": "cc13_fund_tx",
+      "target": "n_funding_d256",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_d256_to_funddisp",
+      "source": "n_funding_d256",
+      "target": "n_funding_txid_disp",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_funddisp_to_match",
+      "source": "n_funding_txid_disp",
+      "target": "n_evidence_funding_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx1disp_to_match",
+      "source": "n_tx1_txid_disp",
+      "target": "n_evidence_tx1_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx1signed_outcount",
+      "source": "n_tx1_signed",
+      "target": "n_tx1_out_count_ext",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1outcount_ok",
+      "source": "n_tx1_out_count_ext",
+      "target": "n_tx1_out_count_ok",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_verifyexp_match",
+      "source": "n_verify_true_expected",
+      "target": "n_verify_true_match",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_evfund_to_gate",
+      "source": "n_evidence_funding_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-900",
+      "selected": false
+    },
+    {
+      "id": "e_evtx1_to_gate",
+      "source": "n_evidence_tx1_match",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-1000",
+      "selected": false
+    },
+    {
+      "id": "e_tx1outc_to_gate",
+      "source": "n_tx1_out_count_ok",
+      "target": "n_l15_check_result",
+      "targetHandle": "input-1100",
+      "selected": false
+    },
+    {
+      "id": "e_h160_p2pkh_spk_v2",
+      "source": "cc04_h160",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_rh160_p2sh_spk_v2",
+      "source": "cc24_rh160",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_destH160_destSpk_v2",
+      "source": "n_tx2_dest_h160",
+      "target": "n_tx2_dest_spk",
+      "targetHandle": "input-200",
+      "selected": false
+    },
+    {
+      "id": "e_cc04_pkh_h160_push",
+      "source": "cc04_h160",
+      "target": "n_pkh_h160_push",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_pkh_h160_push_spk",
+      "source": "n_pkh_h160_push",
+      "target": "cc11_p2pkh_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_cc24_psh_h160_push",
+      "source": "cc24_rh160",
+      "target": "n_psh_h160_push",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_psh_h160_push_spk",
+      "source": "n_psh_h160_push",
+      "target": "cc28_p2sh_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_h160_push",
+      "source": "n_tx2_dest_h160",
+      "target": "n_tx2dest_h160_push",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx2dest_push_spk",
+      "source": "n_tx2dest_h160_push",
+      "target": "n_tx2_dest_spk",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_fundoc_expected",
+      "source": "n_funding_output_count_expected",
+      "target": "n_funding_output_count_ok",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_tx1oc_expected",
+      "source": "n_tx1_out_count_expected",
+      "target": "n_tx1_out_count_ok",
+      "targetHandle": "input-100",
+      "selected": false
+    },
+    {
+      "id": "e_fundingdisp_to_match0",
+      "source": "n_funding_txid_disp",
+      "target": "n_evidence_funding_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_tx1disp_to_match0",
+      "source": "n_tx1_txid_disp",
+      "target": "n_evidence_tx1_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_relayobserved_to_match",
+      "source": "n_relay_observed",
+      "target": "n_relay_match",
+      "targetHandle": "input-0",
+      "selected": false
+    },
+    {
+      "id": "e_minzero_to_n_tx1_amt_nonnegative",
+      "source": "n_minimum_zero",
+      "target": "n_tx1_amt_nonnegative",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_minzero_to_n_tx2_amt_nonnegative",
+      "source": "n_minimum_zero",
+      "target": "n_tx2_amt_nonnegative",
+      "targetHandle": "input-2",
+      "selected": false
+    },
+    {
+      "id": "e_tx1amt_to_verify_spent",
+      "source": "n_tx1_ex_amount",
+      "target": "cc50_verify",
+      "targetHandle": "input-5",
       "selected": false
     }
   ]
