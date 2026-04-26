@@ -299,7 +299,7 @@
         "groupInstances": {},
         "borderColor": "#f59e0b",
         "showComment": true,
-        "comment": "Pre-filled with a real testnet3 TX — no faucet needed. Replace with your own if desired.",
+        "comment": "Testnet3 TX — from faucet or block explorer",
         "error": false
       }
     },
