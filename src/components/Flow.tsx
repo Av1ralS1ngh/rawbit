@@ -297,6 +297,16 @@ function FlowContent() {
         return;
       }
 
+      // Shared-link URLs take precedence over onboarding: suppress the welcome
+      // dialog so the shared-flow loader can import normally. We do NOT write
+      // FIRST_RUN_STORAGE_KEY here so that a plain (non-shared) reload later
+      // still shows the dialog.
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("s") || params.get("share")) {
+        welcomeCompleteRef.current = true;
+        return;
+      }
+
       const hasExistingData = TABS_STORAGE_KEYS.some((key) =>
         Boolean(window.localStorage.getItem(key))
       );
